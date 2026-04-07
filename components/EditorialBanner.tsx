@@ -4,7 +4,7 @@ import Link from "next/link";
 export function EditorialBanner() {
   return (
     <section
-      className="relative min-h-[min(52vh,520px)] w-full overflow-hidden border-b border-white/10"
+      className="relative min-h-[min(52vh,520px)] w-full overflow-hidden border-b border-[#111111]/10"
       aria-labelledby="editorial-heading"
     >
       <Image
@@ -12,23 +12,22 @@ export function EditorialBanner() {
         alt=""
         fill
         sizes="100vw"
-        className="object-cover object-center brightness-[0.4]"
+        className="object-cover object-center brightness-[0.85]"
       />
       <div
-        className="absolute inset-0 bg-[#0a0a0a]/50 mix-blend-multiply"
+        className="absolute inset-0 bg-white/82 backdrop-blur-[2px]"
         aria-hidden
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a]/90 via-[#0a0a0a]/40 to-transparent" />
       <div className="relative flex min-h-[min(52vh,520px)] flex-col justify-center px-4 py-16 sm:px-8 md:px-12 lg:px-16">
         <h2
           id="editorial-heading"
-          className="max-w-xl font-display text-3xl leading-tight tracking-tight uppercase sm:text-4xl md:text-5xl"
+          className="max-w-xl text-3xl font-bold leading-tight tracking-tight text-[#111111] uppercase sm:text-4xl md:text-5xl"
         >
           <Link
             href="#shop"
-            className="group inline-flex flex-col gap-2 text-[#f5f5f0] transition-colors hover:text-[#ff3c00]"
+            className="group inline-flex flex-col gap-2 text-[#111111] transition-colors hover:text-[color:var(--tt-accent)]"
           >
-            <span className="font-mono text-[11px] tracking-[0.35em] text-[#ff3c00] uppercase">
+            <span className="font-mono text-[11px] tracking-[0.35em] text-[color:var(--tt-accent)] uppercase">
               Editorial
             </span>
             <span>

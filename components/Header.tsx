@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const nav = [
@@ -11,8 +12,8 @@ function AccountIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="22"
-      height="22"
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -29,8 +30,8 @@ function SearchIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="22"
-      height="22"
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -47,8 +48,8 @@ function HeartIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="22"
-      height="22"
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -64,8 +65,8 @@ function CartIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="22"
-      height="22"
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -82,13 +83,21 @@ function CartIcon() {
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-[100] border-b border-[#111111]/15 bg-[#ffffff] shadow-[0_1px_0_0_rgba(17,17,17,0.06)]">
-      <div className="mx-auto grid max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-3 sm:px-6 sm:py-4">
+    <header className="sticky top-0 z-[100] border-b border-[color:color-mix(in_srgb,var(--tt-ink)_14%,transparent)] bg-background shadow-[0_1px_0_0_color-mix(in_srgb,var(--tt-accent)_14%,transparent)]">
+      <div className="mx-auto grid max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6 sm:py-5">
         <Link
           href="/"
-          className="justify-self-start bg-gradient-to-r from-[#f0325a] via-[#000000] to-[#f0325a] bg-clip-text font-bold text-xl tracking-[0.08em] text-transparent uppercase sm:text-2xl"
+          className="block shrink-0 justify-self-start leading-none"
+          aria-label="Trash Tribe"
         >
-          Trash Tribe
+          <Image
+            src="/tt.png"
+            alt="Trash Tribe"
+            width={520}
+            height={130}
+            className="block h-[72px] w-auto max-w-[min(52vw,320px)] object-contain object-left sm:h-[84px] sm:max-w-[380px] lg:h-[96px] lg:max-w-[440px]"
+            priority
+          />
         </Link>
         <nav
           aria-label="Primary"
@@ -98,7 +107,7 @@ export function Header() {
             <Link
               key={item.label}
               href={item.href}
-              className="text-[11px] font-bold tracking-[0.2em] text-[#111111] uppercase transition-colors hover:text-[#f0325a] lg:text-[12px]"
+              className="text-[11px] font-bold tracking-[0.2em] text-[color:var(--tt-ink)] uppercase transition-colors hover:text-[color:var(--tt-accent)] lg:text-[12px]"
             >
               {item.label}
             </Link>
@@ -107,31 +116,31 @@ export function Header() {
         <div className="flex items-center justify-end gap-1 sm:gap-3">
           <button
             type="button"
-            className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 text-[#111111] transition-colors hover:text-[#f0325a]"
+            className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 text-[color:var(--tt-ink)] transition-colors hover:text-[color:var(--tt-accent)]"
             aria-label="Account"
           >
             <AccountIcon />
           </button>
           <button
             type="button"
-            className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 text-[#111111] transition-colors hover:text-[#f0325a]"
+            className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 text-[color:var(--tt-ink)] transition-colors hover:text-[color:var(--tt-accent)]"
             aria-label="Search"
           >
             <SearchIcon />
           </button>
           <button
             type="button"
-            className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 text-[#111111] transition-colors hover:text-[#f0325a]"
+            className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 text-[color:var(--tt-ink)] transition-colors hover:text-[color:var(--tt-accent)]"
             aria-label="Wishlist, 3 items"
           >
             <HeartIcon />
-            <span className="absolute -right-0.5 -top-0.5 flex min-h-[18px] min-w-[18px] items-center justify-center bg-[#f0325a] px-1 text-[10px] font-bold leading-none text-[#ffffff]">
+            <span className="absolute -right-0.5 -top-0.5 flex min-h-[18px] min-w-[18px] items-center justify-center bg-[color:var(--tt-accent)] px-1 text-[10px] font-bold leading-none text-[#111111]">
               3
             </span>
           </button>
           <button
             type="button"
-            className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 text-[#111111] transition-colors hover:text-[#f0325a]"
+            className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 text-[color:var(--tt-ink)] transition-colors hover:text-[color:var(--tt-accent)]"
             aria-label="Shopping cart"
           >
             <CartIcon />
@@ -140,13 +149,13 @@ export function Header() {
       </div>
       <nav
         aria-label="Primary mobile"
-        className="flex flex-wrap justify-center gap-x-6 gap-y-2 border-t border-[#111111]/15 px-4 py-3 md:hidden"
+        className="flex flex-wrap justify-center gap-x-6 gap-y-2 border-t border-[color:color-mix(in_srgb,var(--tt-ink)_14%,transparent)] px-4 py-3 md:hidden"
       >
         {nav.map((item) => (
           <Link
             key={item.label}
             href={item.href}
-            className="text-[10px] font-bold tracking-[0.2em] text-[#111111] uppercase hover:text-[#f0325a]"
+            className="text-[10px] font-bold tracking-[0.2em] text-[color:var(--tt-ink)] uppercase hover:text-[color:var(--tt-accent)]"
           >
             {item.label}
           </Link>

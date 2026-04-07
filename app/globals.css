@@ -1,17 +1,47 @@
 @import "tailwindcss";
 
+/*
+ * Palette: white background, black text, lime (#CCFF00) accents only.
+ */
 :root {
   --background: #ffffff;
   --foreground: #111111;
-  --muted: #666666;
-  --accent-pink: #f0325a;
-  --accent-pink-soft: #ff6b8a;
+  --text: #111111;
+  --accent: #ccff00;
+  --tt-ink: #111111;
+  --tt-accent: #ccff00;
+  --tt-accent-soft: #ccff00;
+  --tt-muted: #111111;
+  --tt-surface-tint: #ffffff;
+  --brand-ink: #111111;
+  --brand-accent: #ccff00;
+  --brand-muted: #111111;
+  --brand-surface-tint: #ffffff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: #ffffff;
+  --color-foreground: #111111;
   --font-mono: var(--font-space-mono);
+  --color-brand-ink: #111111;
+  --color-brand-accent: #ccff00;
+  --color-brand-muted: #111111;
+  --color-brand-surface-tint: #ffffff;
+}
+
+/* Accent utilities (lime); buttons use with black text */
+.tt-text-accent {
+  color: var(--accent);
+}
+.tt-bg-accent {
+  background-color: var(--accent);
+}
+.tt-gradient-text,
+.tt-gradient-text-link {
+  color: var(--accent);
+  background-image: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
 }
 
 *,

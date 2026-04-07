@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${spaceMono.variable} h-full antialiased`}>
       <body
-        className={`${spaceMono.className} flex min-h-full flex-col bg-[#ffffff] text-[#111111]`}
+        className={`${spaceMono.className} flex min-h-full flex-col bg-background text-foreground`}
       >
         {children}
       </body>

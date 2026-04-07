@@ -36,12 +36,12 @@ function PinterestIcon() {
 
 export function AnnouncementBar() {
   return (
-    <div className="border-b border-[#111111]/15 bg-[#ffffff] text-[12px] font-bold tracking-[0.12em] text-[#111111]">
+    <div className="border-b border-[color:color-mix(in_srgb,#111111_12%,transparent)] bg-background text-[12px] font-bold tracking-[0.12em] text-[#111111]">
       <div className="mx-auto grid max-w-[1600px] grid-cols-3 items-center gap-4 px-4 py-2.5 sm:px-6">
         <div className="flex items-center gap-4 justify-self-start">
           <Link
             href="https://instagram.com"
-            className="text-[#111111] transition-opacity hover:opacity-60"
+            className="text-[#111111] transition-colors hover:text-[color:var(--tt-accent)]"
             aria-label="Instagram"
             target="_blank"
             rel="noopener noreferrer"
@@ -50,7 +50,7 @@ export function AnnouncementBar() {
           </Link>
           <Link
             href="https://pinterest.com"
-            className="text-[#111111] transition-opacity hover:opacity-60"
+            className="text-[#111111] transition-colors hover:text-[color:var(--tt-accent)]"
             aria-label="Pinterest"
             target="_blank"
             rel="noopener noreferrer"
@@ -61,7 +61,7 @@ export function AnnouncementBar() {
         <p className="text-center text-[10px] tracking-[0.18em] text-[#111111] sm:text-[12px]">
           TRASH TRIBE — INDEPENDENT MERCH
         </p>
-        <p className="justify-self-end text-[11px] tracking-[0.14em] text-[#666666] sm:text-[12px]">
+        <p className="justify-self-end text-[11px] tracking-[0.14em] text-[#111111] sm:text-[12px]">
           EUR €
         </p>
       </div>
