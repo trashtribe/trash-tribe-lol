@@ -1,44 +1,75 @@
 @import "tailwindcss";
 
 /*
- * Palette: white background, black text, lime (#CCFF00) accents only.
+ * Trash Tribe palette
+ * - Primary accent: #b8ff06
+ * - Secondary accent: #ff53e3
+ * - Soft pink: #f088de
+ * - Light base: #ffffff / text #000000
+ * - Dark base: #000000 / text #ffffff
  */
 :root {
   --background: #ffffff;
-  --foreground: #111111;
-  --text: #111111;
-  --accent: #ccff00;
-  --tt-ink: #111111;
-  --tt-accent: #ccff00;
-  --tt-accent-soft: #ccff00;
-  --tt-muted: #111111;
-  --tt-surface-tint: #ffffff;
-  --brand-ink: #111111;
-  --brand-accent: #ccff00;
-  --brand-muted: #111111;
-  --brand-surface-tint: #ffffff;
+  --foreground: #000000;
+  --tt-bg-light: #ffffff;
+  --tt-bg-dark: #000000;
+  --tt-text-on-light: #000000;
+  --tt-text-on-dark: #ffffff;
+  --tt-accent-primary: #b8ff06;
+  --tt-accent-secondary: #ff53e3;
+  --tt-soft-pink: #f088de;
+  --tt-border-light: color-mix(in srgb, var(--tt-text-on-light) 12%, transparent);
+  --tt-border-dark: color-mix(in srgb, var(--tt-text-on-dark) 18%, transparent);
 }
 
 @theme inline {
-  --color-background: #ffffff;
-  --color-foreground: #111111;
+  --color-background: var(--tt-bg-light);
+  --color-foreground: var(--tt-text-on-light);
   --font-mono: var(--font-space-mono);
-  --color-brand-ink: #111111;
-  --color-brand-accent: #ccff00;
-  --color-brand-muted: #111111;
-  --color-brand-surface-tint: #ffffff;
+  --color-brand-primary: var(--tt-accent-primary);
+  --color-brand-secondary: var(--tt-accent-secondary);
+  --color-brand-soft: var(--tt-soft-pink);
 }
 
-/* Accent utilities (lime); buttons use with black text */
-.tt-text-accent {
-  color: var(--accent);
+.tt-text-primary {
+  color: var(--tt-accent-primary);
 }
-.tt-bg-accent {
-  background-color: var(--accent);
+
+.tt-text-secondary {
+  color: var(--tt-accent-secondary);
 }
+
+.tt-text-on-light {
+  color: var(--tt-text-on-light);
+}
+
+.tt-text-on-dark {
+  color: var(--tt-text-on-dark);
+}
+
+.tt-bg-primary {
+  background-color: var(--tt-accent-primary);
+}
+
+.tt-bg-soft {
+  background-color: var(--tt-soft-pink);
+}
+
+.tt-bg-dark {
+  background-color: var(--tt-bg-dark);
+}
+
+.tt-border-light {
+  border-color: var(--tt-border-light);
+}
+
+.tt-border-dark {
+  border-color: var(--tt-border-dark);
+}
+
 .tt-gradient-text,
 .tt-gradient-text-link {
-  color: var(--accent);
+  color: var(--tt-accent-secondary);
   background-image: none;
   -webkit-background-clip: unset;
   background-clip: unset;
