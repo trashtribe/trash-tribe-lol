@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Providers } from "@/components/Providers";
 import { Space_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -24,7 +25,7 @@ export default function RootLayout({
       <body
         className={`${spaceMono.className} flex min-h-full flex-col bg-background text-foreground`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

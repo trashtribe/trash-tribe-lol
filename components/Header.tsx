@@ -1,11 +1,17 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useCart } from "./CartProvider";
+import { useSearchModal } from "./SearchModalContext";
+import { useWishlist } from "./WishlistProvider";
 
 const nav = [
-  { href: "#shop", label: "Shop" },
+  { href: "/shop", label: "Shop" },
   { href: "#shop", label: "Apparel" },
   { href: "#shop", label: "Accessories" },
-  { href: "#contact", label: "Contact" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ] as const;
 
 function AccountIcon() {
@@ -46,6 +52,10 @@ function CartIcon() {
 }
 
 export function Header() {
+  const { itemCount, openCart } = useCart();
+  const { openSearch } = useSearchModal();
+  const { count: wishlistCount } = useWishlist();
+
   return (
     <header className="sticky top-0 z-[100] border-b tt-border-light bg-background">
       <div className="mx-auto grid max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6 sm:py-5">
@@ -76,17 +86,38 @@ export function Header() {
           <button type="button" className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary" aria-label="Account">
             <AccountIcon />
           </button>
-          <button type="button" className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary" aria-label="Search">
+          <button
+            type="button"
+            className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+            aria-label="Search"
+            onClick={openSearch}
+          >
             <SearchIcon />
           </button>
-          <button type="button" className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary" aria-label="Wishlist, 3 items">
+          <Link
+            href="/wishlist"
+            className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+            aria-label={`Wishlist, ${wishlistCount} items`}
+          >
             <HeartIcon />
-            <span className="absolute -right-0.5 -top-0.5 flex min-h-[18px] min-w-[18px] items-center justify-center tt-bg-primary px-1 text-[10px] font-bold leading-none tt-text-on-light">
-              3
-            </span>
-          </button>
-          <button type="button" className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary" aria-label="Shopping cart">
+            {wishlistCount > 0 ? (
+              <span className="absolute -right-0.5 -top-0.5 flex min-h-[18px] min-w-[18px] items-center justify-center tt-bg-primary px-1 text-[10px] font-bold leading-none tt-text-on-light">
+                {wishlistCount}
+              </span>
+            ) : null}
+          </Link>
+          <button
+            type="button"
+            className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+            aria-label={`Shopping cart, ${itemCount} items`}
+            onClick={openCart}
+          >
             <CartIcon />
+            {itemCount > 0 ? (
+              <span className="absolute -right-0.5 -top-0.5 flex min-h-[18px] min-w-[18px] items-center justify-center tt-bg-primary px-1 text-[10px] font-bold leading-none tt-text-on-light">
+                {itemCount}
+              </span>
+            ) : null}
           </button>
         </div>
       </div>

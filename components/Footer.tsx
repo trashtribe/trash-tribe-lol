@@ -6,7 +6,8 @@ const quickLinks = [
   { href: "#shop", label: "Shop" },
   { href: "#shop", label: "Apparel" },
   { href: "#shop", label: "Accessories" },
-  { href: "#contact", label: "Contact" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ] as const;
 
 export function Footer() {
