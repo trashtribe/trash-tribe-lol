@@ -1,3 +1,4 @@
+import { ComingSoonSplash } from "@/components/ComingSoonSplash";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
@@ -6,6 +7,10 @@ import { WelcomeSection } from "@/components/WelcomeSection";
 import { products } from "@/components/product-data";
 
 export default function Home() {
+  if (process.env.NODE_ENV === "production") {
+    return <ComingSoonSplash />;
+  }
+
   return (
     <>
       <Header />
