@@ -1,5 +1,5 @@
-import { ComingSoonSplash } from "@/components/ComingSoonSplash";
+import { ComingSoonLanding } from "@/components/ComingSoonLanding";
 
 export default function ComingSoonPage() {
-  return <ComingSoonSplash />;
+  return <ComingSoonLanding />;
 }

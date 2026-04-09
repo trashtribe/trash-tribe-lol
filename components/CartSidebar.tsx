@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 import { useCart } from "./CartProvider";
 
@@ -128,12 +129,13 @@ export function CartSidebar() {
               <span>{formatCurrency(subtotal)}</span>
             </div>
             <p className="mt-2 text-xs tt-text-on-light">Free shipping over €100</p>
-            <button
-              type="button"
-              className="mt-4 w-full bg-[color:var(--tt-bg-dark)] px-4 py-3 text-sm font-bold tracking-[0.18em] tt-text-primary uppercase transition-colors hover:tt-text-secondary"
+            <Link
+              href="/checkout"
+              onClick={closeCart}
+              className="mt-4 block w-full bg-[color:var(--tt-bg-dark)] px-4 py-3 text-center text-sm font-bold tracking-[0.18em] tt-text-primary uppercase transition-colors hover:tt-text-secondary"
             >
               Checkout
-            </button>
+            </Link>
             <button
               type="button"
               onClick={closeCart}
