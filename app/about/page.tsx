@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -24,6 +25,13 @@ const values = [
     body: "Design that says something. Loud graphics, attitude, and pieces meant to be worn, not watered down for a boardroom.",
   },
 ] as const;
+
+export const metadata: Metadata = {
+  title: "About",
+  description:
+    "Learn about Trash Tribe — independent print-on-demand merch, bold design, and on-demand production with less waste.",
+  alternates: { canonical: "/about" },
+};
 
 export default function AboutPage() {
   return (

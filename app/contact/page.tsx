@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { ContactForm } from "@/components/ContactForm";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
@@ -21,6 +23,13 @@ function PinterestIcon() {
     </svg>
   );
 }
+
+export const metadata: Metadata = {
+  title: "Contact",
+  description:
+    "Contact Trash Tribe for order help, collaborations, or questions. Reach us by email or the contact form.",
+  alternates: { canonical: "/contact" },
+};
 
 export default function ContactPage() {
   return (

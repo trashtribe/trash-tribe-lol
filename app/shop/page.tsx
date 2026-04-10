@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { ShopProductCard } from "@/components/ShopProductCard";
@@ -5,6 +7,13 @@ import { products } from "@/components/product-data";
 
 const filters = ["ALL", "POSTERS", "APPAREL", "ACCESSORIES"] as const;
 const activeFilter = "ALL";
+
+export const metadata: Metadata = {
+  title: "Shop",
+  description:
+    "Browse posters, apparel, and accessories from Trash Tribe. Independent print-on-demand merch with bold graphics.",
+  alternates: { canonical: "/shop" },
+};
 
 export default function ShopPage() {
   return (
