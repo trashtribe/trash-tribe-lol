@@ -46,7 +46,7 @@ const nextConfig: NextConfig = {
     const destination = "/coming-soon";
     const publicPaths = listPublicUrlPaths(path.join(process.cwd(), "public"));
     const publicAlt = publicPaths.map(escapeRegex).join("|");
-    const notPublicOrSystem = `(?!coming-soon$|coming-soon/|_next/|_next$|(?:${publicAlt})$)`;
+    const notPublicOrSystem = `(?!coming-soon$|coming-soon/|account(?:/|$)|checkout(?:/|$)|order-confirmation(?:/|$)|_next/|_next$|(?:${publicAlt})$)`;
 
     return [
       { source: "/", destination, permanent: false },

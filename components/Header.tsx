@@ -83,9 +83,13 @@ export function Header() {
         </nav>
 
         <div className="flex items-center justify-end gap-1 sm:gap-3">
-          <button type="button" className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary" aria-label="Account">
+          <Link
+            href="/account"
+            className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+            aria-label="Account"
+          >
             <AccountIcon />
-          </button>
+          </Link>
           <button
             type="button"
             className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
