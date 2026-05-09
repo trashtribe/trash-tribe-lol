@@ -6,6 +6,10 @@ import { useCart } from "./CartProvider";
 import { useSearchModal } from "./SearchModalContext";
 import { useWishlist } from "./WishlistProvider";
 
+/** Intrinsic size of `public/tt.png` (must match file or layout shifts on load). */
+const HEADER_LOGO_WIDTH = 1295;
+const HEADER_LOGO_HEIGHT = 1533;
+
 const nav = [
   { href: "/shop", label: "Shop" },
   { href: "#shop", label: "Apparel" },
@@ -60,14 +64,17 @@ export function Header() {
     <header className="sticky top-0 z-[100] border-b tt-border-light bg-background">
       <div className="mx-auto grid max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6 sm:py-5">
         <Link href="/" className="block shrink-0 justify-self-start leading-none" aria-label="Trash Tribe">
-          <Image
-            src="/tt.png"
-            alt="Trash Tribe"
-            width={520}
-            height={130}
-            className="block h-[72px] w-auto max-w-[min(52vw,320px)] object-contain object-left sm:h-[84px] sm:max-w-[380px] lg:h-[96px] lg:max-w-[440px]"
-            priority
-          />
+          <span className="block h-[72px] w-[61px] shrink-0 sm:h-[84px] sm:w-[71px] lg:h-[96px] lg:w-[81px]">
+            <Image
+              src="/tt.png"
+              alt="Trash Tribe"
+              width={HEADER_LOGO_WIDTH}
+              height={HEADER_LOGO_HEIGHT}
+              sizes="(max-width: 640px) 61px, (max-width: 1024px) 71px, 81px"
+              className="block size-full object-contain object-left"
+              priority
+            />
+          </span>
         </Link>
 
         <nav aria-label="Primary" className="hidden items-center gap-6 md:flex lg:gap-10">

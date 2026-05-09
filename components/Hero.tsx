@@ -7,8 +7,9 @@ export function Hero() {
         <Image
           src="/trashtribe%20logo%20final.png"
           alt="Trash Tribe"
-          width={1400}
-          height={900}
+          width={4983}
+          height={2266}
+          sizes="(max-width: 900px) 92vw, 900px"
           className="h-auto w-full object-contain"
           priority
         />

@@ -4,8 +4,6 @@ import { ContactForm } from "@/components/ContactForm";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 
-const contactEmail = "hello@trashtribe.lol";
-
 function InstagramIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
@@ -46,12 +44,7 @@ export default function ContactPage() {
                 Questions about your order, collabs, or just want to say hi?
               </p>
               <p>
-                <a
-                  href={`mailto:${contactEmail}`}
-                  className="text-[15px] font-semibold tracking-wide tt-text-on-light underline decoration-[color:var(--tt-accent-secondary)] underline-offset-4 transition-colors hover:tt-text-secondary"
-                >
-                  {contactEmail}
-                </a>
+                <a href="mailto:hello@trashtribe.lol">hello@trashtribe.lol</a>
               </p>
               <div className="flex flex-wrap items-center gap-6">
                 <a

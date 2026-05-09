@@ -1,17 +1,26 @@
 "use client";
 
+import type { User } from "@supabase/supabase-js";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { useAuth } from "@/components/AuthProvider";
 import type { CartItem } from "@/components/CartProvider";
 import { useCart } from "@/components/CartProvider";
+import { CheckoutCardPayment } from "@/components/CheckoutCardPayment";
+import {
+  computeCheckoutTotalEur,
+  eurToStripeCents,
+  getShippingEur,
+} from "@/lib/checkout-totals";
 import {
   cartItemsToStoredLines,
   saveCompletedOrder,
 } from "@/lib/checkout-order-storage";
 import { formatEuro } from "@/lib/format-currency";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 const COUNTRIES = [
   "Ireland",
@@ -35,11 +44,6 @@ const COUNTRIES = [
   "Other",
 ] as const;
 
-function getShippingCost(subtotal: number, method: "standard" | "express") {
-  if (method === "express") return 12.99;
-  return subtotal >= 100 ? 0 : 4.99;
-}
-
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
@@ -54,9 +58,22 @@ const labelClass =
   "text-[11px] font-bold tracking-[0.14em] text-black uppercase";
 const errorClass = "mt-1 text-xs text-[#ff53e3]";
 
+function cartLinesForApi(items: CartItem[]) {
+  return items.map((i) => ({
+    productId: i.productId,
+    quantity: i.quantity,
+    unitPrice: i.unitPrice,
+  }));
+}
+
+function cartSignature(items: CartItem[]) {
+  return items.map((i) => `${i.key}:${i.quantity}`).join("|");
+}
+
 export function CheckoutPageClient() {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
+  const { user, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
@@ -84,11 +101,22 @@ export function CheckoutPageClient() {
     total: number;
   } | null>(null);
 
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [prepareError, setPrepareError] = useState<string | null>(null);
+  const [preparingPayment, setPreparingPayment] = useState(false);
+
+  const cartSig = useMemo(() => cartSignature(items), [items]);
+
+  useEffect(() => {
+    setClientSecret(null);
+    setPrepareError(null);
+  }, [shippingMethod, cartSig]);
+
   const displayItems = summarySnapshot ?? items;
   const displaySubtotal = totalsSnapshot?.subtotal ?? subtotal;
   const displayShipping =
     totalsSnapshot?.shipping ??
-    getShippingCost(displaySubtotal, shippingMethod);
+    getShippingEur(displaySubtotal, shippingMethod);
   const displayTotal =
     totalsSnapshot?.total ?? displaySubtotal + displayShipping;
 
@@ -201,34 +229,91 @@ export function CheckoutPageClient() {
     phone,
   ]);
 
-  const handleCompleteOrder = () => {
+  const preparePayment = useCallback(async () => {
     setSubmitAttempted(true);
     if (!validateAll()) return;
 
-    const ship = getShippingCost(subtotal, shippingMethod);
-    const orderTotal = subtotal + ship;
-    const lines = cartItemsToStoredLines(items);
-    saveCompletedOrder({
-      lines,
-      subtotal,
-      shipping: ship,
-      total: orderTotal,
-      shippingMethod,
-      email: email.trim(),
-      placedAt: new Date().toISOString(),
-    });
-    setTotalsSnapshot({
-      subtotal,
-      shipping: ship,
-      total: orderTotal,
-    });
-    setSummarySnapshot([...items]);
-    clearCart();
-    setOrderSuccess(true);
-    window.setTimeout(() => {
+    const supabase = createBrowserSupabaseClient();
+    if (!supabase) {
+      setPrepareError("Checkout is unavailable (Supabase not configured).");
+      return;
+    }
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      setPrepareError("Sign in to pay.");
+      return;
+    }
+
+    setPrepareError(null);
+    setPreparingPayment(true);
+
+    try {
+      const lines = cartLinesForApi(items);
+      const { subtotal: st, shipping, total } = computeCheckoutTotalEur(
+        lines,
+        shippingMethod,
+      );
+      const amount = eurToStripeCents(total);
+
+      const res = await fetch("/api/create-payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          currency: "eur",
+          accessToken: session.access_token,
+          items: lines,
+          shippingMethod,
+        }),
+      });
+
+      const data = (await res.json()) as {
+        clientSecret?: string;
+        error?: string;
+      };
+
+      if (!res.ok || !data.clientSecret) {
+        setPrepareError(data.error ?? "Could not start payment.");
+        return;
+      }
+
+      setClientSecret(data.clientSecret);
+    } catch {
+      setPrepareError("Network error. Try again.");
+    } finally {
+      setPreparingPayment(false);
+    }
+  }, [items, shippingMethod, validateAll]);
+
+  const handlePaymentSuccess = useCallback(
+    (_paymentIntentId: string) => {
+      const lines = cartLinesForApi(items);
+      const { subtotal: st, shipping, total } = computeCheckoutTotalEur(
+        lines,
+        shippingMethod,
+      );
+
+      saveCompletedOrder({
+        lines: cartItemsToStoredLines(items),
+        subtotal: st,
+        shipping,
+        total,
+        shippingMethod,
+        email: email.trim(),
+        placedAt: new Date().toISOString(),
+      });
+      setTotalsSnapshot({ subtotal: st, shipping, total });
+      setSummarySnapshot([...items]);
+      setOrderSuccess(true);
+      clearCart();
       router.push("/order-confirmation");
-    }, 900);
-  };
+    },
+    [items, shippingMethod, email, clearCart, router],
+  );
 
   if (displayItems.length === 0 && !orderSuccess) {
     return (
@@ -524,6 +609,29 @@ export function CheckoutPageClient() {
             </fieldset>
           </section>
 
+          {clientSecret ? (
+            <section aria-labelledby="step-payment">
+              <h2
+                id="step-payment"
+                className="border-b border-black/10 pb-3 text-sm font-bold tracking-[0.2em] tt-text-on-light uppercase"
+              >
+                Step 4 — Payment
+              </h2>
+              <p className="mt-4 text-sm tt-text-on-light">
+                Pay securely with your card. Your order was created when you
+                continued to payment; it will be marked paid after a successful
+                charge.
+              </p>
+              <div className="mt-6 max-w-md">
+                <CheckoutCardPayment
+                  clientSecret={clientSecret}
+                  disabled={orderSuccess}
+                  onSuccess={handlePaymentSuccess}
+                />
+              </div>
+            </section>
+          ) : null}
+
           <div className="border-t border-black/10 pt-8 lg:hidden">
             <OrderSummaryBlock
               items={displayItems}
@@ -532,7 +640,12 @@ export function CheckoutPageClient() {
               total={displayTotal}
               orderSuccess={orderSuccess}
               isFormValid={isFormValid}
-              onComplete={handleCompleteOrder}
+              user={user}
+              authLoading={authLoading}
+              paymentReady={!!clientSecret}
+              preparingPayment={preparingPayment}
+              prepareError={prepareError}
+              onContinueToPayment={preparePayment}
             />
           </div>
         </div>
@@ -545,7 +658,12 @@ export function CheckoutPageClient() {
             total={displayTotal}
             orderSuccess={orderSuccess}
             isFormValid={isFormValid}
-            onComplete={handleCompleteOrder}
+            user={user}
+            authLoading={authLoading}
+            paymentReady={!!clientSecret}
+            preparingPayment={preparingPayment}
+            prepareError={prepareError}
+            onContinueToPayment={preparePayment}
           />
         </aside>
       </div>
@@ -560,7 +678,12 @@ type OrderSummaryBlockProps = {
   total: number;
   orderSuccess: boolean;
   isFormValid: boolean;
-  onComplete: () => void;
+  user: User | null;
+  authLoading: boolean;
+  paymentReady: boolean;
+  preparingPayment: boolean;
+  prepareError: string | null;
+  onContinueToPayment: () => void;
 };
 
 function OrderSummaryBlock({
@@ -570,8 +693,15 @@ function OrderSummaryBlock({
   total,
   orderSuccess,
   isFormValid,
-  onComplete,
+  user,
+  authLoading,
+  paymentReady,
+  preparingPayment,
+  prepareError,
+  onContinueToPayment,
 }: OrderSummaryBlockProps) {
+  const needsSignIn = !authLoading && !user;
+
   return (
     <div className="border border-black/10 bg-white p-6">
       <h2 className="text-sm font-bold tracking-[0.2em] tt-text-on-light uppercase">
@@ -621,19 +751,54 @@ function OrderSummaryBlock({
           <dd>{formatEuro(total)}</dd>
         </div>
       </dl>
-      <button
-        type="button"
-        onClick={onComplete}
-        disabled={orderSuccess || items.length === 0}
-        className="mt-6 w-full bg-black py-3.5 text-center text-[11px] font-bold tracking-[0.22em] text-[#b8ff06] uppercase transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {orderSuccess ? "ORDER PLACED" : "COMPLETE ORDER"}
-      </button>
-      {!isFormValid && !orderSuccess ? (
-        <p className="mt-3 text-center text-[11px] text-black/45">
-          Fill in all required fields to continue.
-        </p>
+
+      {prepareError ? (
+        <p className="mt-4 text-center text-xs text-[#ff53e3]">{prepareError}</p>
       ) : null}
+
+      {needsSignIn ? (
+        <div className="mt-6 space-y-3 text-center">
+          <p className="text-[11px] text-black/55">
+            Sign in to complete your purchase.
+          </p>
+          <Link
+            href="/account"
+            className="inline-block w-full bg-black py-3.5 text-center text-[11px] font-bold tracking-[0.22em] text-[#b8ff06] uppercase transition-opacity hover:opacity-90"
+          >
+            GO TO ACCOUNT
+          </Link>
+        </div>
+      ) : paymentReady ? (
+        <p className="mt-6 text-center text-[11px] text-black/55">
+          Enter your card details in the payment section and pay.
+        </p>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={onContinueToPayment}
+            disabled={
+              orderSuccess ||
+              items.length === 0 ||
+              !isFormValid ||
+              preparingPayment ||
+              authLoading
+            }
+            className="mt-6 w-full bg-black py-3.5 text-center text-[11px] font-bold tracking-[0.22em] text-[#b8ff06] uppercase transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {orderSuccess
+              ? "ORDER PLACED"
+              : preparingPayment
+                ? "PREPARING…"
+                : "CONTINUE TO PAYMENT"}
+          </button>
+          {!isFormValid && !orderSuccess ? (
+            <p className="mt-3 text-center text-[11px] text-black/45">
+              Fill in all required fields to continue.
+            </p>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }
