@@ -60,16 +60,15 @@ export function Header() {
     <header className="sticky top-0 z-[100] border-b tt-border-light bg-background">
       <div className="mx-auto grid max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6 sm:py-5">
         <Link href="/" className="block shrink-0 justify-self-start leading-none" aria-label="Trash Tribe">
-          <span suppressHydrationWarning className="block">
-            <Image
-              src="/tt.png"
-              alt="Trash Tribe"
-              width={61}
-              height={72}
-              className="block object-contain object-left"
-              priority
-            />
-          </span>
+          <Image
+            src="/tt.png"
+            alt="Trash Tribe"
+            width={61}
+            height={72}
+            priority
+            style={{ width: 61, height: 72 }}
+            className="block object-contain object-left"
+          />
         </Link>
 
         <nav aria-label="Primary" className="hidden items-center gap-6 md:flex lg:gap-10">
