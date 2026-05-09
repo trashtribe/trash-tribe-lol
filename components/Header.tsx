@@ -11,7 +11,6 @@ const nav = [
   { href: "#shop", label: "Apparel" },
   { href: "#shop", label: "Accessories" },
   { href: "/about", label: "About" },
-  { href: "mailto:hello@trashtribe.lol", label: "hello@trashtribe.lol" },
 ] as const;
 
 function AccountIcon() {
@@ -72,25 +71,15 @@ export function Header() {
         </Link>
 
         <nav aria-label="Primary" className="hidden items-center gap-6 md:flex lg:gap-10">
-          {nav.map((item) =>
-            item.href.startsWith("mailto:") ? (
-              <a
-                key={item.label}
-                href={item.href}
-                className="text-[11px] font-bold tracking-[0.2em] tt-text-on-light transition-colors hover:tt-text-secondary lg:text-[12px]"
-              >
-                {item.label}
-              </a>
-            ) : (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="text-[11px] font-bold tracking-[0.2em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary lg:text-[12px]"
-              >
-                {item.label}
-              </Link>
-            ),
-          )}
+          {nav.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="text-[11px] font-bold tracking-[0.2em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary lg:text-[12px]"
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
         <div className="flex items-center justify-end gap-1 sm:gap-3">
@@ -138,25 +127,15 @@ export function Header() {
       </div>
 
       <nav aria-label="Primary mobile" className="flex flex-wrap justify-center gap-x-6 gap-y-2 border-t tt-border-light px-4 py-3 md:hidden">
-        {nav.map((item) =>
-          item.href.startsWith("mailto:") ? (
-            <a
-              key={item.label}
-              href={item.href}
-              className="text-[10px] font-bold tracking-[0.2em] tt-text-on-light hover:tt-text-secondary"
-            >
-              {item.label}
-            </a>
-          ) : (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="text-[10px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary"
-            >
-              {item.label}
-            </Link>
-          ),
-        )}
+        {nav.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            className="text-[10px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary"
+          >
+            {item.label}
+          </Link>
+        ))}
       </nav>
     </header>
   );
