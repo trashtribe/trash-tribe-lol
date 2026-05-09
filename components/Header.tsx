@@ -65,7 +65,7 @@ export function Header() {
             width={61}
             height={72}
             priority
-            style={{ width: 61, height: 72 }}
+            style={{ width: '61px', height: 'auto' }}
             className="block object-contain object-left"
           />
         </Link>
