@@ -6,16 +6,12 @@ import { useCart } from "./CartProvider";
 import { useSearchModal } from "./SearchModalContext";
 import { useWishlist } from "./WishlistProvider";
 
-/** Intrinsic size of `public/tt.png` (must match file or layout shifts on load). */
-const HEADER_LOGO_WIDTH = 1295;
-const HEADER_LOGO_HEIGHT = 1533;
-
 const nav = [
   { href: "/shop", label: "Shop" },
   { href: "#shop", label: "Apparel" },
   { href: "#shop", label: "Accessories" },
   { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
+  { href: "mailto:hello@trashtribe.lol", label: "hello@trashtribe.lol" },
 ] as const;
 
 function AccountIcon() {
@@ -64,29 +60,38 @@ export function Header() {
     <header className="sticky top-0 z-[100] border-b tt-border-light bg-background">
       <div className="mx-auto grid max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6 sm:py-5">
         <Link href="/" className="block shrink-0 justify-self-start leading-none" aria-label="Trash Tribe">
-          <span className="block h-[72px] w-[61px] shrink-0 sm:h-[84px] sm:w-[71px] lg:h-[96px] lg:w-[81px]">
+          <span suppressHydrationWarning className="block">
             <Image
               src="/tt.png"
               alt="Trash Tribe"
-              width={HEADER_LOGO_WIDTH}
-              height={HEADER_LOGO_HEIGHT}
-              sizes="(max-width: 640px) 61px, (max-width: 1024px) 71px, 81px"
-              className="block size-full object-contain object-left"
+              width={61}
+              height={72}
+              className="block object-contain object-left"
               priority
             />
           </span>
         </Link>
 
         <nav aria-label="Primary" className="hidden items-center gap-6 md:flex lg:gap-10">
-          {nav.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="text-[11px] font-bold tracking-[0.2em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary lg:text-[12px]"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {nav.map((item) =>
+            item.href.startsWith("mailto:") ? (
+              <a
+                key={item.label}
+                href={item.href}
+                className="text-[11px] font-bold tracking-[0.2em] tt-text-on-light transition-colors hover:tt-text-secondary lg:text-[12px]"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="text-[11px] font-bold tracking-[0.2em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary lg:text-[12px]"
+              >
+                {item.label}
+              </Link>
+            ),
+          )}
         </nav>
 
         <div className="flex items-center justify-end gap-1 sm:gap-3">
@@ -134,11 +139,25 @@ export function Header() {
       </div>
 
       <nav aria-label="Primary mobile" className="flex flex-wrap justify-center gap-x-6 gap-y-2 border-t tt-border-light px-4 py-3 md:hidden">
-        {nav.map((item) => (
-          <Link key={item.label} href={item.href} className="text-[10px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary">
-            {item.label}
-          </Link>
-        ))}
+        {nav.map((item) =>
+          item.href.startsWith("mailto:") ? (
+            <a
+              key={item.label}
+              href={item.href}
+              className="text-[10px] font-bold tracking-[0.2em] tt-text-on-light hover:tt-text-secondary"
+            >
+              {item.label}
+            </a>
+          ) : (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="text-[10px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary"
+            >
+              {item.label}
+            </Link>
+          ),
+        )}
       </nav>
     </header>
   );

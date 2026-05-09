@@ -7,7 +7,7 @@ const quickLinks = [
   { href: "#shop", label: "Apparel" },
   { href: "#shop", label: "Accessories" },
   { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
+  { href: "mailto:hello@trashtribe.lol", label: "hello@trashtribe.lol" },
 ] as const;
 
 export function Footer() {
@@ -20,9 +20,15 @@ export function Footer() {
             <ul className="flex flex-col gap-3 text-[12px] tracking-[0.08em]">
               {quickLinks.map((item) => (
                 <li key={item.label}>
-                  <Link href={item.href} className="tt-text-on-dark transition-colors hover:tt-text-secondary">
-                    {item.label}
-                  </Link>
+                  {item.href.startsWith("mailto:") ? (
+                    <a href={item.href} className="tt-text-on-dark transition-colors hover:tt-text-secondary">
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link href={item.href} className="tt-text-on-dark transition-colors hover:tt-text-secondary">
+                      {item.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

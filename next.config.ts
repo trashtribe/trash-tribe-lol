@@ -46,12 +46,11 @@ const nextConfig: NextConfig = {
     const destination = "/coming-soon";
     const publicPaths = listPublicUrlPaths(path.join(process.cwd(), "public"));
     const publicAlt = publicPaths.map(escapeRegex).join("|");
-    const notPublicOrSystem = `(?!coming-soon$|coming-soon/|account(?:/|$)|checkout(?:/|$)|order-confirmation(?:/|$)|api(?:/|$)|_next/|_next$|(?:${publicAlt})$)`;
+    const notPublicOrSystem = `(?!coming-soon$|coming-soon/|contact(?:/|$)|account(?:/|$)|checkout(?:/|$)|order-confirmation(?:/|$)|api(?:/|$)|_next/|_next$|(?:${publicAlt})$)`;
 
     return [
       { source: "/", destination, permanent: false },
       { source: "/about", destination, permanent: false },
-      { source: "/contact", destination, permanent: false },
       { source: "/wishlist", destination, permanent: false },
       { source: "/shop", destination, permanent: false },
       { source: "/shop/:slug*", destination, permanent: false },

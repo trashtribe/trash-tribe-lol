@@ -18,6 +18,9 @@ export function ComingSoonLanding() {
       <p className="text-center font-mono text-base tracking-[0.35em] text-black uppercase sm:text-lg">
         COMING SOON
       </p>
+      <p className="text-center font-mono text-sm text-black">
+        <a href="mailto:hello@trashtribe.lol">hello@trashtribe.lol</a>
+      </p>
       <ComingSoonNotifyForm />
     </div>
   );
