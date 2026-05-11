@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 export function ComingSoonNotifyForm() {
   const [email, setEmail] = useState("");
@@ -9,11 +10,11 @@ export function ComingSoonNotifyForm() {
     e.preventDefault();
     if (!email) return;
     setStatus("loading");
-    const { createClient } = await import("@supabase/supabase-js");
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const supabase = createBrowserSupabaseClient();
+    if (!supabase) {
+      setStatus("error");
+      return;
+    }
     const { error } = await supabase.from("email_signups").insert([{ email }]);
     if (error) {
       setStatus("error");
