@@ -28,6 +28,8 @@ export function ContactForm() {
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const resetForm = useCallback(() => {
     setName("");
@@ -36,10 +38,12 @@ export function ContactForm() {
     setMessage("");
     setErrors({});
     setSubmitted(false);
+    setSubmitError(null);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setSubmitError(null);
     const next: FieldErrors = {};
     if (!name.trim()) next.name = "Name is required.";
     const emailErr = validateEmail(email);
@@ -53,7 +57,35 @@ export function ContactForm() {
       return;
     }
 
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          subject,
+          message: message.trim(),
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+
+      if (!res.ok) {
+        setSubmitError(
+          typeof data.error === "string"
+            ? data.error
+            : "Something went wrong. Please try again.",
+        );
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      setSubmitError("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -175,11 +207,18 @@ export function ContactForm() {
         ) : null}
       </div>
 
+      {submitError ? (
+        <p className="text-[12px] text-red-600" role="alert">
+          {submitError}
+        </p>
+      ) : null}
+
       <button
         type="submit"
-        className="w-full min-h-[52px] tt-bg-dark text-[11px] font-bold tracking-[0.22em] tt-text-primary uppercase transition-opacity hover:opacity-90"
+        disabled={submitting}
+        className="w-full min-h-[52px] tt-bg-dark text-[11px] font-bold tracking-[0.22em] tt-text-primary uppercase transition-opacity hover:opacity-90 disabled:opacity-50"
       >
-        Send message
+        {submitting ? "Sending…" : "Send message"}
       </button>
     </form>
   );

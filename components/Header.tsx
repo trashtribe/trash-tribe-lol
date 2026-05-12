@@ -11,6 +11,7 @@ const nav = [
   { href: "#shop", label: "Apparel" },
   { href: "#shop", label: "Accessories" },
   { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ] as const;
 
 function AccountIcon() {
