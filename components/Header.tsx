@@ -8,8 +8,8 @@ import { useWishlist } from "./WishlistProvider";
 
 const nav = [
   { href: "/shop", label: "Shop" },
-  { href: "#shop", label: "Apparel" },
-  { href: "#shop", label: "Accessories" },
+  { href: "/shop?category=APPAREL", label: "Apparel" },
+  { href: "/shop?category=ACCESSORIES", label: "Accessories" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ] as const;
