@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { ShopFilters, type ShopCategoryFilter } from "@/components/ShopFilters";
 import { ShopProductCard } from "@/components/ShopProductCard";
+import type { Product } from "@/components/product-data";
 import { products } from "@/components/product-data";
-
-const filters = ["ALL", "POSTERS", "APPAREL", "ACCESSORIES"] as const;
-const activeFilter = "ALL";
 
 export const metadata: Metadata = {
   title: "Shop",
@@ -15,7 +14,32 @@ export const metadata: Metadata = {
   alternates: { canonical: "/shop" },
 };
 
-export default function ShopPage() {
+function resolveActiveFilter(categoryParam: string | undefined): ShopCategoryFilter {
+  const key = categoryParam?.toUpperCase();
+  if (!key || key === "ALL") return "ALL";
+  if (key === "POSTERS" || key === "APPAREL" || key === "ACCESSORIES") {
+    return key;
+  }
+  return "ALL";
+}
+
+function filterProductsByCategory(
+  list: Product[],
+  active: ShopCategoryFilter,
+): Product[] {
+  if (active === "ALL") return list;
+  return list.filter((p) => p.category === active);
+}
+
+export default async function ShopPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const { category: categoryParam } = await searchParams;
+  const activeFilter = resolveActiveFilter(categoryParam);
+  const visibleProducts = filterProductsByCategory(products, activeFilter);
+
   return (
     <>
       <Header />
@@ -25,32 +49,14 @@ export default function ShopPage() {
             <h1 className="text-center text-4xl font-bold tracking-[0.2em] tt-text-on-light uppercase sm:text-5xl">
               SHOP
             </h1>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-              {filters.map((filter) => {
-                const isActive = filter === activeFilter;
-                return (
-                  <button
-                    key={filter}
-                    type="button"
-                    className={`border px-4 py-2 text-[11px] font-bold tracking-[0.18em] uppercase transition-colors sm:px-5 sm:py-2.5 ${
-                      isActive
-                        ? "tt-bg-primary tt-text-on-light tt-border-light"
-                        : "bg-background tt-text-on-light tt-border-light hover:tt-text-secondary"
-                    }`}
-                    aria-pressed={isActive}
-                  >
-                    {filter}
-                  </button>
-                );
-              })}
-            </div>
+            <ShopFilters activeFilter={activeFilter} />
           </div>
         </section>
 
         <section className="px-4 py-10 sm:px-6 sm:py-14">
           <div className="mx-auto max-w-[1600px]">
             <div className="grid grid-cols-2 gap-6 md:grid-cols-3 xl:grid-cols-4">
-              {products.map((product) => (
+              {visibleProducts.map((product) => (
                 <ShopProductCard key={product.id} product={product} />
               ))}
             </div>
