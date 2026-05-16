@@ -65,6 +65,9 @@ export default function AboutPage() {
                 WHO WE ARE
               </h2>
               <div className="flex flex-col gap-4 text-[15px] leading-relaxed tracking-[0.04em] tt-text-on-light sm:text-base">
+                <p className="text-[15px] font-bold leading-relaxed tracking-[0.04em] tt-text-on-light sm:text-base">
+                  trashtribe — early 2000s energy, queer by design, un poco locas, no apologies.
+                </p>
                 <p>
                   Trash Tribe is an independent merch brand — not a faceless label, just a crew that
                   cares about graphics, quality, and wearing your point of view on your sleeve (literally).
