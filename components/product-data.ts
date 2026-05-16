@@ -1,24 +1,27 @@
-export type Product = {
-  id: string;
-  slug: string;
-  name: string;
-  price: string;
-  originalPrice: string;
-  description: string;
-  imageSrc: string;
-  imageAlt: string;
-  galleryImages: string[];
-  category: "POSTERS" | "APPAREL" | "ACCESSORIES";
-  saleTag?: string;
-};
+import type { StoreProduct } from "@/lib/products";
 
-type ProductSeed = Omit<Product, "slug">;
+export type Product = StoreProduct;
+
+type ProductSeed = Omit<StoreProduct, "slug">;
 
 function slugify(value: string) {
   return value
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function apparelVariants(productId: string, price: string): StoreProduct["variants"] {
+  return ["S", "M", "L", "XL"].map((size) => ({
+    id: `${productId}-${size}`,
+    size,
+    color: "—",
+    price,
+  }));
+}
+
+function oneVariant(productId: string, price: string): StoreProduct["variants"] {
+  return [{ id: `${productId}-default`, size: "One size", color: "—", price }];
 }
 
 const productSeeds: ProductSeed[] = [
@@ -38,6 +41,7 @@ const productSeeds: ProductSeed[] = [
       "/products/keychain-star.png",
     ],
     category: "ACCESSORIES",
+    variants: oneVariant("p-1", "€22"),
     saleTag: "SALE",
   },
   {
@@ -56,6 +60,7 @@ const productSeeds: ProductSeed[] = [
       "/products/tee-lesbians.png",
     ],
     category: "APPAREL",
+    variants: apparelVariants("p-2", "€48"),
   },
   {
     id: "p-3",
@@ -73,6 +78,7 @@ const productSeeds: ProductSeed[] = [
       "/products/classic-type.png",
     ],
     category: "POSTERS",
+    variants: oneVariant("p-3", "€38"),
     saleTag: "NEW",
   },
   {
@@ -91,6 +97,7 @@ const productSeeds: ProductSeed[] = [
       "/products/heart-keychain.png",
     ],
     category: "ACCESSORIES",
+    variants: oneVariant("p-4", "€18"),
   },
   {
     id: "p-5",
@@ -108,6 +115,7 @@ const productSeeds: ProductSeed[] = [
       "/products/tee-vagitarian.png",
     ],
     category: "APPAREL",
+    variants: apparelVariants("p-5", "€48"),
   },
   {
     id: "p-6",
@@ -125,6 +133,7 @@ const productSeeds: ProductSeed[] = [
       "/products/tee-vagitarian.png",
     ],
     category: "APPAREL",
+    variants: apparelVariants("p-6", "€36"),
     saleTag: "-20%",
   },
   {
@@ -143,6 +152,7 @@ const productSeeds: ProductSeed[] = [
       "/products/art-collage.png",
     ],
     category: "POSTERS",
+    variants: oneVariant("p-7", "€34"),
   },
   {
     id: "p-8",
@@ -160,6 +170,7 @@ const productSeeds: ProductSeed[] = [
       "/products/classic-type.png",
     ],
     category: "POSTERS",
+    variants: oneVariant("p-8", "€44"),
     saleTag: "SALE",
   },
   {
@@ -178,6 +189,7 @@ const productSeeds: ProductSeed[] = [
       "/products/art-collage.png",
     ],
     category: "POSTERS",
+    variants: oneVariant("p-9", "€22"),
   },
   {
     id: "p-10",
@@ -195,6 +207,7 @@ const productSeeds: ProductSeed[] = [
       "/products/heart-keychain.png",
     ],
     category: "ACCESSORIES",
+    variants: oneVariant("p-10", "€16"),
     saleTag: "NEW",
   },
   {
@@ -213,6 +226,7 @@ const productSeeds: ProductSeed[] = [
       "/products/keychain-star.png",
     ],
     category: "ACCESSORIES",
+    variants: oneVariant("p-11", "€28"),
   },
   {
     id: "p-12",
@@ -230,11 +244,12 @@ const productSeeds: ProductSeed[] = [
       "/products/tee-lesbians.png",
     ],
     category: "APPAREL",
+    variants: apparelVariants("p-12", "€42"),
     saleTag: "SALE",
   },
 ];
 
-export const products: Product[] = productSeeds.map((product) => ({
+export const products: StoreProduct[] = productSeeds.map((product) => ({
   ...product,
   slug: slugify(product.name),
 }));

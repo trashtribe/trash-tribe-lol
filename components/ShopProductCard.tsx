@@ -3,8 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import type { StoreProduct } from "@/lib/products";
+
 import { useCart } from "./CartProvider";
-import type { Product } from "./product-data";
 import { useWishlist } from "./WishlistProvider";
 
 function HeartIcon({ filled }: { filled: boolean }) {
@@ -25,8 +26,25 @@ function HeartIcon({ filled }: { filled: boolean }) {
 }
 
 type ShopProductCardProps = {
-  product: Product;
+  product: StoreProduct;
 };
+
+function quickBuyPayload(product: StoreProduct): {
+  product: StoreProduct;
+  size?: string;
+} {
+  if (product.category !== "APPAREL") {
+    return { product };
+  }
+  const v = product.variants[0];
+  if (!v) return { product };
+  const size =
+    v.size && v.size.toLowerCase() !== "one size" && v.size !== "—" ? v.size : undefined;
+  return {
+    product: { ...product, price: v.price },
+    size,
+  };
+}
 
 export function ShopProductCard({ product }: ShopProductCardProps) {
   const { addToCart } = useCart();
@@ -58,7 +76,8 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
             type="button"
             onClick={(event) => {
               event.preventDefault();
-              addToCart({ product, quantity: 1 });
+              const { product: cartProduct, size } = quickBuyPayload(product);
+              addToCart({ product: cartProduct, quantity: 1, size });
             }}
             className="absolute bottom-0 left-0 right-0 z-10 translate-y-full tt-bg-primary px-2 py-2 text-center text-[9px] font-bold tracking-[0.18em] tt-text-on-light uppercase transition-transform duration-200 group-hover:translate-y-0"
           >

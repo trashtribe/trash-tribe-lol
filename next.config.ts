@@ -36,6 +36,21 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "images.printify.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "printify-production-uploads.s3.amazonaws.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "printify-production-uploads.s3.us-east-1.amazonaws.com",
+        pathname: "/**",
+      },
     ],
   },
   async redirects() {

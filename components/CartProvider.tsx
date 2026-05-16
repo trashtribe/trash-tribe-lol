@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
-import type { Product } from "./product-data";
+import type { StoreProduct } from "@/lib/products";
 
 export type CartItem = {
   key: string;
@@ -17,7 +17,7 @@ export type CartItem = {
 };
 
 type AddToCartInput = {
-  product: Product;
+  product: StoreProduct;
   quantity?: number;
   size?: string;
 };

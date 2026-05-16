@@ -4,8 +4,8 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { ShopFilters, type ShopCategoryFilter } from "@/components/ShopFilters";
 import { ShopProductCard } from "@/components/ShopProductCard";
-import type { Product } from "@/components/product-data";
-import { products } from "@/components/product-data";
+import type { StoreProduct } from "@/lib/products";
+import { getProducts } from "@/lib/products";
 
 export const metadata: Metadata = {
   title: "Shop",
@@ -24,9 +24,9 @@ function resolveActiveFilter(categoryParam: string | undefined): ShopCategoryFil
 }
 
 function filterProductsByCategory(
-  list: Product[],
+  list: StoreProduct[],
   active: ShopCategoryFilter,
-): Product[] {
+): StoreProduct[] {
   if (active === "ALL") return list;
   return list.filter((p) => p.category === active);
 }
@@ -38,6 +38,7 @@ export default async function ShopPage({
 }) {
   const { category: categoryParam } = await searchParams;
   const activeFilter = resolveActiveFilter(categoryParam);
+  const products = await getProducts();
   const visibleProducts = filterProductsByCategory(products, activeFilter);
 
   return (

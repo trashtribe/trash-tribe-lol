@@ -5,7 +5,7 @@ import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { ProductGrid } from "@/components/ProductGrid";
 import { WelcomeSection } from "@/components/WelcomeSection";
-import { products } from "@/components/product-data";
+import { getProducts } from "@/lib/products";
 
 export const metadata: Metadata = {
   title: {
@@ -16,7 +16,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export default function Home() {
+export default async function Home() {
+  const products = await getProducts();
+
   return (
     <>
       <Header />

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { ProductDetailView } from "@/components/ProductDetailView";
-import { products } from "@/components/product-data";
+import { getProductBySlug, getProducts } from "@/lib/products";
 
 type ProductPageProps = {
   params: Promise<{
@@ -12,7 +12,8 @@ type ProductPageProps = {
   }>;
 };
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  const products = await getProducts();
   return products.map((product) => ({
     slug: product.slug,
   }));
@@ -28,7 +29,7 @@ export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = products.find((item) => item.slug === slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     return { title: "Product" };
@@ -58,13 +59,14 @@ export async function generateMetadata({
 
 export default async function ProductDetailPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = products.find((item) => item.slug === slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
-  const relatedProducts = products
+  const catalog = await getProducts();
+  const relatedProducts = catalog
     .filter((item) => item.id !== product.id)
     .sort((a, b) => {
       if (a.category === product.category && b.category !== product.category) {
@@ -80,7 +82,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
   return (
     <>
       <Header />
-      <ProductDetailView product={product} relatedProducts={relatedProducts} />
+      <ProductDetailView key={product.id} product={product} relatedProducts={relatedProducts} />
       <Footer />
     </>
   );

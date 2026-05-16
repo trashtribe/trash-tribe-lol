@@ -1,18 +1,51 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
-import type { Product } from "./product-data";
+import type { StoreProduct } from "@/lib/products";
+
 import { ShopProductCard } from "./ShopProductCard";
 import { useCart } from "./CartProvider";
 import { useWishlist } from "./WishlistProvider";
 
-const apparelSizes = ["S", "M", "L", "XL"] as const;
+const FALLBACK_APPAREL_SIZES = ["S", "M", "L", "XL"] as const;
+
+function sortSizes(a: string, b: string): number {
+  const order = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL", "2XL", "3XL", "4XL"];
+  const ia = order.indexOf(a.toUpperCase());
+  const ib = order.indexOf(b.toUpperCase());
+  if (ia >= 0 && ib >= 0) return ia - ib;
+  if (ia >= 0) return -1;
+  if (ib >= 0) return 1;
+  return a.localeCompare(b);
+}
+
+function sizesForProduct(product: StoreProduct): string[] {
+  if (product.category !== "APPAREL") return [];
+  const fromVariants = Array.from(
+    new Set(
+      product.variants
+        .map((v) => v.size?.trim())
+        .filter((s): s is string => Boolean(s && s.toLowerCase() !== "one size" && s !== "—")),
+    ),
+  );
+  if (fromVariants.length > 0) {
+    return [...fromVariants].sort(sortSizes);
+  }
+  return [...FALLBACK_APPAREL_SIZES];
+}
+
+function pickDefaultSize(sizes: string[]): string {
+  if (sizes.length === 0) return FALLBACK_APPAREL_SIZES[1]!;
+  const m = sizes.find((s) => s.toUpperCase() === "M");
+  if (m) return m;
+  return sizes[Math.min(1, sizes.length - 1)] ?? sizes[0]!;
+}
 
 type ProductDetailViewProps = {
-  product: Product;
-  relatedProducts: Product[];
+  product: StoreProduct;
+  relatedProducts: StoreProduct[];
 };
 
 export function ProductDetailView({ product, relatedProducts }: ProductDetailViewProps) {
@@ -20,10 +53,26 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
   const { isInWishlist, toggleWishlist } = useWishlist();
   const wishlisted = isInWishlist(product.id);
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState<string>(apparelSizes[1]);
+
+  const sizeList = useMemo(() => sizesForProduct(product), [product]);
+  const isApparel = product.category === "APPAREL" && sizeList.length > 0;
+  const [selectedSize, setSelectedSize] = useState<string>(() =>
+    isApparel ? pickDefaultSize(sizeList) : pickDefaultSize([...FALLBACK_APPAREL_SIZES]),
+  );
 
   const gallery = product.galleryImages.slice(0, 4);
-  const isApparel = product.category === "APPAREL";
+  const showCompareAt = product.originalPrice.trim() !== product.price.trim();
+
+  const selectedVariant = useMemo(() => {
+    if (!isApparel) return product.variants[0];
+    return (
+      product.variants.find(
+        (v) => v.size.trim().toLowerCase() === selectedSize.trim().toLowerCase(),
+      ) ?? product.variants[0]
+    );
+  }, [isApparel, product.variants, selectedSize]);
+
+  const priceForSelection = selectedVariant?.price ?? product.price;
 
   return (
     <main className="flex flex-1 flex-col bg-background">
@@ -62,10 +111,12 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
               {product.name}
             </h1>
             <div className="mt-4 flex items-end gap-3">
-              <p className="text-lg text-[color:color-mix(in_srgb,var(--tt-text-on-light)_60%,transparent)] line-through">
-                {product.originalPrice}
-              </p>
-              <p className="text-2xl font-bold tt-text-secondary">{product.price}</p>
+              {showCompareAt ? (
+                <p className="text-lg text-[color:color-mix(in_srgb,var(--tt-text-on-light)_60%,transparent)] line-through">
+                  {product.originalPrice}
+                </p>
+              ) : null}
+              <p className="text-2xl font-bold tt-text-secondary">{priceForSelection}</p>
             </div>
             <p className="mt-6 max-w-xl text-sm leading-relaxed tt-text-on-light sm:text-base">
               {product.description}
@@ -77,7 +128,7 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
                   Size
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {apparelSizes.map((size) => {
+                  {sizeList.map((size) => {
                     const active = selectedSize === size;
                     return (
                       <button
@@ -124,13 +175,17 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
             <div className="mt-8 space-y-4">
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
+                  const lineProduct: StoreProduct = {
+                    ...product,
+                    price: priceForSelection,
+                  };
                   addToCart({
-                    product,
+                    product: lineProduct,
                     quantity,
                     size: isApparel ? selectedSize : undefined,
-                  })
-                }
+                  });
+                }}
                 className="w-full bg-[color:var(--tt-bg-dark)] px-6 py-4 text-sm font-bold tracking-[0.2em] tt-text-primary uppercase transition-colors hover:tt-text-secondary"
               >
                 Add to cart

@@ -1,13 +1,14 @@
 import Link from "next/link";
 
-import type { Product } from "./product-data";
+import type { StoreProduct } from "@/lib/products";
+
 import { ShopProductCard } from "./ShopProductCard";
 
 type ProductGridProps = {
   id?: string;
   title: string;
   viewAllHref?: string;
-  products: Product[];
+  products: StoreProduct[];
   ariaLabelledBy: string;
 };
 
