@@ -45,6 +45,8 @@ const PRINTIFY_API_BASE = "https://api.printify.com/v1";
 export async function fetchPrintifyProducts(): Promise<PrintifyProduct[]> {
   const { shopId, apiKey } = requirePrintifyConfig();
   const url = `${PRINTIFY_API_BASE}/shops/${shopId}/products.json?limit=24`;
+  console.log('API KEY PREFIX:', process.env.PRINTIFY_API_KEY?.slice(0, 20));
+  console.log('Printify fetch URL:', url);
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${apiKey}` },
     next: { revalidate: 3600 },
@@ -65,6 +67,8 @@ export async function fetchPrintifyProducts(): Promise<PrintifyProduct[]> {
 export async function fetchPrintifyProductById(id: string): Promise<PrintifyProduct | null> {
   const { shopId, apiKey } = requirePrintifyConfig();
   const url = `${PRINTIFY_API_BASE}/shops/${shopId}/products/${encodeURIComponent(id)}.json`;
+  console.log('API KEY PREFIX:', process.env.PRINTIFY_API_KEY?.slice(0, 20));
+  console.log('Printify fetch URL:', url);
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${apiKey}` },
     cache: "no-store",

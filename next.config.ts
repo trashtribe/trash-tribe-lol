@@ -43,6 +43,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "images-api.printify.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "printify-production-uploads.s3.amazonaws.com",
         pathname: "/**",
       },
