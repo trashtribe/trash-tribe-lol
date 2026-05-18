@@ -1,12 +1,14 @@
+/*
 import fs from "fs";
 import path from "path";
+*/
 import type { NextConfig } from "next";
 
+/*
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Relative URL paths for every file under `public/` (e.g. `ttt.png`, `products/foo.png`). */
 function listPublicUrlPaths(publicDir: string): string[] {
   const out: string[] = [];
 
@@ -27,6 +29,7 @@ function listPublicUrlPaths(publicDir: string): string[] {
   }
   return out;
 }
+*/
 
 const nextConfig: NextConfig = {
   images: {
@@ -58,6 +61,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  /*
+  // Re-enable before launch: production “coming soon” redirects for non-exempt routes.
   async redirects() {
     if (process.env.NODE_ENV !== "production") {
       return [];
@@ -81,6 +86,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  */
 };
 
 export default nextConfig;
