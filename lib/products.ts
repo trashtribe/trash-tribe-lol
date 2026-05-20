@@ -202,40 +202,77 @@ function segmentLooksLikeSize(segment: string): boolean {
 }
 
 /**
- * Split variant titles into display **size** vs **color**.
- * Supports **"Size / Color"** (`S / Black`) and **"Color / Size"** (`Athletic Heather / L`).
+ * Split Printify variant titles into **size** and/or **color** axes.
+ *
+ * - If the title contains ` / `, split into segments and assign size vs color (Printify often uses
+ *   **Color / Size**; we detect the size token where possible).
+ * - If there is no slash, treat the whole title as **either** a known size label **or** a single color option.
  */
 export function parseVariantTitleSegments(title: string): {
-  size: string;
+  size: string | null;
   color: string | null;
 } {
   const t = title.trim();
-  if (!t) return { size: "One size", color: null };
+  if (!t) return { size: null, color: null };
+
   if (!t.includes("/")) {
-    return { size: t, color: null };
+    if (segmentLooksLikeSize(t)) {
+      return { size: t, color: null };
+    }
+    return { size: null, color: t };
   }
+
   const parts = t.split("/").map((s) => s.trim()).filter(Boolean);
-  if (parts.length === 0) return { size: "One size", color: null };
+  if (parts.length === 0) return { size: null, color: null };
   if (parts.length === 1) {
-    return { size: parts[0]!, color: null };
+    const only = parts[0]!;
+    if (segmentLooksLikeSize(only)) return { size: only, color: null };
+    return { size: null, color: only };
   }
 
   const sizeIndices = parts
     .map((p, i) => (segmentLooksLikeSize(p) ? i : -1))
     .filter((i): i is number => i >= 0);
 
-  // Exactly one size-like segment → use it as size; join the rest as the color label.
+  // Exactly one size-like segment → that segment is size; the rest joined is color.
   if (sizeIndices.length === 1) {
     const si = sizeIndices[0]!;
     const sizePart = parts[si]!.trim();
     const colorJoined = parts.filter((_, i) => i !== si).join(" / ").trim();
-    return { size: sizePart, color: colorJoined.length > 0 ? colorJoined : null };
+    return {
+      size: sizePart,
+      color: colorJoined.length > 0 ? colorJoined : null,
+    };
   }
 
-  // Ambiguous or no recognized size token → legacy **size-first** rule.
-  const size = parts[0]!;
+  // No recognized size tokens — try common Printify **color / size** order, then **size / color**.
+  if (sizeIndices.length === 0) {
+    const last = parts[parts.length - 1]!;
+    if (segmentLooksLikeSize(last)) {
+      const colorJoined = parts.slice(0, -1).join(" / ").trim();
+      return {
+        size: last.trim(),
+        color: colorJoined.length > 0 ? colorJoined : null,
+      };
+    }
+    const first = parts[0]!;
+    if (segmentLooksLikeSize(first)) {
+      const colorJoined = parts.slice(1).join(" / ").trim();
+      return {
+        size: first.trim(),
+        color: colorJoined.length > 0 ? colorJoined : null,
+      };
+    }
+    return { size: null, color: parts.join(" / ").trim() };
+  }
+
+  // Multiple size-like segments (e.g. numeric inseams) — fall back to **size-first**.
+  const size = parts[0]!.trim();
   const color = parts.slice(1).join(" / ").trim();
-  return { size, color: color.length > 0 ? color : null };
+  return {
+    size,
+    color: color.length > 0 ? color : null,
+  };
 }
 
 export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {

@@ -62,7 +62,7 @@ export function WishlistProductCard({ product }: WishlistProductCardProps) {
             product.category === "APPAREL"
               ? product.variants.find((x) => {
                   const { size } = parseVariantTitleSegments(x.title);
-                  return size.toUpperCase() === "M";
+                  return size !== null && size.toUpperCase() === "M";
                 }) ?? product.variants[0]
               : product.variants[0];
 
