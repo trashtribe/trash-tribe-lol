@@ -54,6 +54,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${spaceMono.variable} h-full antialiased`}>
+      <head>
+        <link rel="icon" href="/tt.png" />
+      </head>
       <body
         className={`${spaceMono.className} flex min-h-full flex-col bg-background text-foreground`}
       >

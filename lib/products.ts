@@ -50,6 +50,15 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+/** Decode common double-encoded entities Printify sends when `&` was escaped as `&amp;`. */
+function decodeHtmlEntities(html: string): string {
+  return html
+    .replaceAll("&amp;#39;", "'")
+    .replaceAll("&amp;amp;", "&")
+    .replaceAll("&amp;lt;", "<")
+    .replaceAll("&amp;gt;", ">");
+}
+
 export function formatCents(cents: number): string {
   return new Intl.NumberFormat(undefined, {
     style: "currency",
@@ -139,7 +148,63 @@ function galleryFromProduct(p: PrintifyProduct): string[] {
   return unique;
 }
 
-/** Parse "size / color" convention (size first): "S / Black" → S, Black */
+/**
+ * Detect whether a slash-separated segment is likely an apparel/size token.
+ * Printify often titles variants as **"Color / Size"** (e.g. `Black / M`), not size-first.
+ */
+function segmentLooksLikeSize(segment: string): boolean {
+  const raw = segment.trim();
+  if (!raw) return false;
+
+  const compact = raw.replace(/\s+/g, "").toUpperCase();
+  const upperSpaced = raw.replace(/\s+/g, " ").trim().toUpperCase();
+
+  const codes = new Set([
+    "XXS",
+    "XS",
+    "S",
+    "M",
+    "L",
+    "XL",
+    "XXL",
+    "XXXL",
+    "2XL",
+    "3XL",
+    "4XL",
+    "5XL",
+    "6XL",
+  ]);
+  if (codes.has(compact)) return true;
+
+  if (compact === "OS" || compact === "O/S") return true;
+
+  if (
+    upperSpaced === "ONE SIZE" ||
+    upperSpaced.startsWith("ONE SIZE ") ||
+    compact === "ONESIZE"
+  ) {
+    return true;
+  }
+
+  if (
+    /^(SMALL|MEDIUM|LARGE|X-LARGE|X-SMALL|EXTRA SMALL|EXTRA LARGE)$/i.test(raw.trim())
+  ) {
+    return true;
+  }
+
+  // Numeric-only garment sizes (EU/US/kids shoe, etc.)
+  if (/^\d{1,3}$/.test(raw.trim())) return true;
+
+  // Toddler sizes like 4T
+  if (/^\d{1,2}T$/i.test(compact)) return true;
+
+  return false;
+}
+
+/**
+ * Split variant titles into display **size** vs **color**.
+ * Supports **"Size / Color"** (`S / Black`) and **"Color / Size"** (`Athletic Heather / L`).
+ */
 export function parseVariantTitleSegments(title: string): {
   size: string;
   color: string | null;
@@ -150,6 +215,24 @@ export function parseVariantTitleSegments(title: string): {
     return { size: t, color: null };
   }
   const parts = t.split("/").map((s) => s.trim()).filter(Boolean);
+  if (parts.length === 0) return { size: "One size", color: null };
+  if (parts.length === 1) {
+    return { size: parts[0]!, color: null };
+  }
+
+  const sizeIndices = parts
+    .map((p, i) => (segmentLooksLikeSize(p) ? i : -1))
+    .filter((i): i is number => i >= 0);
+
+  // Exactly one size-like segment → use it as size; join the rest as the color label.
+  if (sizeIndices.length === 1) {
+    const si = sizeIndices[0]!;
+    const sizePart = parts[si]!.trim();
+    const colorJoined = parts.filter((_, i) => i !== si).join(" / ").trim();
+    return { size: sizePart, color: colorJoined.length > 0 ? colorJoined : null };
+  }
+
+  // Ambiguous or no recognized size token → legacy **size-first** rule.
   const size = parts[0]!;
   const color = parts.slice(1).join(" / ").trim();
   return { size, color: color.length > 0 ? color : null };
@@ -159,7 +242,7 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
   const id = String(p.id);
   const name = p.title?.trim() || "Untitled";
   const slugBase = slugify(name) || `product-${id}`;
-  const description = stripHtml(p.description ?? "");
+  const description = decodeHtmlEntities(stripHtml(p.description ?? ""));
   const imageAlt = name;
 
   const rows = (p.variants ?? [])
