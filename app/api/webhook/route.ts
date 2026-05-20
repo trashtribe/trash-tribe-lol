@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { submitPaidOrderToPrintify } from "@/lib/printify-order-fulfillment";
 import { getStripe } from "@/lib/stripe-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -44,9 +45,11 @@ export async function POST(request: Request) {
 
         if (error) {
           console.error("[stripe webhook] order update failed:", error);
+        } else {
+          await submitPaidOrderToPrintify(admin, orderId);
         }
       } catch (e) {
-        console.error("[stripe webhook] Supabase admin error:", e);
+        console.error("[stripe webhook] Supabase admin / Printify error:", e);
       }
     }
   }
