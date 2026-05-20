@@ -27,7 +27,10 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   icons: {
-    icon: [{ url: "/tt.png", type: "image/png" }],
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/tt.png", type: "image/png" },
+    ],
     apple: "/tt.png",
   },
   openGraph: {
@@ -54,9 +57,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${spaceMono.variable} h-full antialiased`}>
-      <head>
-        <link rel="icon" href="/tt.png" />
-      </head>
       <body
         className={`${spaceMono.className} flex min-h-full flex-col bg-background text-foreground`}
       >
