@@ -14,14 +14,14 @@ export type CartItem = {
   unitPrice: number;
   quantity: number;
   size?: string;
-  printifyVariantId?: string;
+  variantId?: number;
 };
 
 type AddToCartInput = {
   product: StoreProduct;
   quantity?: number;
   size?: string;
-  variantId?: string;
+  variantId?: number;
 };
 
 type CartContextValue = {
@@ -45,8 +45,11 @@ function parseEuroPrice(price: string) {
   return Number.isFinite(value) ? value : 0;
 }
 
-function buildKey(productId: string, size?: string) {
-  return `${productId}::${size ?? "nosize"}`;
+function buildKey(productId: string, variantId?: number, fallbackLabel?: string) {
+  if (variantId !== undefined && Number.isFinite(variantId)) {
+    return `${productId}::v${variantId}`;
+  }
+  return `${productId}::${fallbackLabel ?? "default"}`;
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -58,7 +61,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = useCallback(({ product, quantity = 1, size, variantId }: AddToCartInput) => {
     const safeQuantity = Math.max(1, quantity);
-    const key = buildKey(product.id, size);
+    const key = buildKey(product.id, variantId, size ?? "nosize");
 
     setItems((prev) => {
       const existing = prev.find((item) => item.key == key);
@@ -68,7 +71,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             ? {
                 ...item,
                 quantity: item.quantity + safeQuantity,
-                printifyVariantId: variantId ?? item.printifyVariantId,
+                variantId: variantId ?? item.variantId,
               }
             : item,
         );
@@ -86,7 +89,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           unitPrice: parseEuroPrice(product.price),
           quantity: safeQuantity,
           size,
-          printifyVariantId: variantId,
+          variantId,
         },
       ];
     });

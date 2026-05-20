@@ -6,15 +6,30 @@ export type PrintifyImage = {
   is_default?: boolean;
 };
 
+/**
+ * Canonical variant shape expected after normalizing Printify catalog responses.
+ */
 export type PrintifyVariant = {
   id: number;
-  title?: string;
+  /** e.g. "S / Black", "M / White" */
+  title: string;
+  /** Option values ordered as returned by Printify (or derived from titles). */
+  options: (string | number)[];
+  is_available: boolean;
+  /** Minor currency unit e.g. cents for EUR listings. */
   price: number;
+};
+
+/** Loose row from Printify REST (fields may omit or use legacy shapes). */
+export type PrintifyVariantRow = Omit<Partial<PrintifyVariant>, "id" | "options"> & {
+  id?: number | string;
+  title?: string;
+  price?: number;
   sku?: string;
-  is_enabled?: boolean;
+  /** API may send an object map instead of an array. */
+  options?: unknown;
   is_available?: boolean;
-  /** Present on some responses; otherwise parse from {@link PrintifyVariant.title}. */
-  options?: Record<string, string | number | undefined>;
+  is_enabled?: boolean;
 };
 
 export type PrintifyProduct = {
@@ -23,7 +38,7 @@ export type PrintifyProduct = {
   description?: string;
   tags?: string[];
   images?: PrintifyImage[];
-  variants?: PrintifyVariant[];
+  variants?: PrintifyVariantRow[];
   visible?: boolean;
 };
 

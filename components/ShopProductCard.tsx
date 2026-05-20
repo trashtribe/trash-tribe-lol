@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import type { StoreProduct } from "@/lib/products";
+import { formatEuro } from "@/lib/format-currency";
 
 import { useCart } from "./CartProvider";
 import { useWishlist } from "./WishlistProvider";
@@ -32,22 +33,15 @@ type ShopProductCardProps = {
 function quickBuyPayload(product: StoreProduct): {
   product: StoreProduct;
   size?: string;
-  variantId?: string;
+  variantId?: number;
 } {
-  if (product.category !== "APPAREL") {
-    const v = product.variants[0];
-    return {
-      product: v ? { ...product, price: v.price } : product,
-      variantId: v?.id,
-    };
-  }
-  const v = product.variants[0];
+  const avail = product.variants.filter((v) => v.isAvailable);
+  const pool = avail.length > 0 ? avail : product.variants;
+  const v = pool[0];
   if (!v) return { product };
-  const size =
-    v.size && v.size.toLowerCase() !== "one size" && v.size !== "—" ? v.size : undefined;
   return {
-    product: { ...product, price: v.price },
-    size,
+    product: { ...product, price: formatEuro(v.price / 100) },
+    size: v.title,
     variantId: v.id,
   };
 }

@@ -1,15 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
-import type { StoreProduct } from "@/lib/products";
+import { formatEuro } from "@/lib/format-currency";
+import { parseVariantTitleSegments, type StoreProduct } from "@/lib/products";
 
 import { ShopProductCard } from "./ShopProductCard";
 import { useCart } from "./CartProvider";
 import { useWishlist } from "./WishlistProvider";
-
-const FALLBACK_APPAREL_SIZES = ["S", "M", "L", "XL"] as const;
 
 function sortSizes(a: string, b: string): number {
   const order = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL", "2XL", "3XL", "4XL"];
@@ -21,26 +20,64 @@ function sortSizes(a: string, b: string): number {
   return a.localeCompare(b);
 }
 
-function sizesForProduct(product: StoreProduct): string[] {
-  if (product.category !== "APPAREL") return [];
-  const fromVariants = Array.from(
-    new Set(
-      product.variants
-        .map((v) => v.size?.trim())
-        .filter((s): s is string => Boolean(s && s.toLowerCase() !== "one size" && s !== "—")),
-    ),
-  );
-  if (fromVariants.length > 0) {
-    return [...fromVariants].sort(sortSizes);
-  }
-  return [...FALLBACK_APPAREL_SIZES];
+function norm(s: string) {
+  return s.trim().toLowerCase();
 }
 
-function pickDefaultSize(sizes: string[]): string {
-  if (sizes.length === 0) return FALLBACK_APPAREL_SIZES[1]!;
-  const m = sizes.find((s) => s.toUpperCase() === "M");
-  if (m) return m;
-  return sizes[Math.min(1, sizes.length - 1)] ?? sizes[0]!;
+function defaultSelections(variants: StoreProduct["variants"]): {
+  size: string | null;
+  color: string | null;
+} {
+  const firstAvail = variants.find((v) => v.isAvailable) ?? variants[0];
+  if (!firstAvail) return { size: null, color: null };
+  const { size, color } = parseVariantTitleSegments(firstAvail.title);
+  return { size, color };
+}
+
+function variantsWithPalette(variants: StoreProduct["variants"]) {
+  const sizesSet = new Set<string>();
+  const colorsSet = new Set<string>();
+
+  for (const v of variants) {
+    const { size, color } = parseVariantTitleSegments(v.title);
+    sizesSet.add(size);
+    if (color) colorsSet.add(color);
+  }
+
+  const sizes = [...sizesSet].sort(sortSizes);
+  const colors = [...colorsSet].sort((a, b) => norm(a).localeCompare(norm(b)));
+  const hasColors = colors.length > 0;
+
+  return { sizes, colors, hasColors };
+}
+
+function variantMatchesChoice(
+  v: StoreProduct["variants"][number],
+  selSize: string | null,
+  selColor: string | null,
+): boolean {
+  const { size, color } = parseVariantTitleSegments(v.title);
+  if (!selSize || norm(size) !== norm(selSize)) return false;
+  if (color === null) return selColor === null;
+  if (selColor === null) return false;
+  return norm(color) === norm(selColor);
+}
+
+function approximateSwatchTailwind(colorLabel: string): string {
+  const k = norm(colorLabel).replace(/\s+/g, "");
+  if (k.includes("black")) return "#111111";
+  if (k.includes("white")) return "#f5f5f5";
+  if (k.includes("navy")) return "#1a2744";
+  if (k.includes("grey") || k.includes("gray")) return "#8a8a8a";
+  if (k.includes("pink")) return "#ffb6d9";
+  if (k.includes("red")) return "#cc2222";
+  if (k.includes("blue")) return "#2860d8";
+  if (k.includes("green")) return "#226644";
+  if (k.includes("yellow")) return "#e6d400";
+  if (k.includes("orange")) return "#e07020";
+  if (k.includes("purple")) return "#6844aa";
+  if (k.includes("brown")) return "#6b4423";
+  return "#dcdcdc";
 }
 
 type ProductDetailViewProps = {
@@ -54,25 +91,97 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
   const wishlisted = isInWishlist(product.id);
   const [quantity, setQuantity] = useState(1);
 
-  const sizeList = useMemo(() => sizesForProduct(product), [product]);
-  const isApparel = product.category === "APPAREL" && sizeList.length > 0;
-  const [selectedSize, setSelectedSize] = useState<string>(() =>
-    isApparel ? pickDefaultSize(sizeList) : pickDefaultSize([...FALLBACK_APPAREL_SIZES]),
+  const variants = product.variants;
+  const { sizes, colors, hasColors } = variantsWithPalette(variants);
+
+  const needsExplicitSizePick =
+    variants.length > 0 && (sizes.length > 1 || (sizes.length === 1 && !hasColors));
+
+  const [selectedSize, setSelectedSize] = useState<string | null>(() => {
+    if (!needsExplicitSizePick && sizes.length === 1) return sizes[0]!;
+    return defaultSelections(variants).size;
+  });
+  const [selectedColor, setSelectedColor] = useState<string | null>(() =>
+    defaultSelections(variants).color,
+  );
+
+  const effectiveSize =
+    selectedSize ?? (sizes.length === 1 ? sizes[0] ?? null : null);
+
+  const matchingVariant = useMemo(() => {
+    if (effectiveSize === null) return null;
+    return (
+      variants.find((v) => variantMatchesChoice(v, effectiveSize, selectedColor)) ?? null
+    );
+  }, [variants, effectiveSize, selectedColor]);
+
+  const firstAvailableColorForSize = useCallback(
+    (size: string): string | null => {
+      if (!hasColors) return null;
+      const cand = variants
+        .filter((v) => {
+          const p = parseVariantTitleSegments(v.title);
+          return norm(p.size) === norm(size) && p.color !== null && v.isAvailable;
+        })
+        .map((v) => parseVariantTitleSegments(v.title).color!)
+        .find(Boolean);
+      if (cand) return cand;
+
+      /* Any color for size (still show disabled combos at submit time) */
+      const any = variants
+        .filter((v) => {
+          const p = parseVariantTitleSegments(v.title);
+          return norm(p.size) === norm(size) && p.color !== null;
+        })
+        .map((v) => parseVariantTitleSegments(v.title).color!)
+        .find(Boolean);
+      return any ?? colors[0] ?? null;
+    },
+    [colors, hasColors, variants],
+  );
+
+  const handleSelectSize = (size: string) => {
+    setSelectedSize(size);
+    if (hasColors) {
+      const nextColor = firstAvailableColorForSize(size);
+      setSelectedColor(nextColor ?? null);
+    }
+  };
+
+  const handleSelectColor = (color: string) => {
+    setSelectedColor(color);
+  };
+
+  const sizeHasAvailableStock = useCallback(
+    (sizeLabel: string) =>
+      variants.some((v) => {
+        const p = parseVariantTitleSegments(v.title);
+        return norm(p.size) === norm(sizeLabel) && v.isAvailable;
+      }),
+    [variants],
+  );
+
+  const colorAvailableForSelection = useCallback(
+    (colorLabel: string) => {
+      if (!effectiveSize) return false;
+      return variants.some(
+        (v) =>
+          variantMatchesChoice(v, effectiveSize, colorLabel) && v.isAvailable,
+      );
+    },
+    [effectiveSize, variants],
   );
 
   const gallery = product.galleryImages.slice(0, 4);
-  const showCompareAt = product.originalPrice.trim() !== product.price.trim();
+  const showCompareAt =
+    product.originalPrice.trim() !== "" && product.originalPrice.trim() !== product.price.trim();
 
-  const selectedVariant = useMemo(() => {
-    if (!isApparel) return product.variants[0];
-    return (
-      product.variants.find(
-        (v) => v.size.trim().toLowerCase() === selectedSize.trim().toLowerCase(),
-      ) ?? product.variants[0]
-    );
-  }, [isApparel, product.variants, selectedSize]);
+  const priceLabel =
+    matchingVariant != null ? formatEuro(matchingVariant.price / 100) : product.price;
 
-  const priceForSelection = selectedVariant?.price ?? product.price;
+  const canAdd = Boolean(matchingVariant?.isAvailable);
+  const showSizeRow = needsExplicitSizePick;
+  const showColorRow = hasColors && effectiveSize !== null;
 
   return (
     <main className="flex flex-1 flex-col bg-background">
@@ -116,33 +225,76 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
                   {product.originalPrice}
                 </p>
               ) : null}
-              <p className="text-2xl font-bold tt-text-secondary">{priceForSelection}</p>
+              <p className="text-2xl font-bold tt-text-secondary">{priceLabel}</p>
             </div>
             <p className="mt-6 max-w-xl text-sm leading-relaxed tt-text-on-light sm:text-base">
               {product.description}
             </p>
 
-            {isApparel ? (
+            {showSizeRow ? (
               <div className="mt-8">
                 <p className="mb-3 text-[11px] font-bold tracking-[0.16em] tt-text-on-light uppercase">
                   Size
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {sizeList.map((size) => {
-                    const active = selectedSize === size;
+                  {sizes.map((sizeLabel) => {
+                        const unavailable = !sizeHasAvailableStock(sizeLabel);
+                        const active =
+                          effectiveSize !== null && norm(effectiveSize) === norm(sizeLabel);
+                        return (
+                          <button
+                            key={sizeLabel}
+                            type="button"
+                            disabled={unavailable}
+                            onClick={() => handleSelectSize(sizeLabel)}
+                            className={`min-w-11 border px-3 py-2 text-xs font-bold tracking-[0.14em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${active ? "tt-bg-primary tt-border-light tt-text-on-light" : "tt-border-light tt-text-on-light hover:tt-text-secondary"}`}
+                            aria-pressed={active}
+                          >
+                            {sizeLabel}
+                          </button>
+                        );
+                      })}
+                </div>
+              </div>
+            ) : null}
+
+            {showColorRow ? (
+              <div className="mt-8">
+                <p className="mb-3 text-[11px] font-bold tracking-[0.16em] tt-text-on-light uppercase">
+                  Color
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {colors.map((colorLabel) => {
+                    const unavailable = !colorAvailableForSelection(colorLabel);
+                    const active =
+                      selectedColor !== null &&
+                      norm(selectedColor) === norm(colorLabel);
+                    const hex = approximateSwatchTailwind(colorLabel);
                     return (
                       <button
-                        key={size}
+                        key={colorLabel}
                         type="button"
-                        onClick={() => setSelectedSize(size)}
-                        className={`min-w-11 border px-3 py-2 text-xs font-bold tracking-[0.14em] uppercase transition-colors ${active ? "tt-bg-primary tt-border-light tt-text-on-light" : "tt-border-light tt-text-on-light hover:tt-text-secondary"}`}
-                      >
-                        {size}
-                      </button>
+                        title={colorLabel}
+                        disabled={unavailable || !effectiveSize}
+                        onClick={() => handleSelectColor(colorLabel)}
+                        className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-[box-shadow] disabled:cursor-not-allowed disabled:opacity-35 ${active ? "ring-2 ring-[color:var(--tt-accent-secondary)] ring-offset-2 ring-offset-background" : "tt-border-light hover:opacity-95"}`}
+                        style={{
+                          backgroundColor: hex,
+                          boxShadow: hex.toLowerCase() === "#f5f5f5" ? "inset 0 0 0 1px rgba(0,0,0,.12)" : undefined,
+                        }}
+                        aria-label={colorLabel}
+                        aria-pressed={active}
+                      />
                     );
                   })}
                 </div>
               </div>
+            ) : null}
+
+            {!canAdd && variants.length > 0 ? (
+              <p className="mt-4 text-xs tt-text-secondary" role="status">
+                This combination is unavailable. Pick another option.
+              </p>
             ) : null}
 
             <div className="mt-8">
@@ -175,19 +327,21 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
             <div className="mt-8 space-y-4">
               <button
                 type="button"
+                disabled={!canAdd || matchingVariant === null}
                 onClick={() => {
+                  if (!matchingVariant) return;
                   const lineProduct: StoreProduct = {
                     ...product,
-                    price: priceForSelection,
+                    price: formatEuro(matchingVariant.price / 100),
                   };
                   addToCart({
                     product: lineProduct,
                     quantity,
-                    size: isApparel ? selectedSize : undefined,
-                    variantId: selectedVariant?.id,
+                    size: matchingVariant.title,
+                    variantId: matchingVariant.id,
                   });
                 }}
-                className="w-full bg-[color:var(--tt-bg-dark)] px-6 py-4 text-sm font-bold tracking-[0.2em] tt-text-primary uppercase transition-colors hover:tt-text-secondary"
+                className="w-full bg-[color:var(--tt-bg-dark)] px-6 py-4 text-sm font-bold tracking-[0.2em] tt-text-primary uppercase transition-colors hover:tt-text-secondary disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Add to cart
               </button>

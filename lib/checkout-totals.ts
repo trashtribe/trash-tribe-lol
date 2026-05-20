@@ -2,8 +2,8 @@ export type CheckoutLineInput = {
   productId: string;
   quantity: number;
   unitPrice: number;
-  /** Printify variant id when known (SKU line in Printify). */
-  printifyVariantId?: string;
+  /** Printify variant id when known (numeric from Printify catalog). */
+  printifyVariantId?: number | string;
 };
 
 export function getShippingEur(

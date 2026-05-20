@@ -88,7 +88,8 @@ export async function POST(request: Request) {
       if (
         line.printifyVariantId !== undefined &&
         line.printifyVariantId !== null &&
-        typeof line.printifyVariantId !== "string"
+        typeof line.printifyVariantId !== "string" &&
+        typeof line.printifyVariantId !== "number"
       ) {
         return NextResponse.json(
           { error: "Invalid printify_variant_id on line item." },
@@ -164,10 +165,10 @@ export async function POST(request: Request) {
         quantity: line.quantity,
         price: line.unitPrice,
         printify_variant_id:
-          typeof line.printifyVariantId === "string" &&
-          line.printifyVariantId.trim()
-            ? line.printifyVariantId.trim()
-            : null,
+          line.printifyVariantId == null ||
+          (typeof line.printifyVariantId === "string" && !line.printifyVariantId.trim())
+            ? null
+            : String(line.printifyVariantId).trim(),
       })),
     );
 

@@ -3,6 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { formatEuro } from "@/lib/format-currency";
+import { parseVariantTitleSegments } from "@/lib/products";
+
 import { useCart } from "./CartProvider";
 import type { Product } from "./product-data";
 import { useWishlist } from "./WishlistProvider";
@@ -55,26 +58,27 @@ export function WishlistProductCard({ product }: WishlistProductCardProps) {
       <button
         type="button"
         onClick={() => {
-          const v =
+          const pick =
             product.category === "APPAREL"
-              ? product.variants.find((x) => x.size?.toUpperCase() === "M") ??
-                product.variants[0]
+              ? product.variants.find((x) => {
+                  const { size } = parseVariantTitleSegments(x.title);
+                  return size.toUpperCase() === "M";
+                }) ?? product.variants[0]
               : product.variants[0];
+
           let lineProduct = product;
+          let variantId: number | undefined;
           let size: string | undefined;
-          let variantId: string | undefined;
-          if (v) {
-            lineProduct = { ...product, price: v.price };
-            variantId = v.id;
-            if (
-              product.category === "APPAREL" &&
-              v.size &&
-              v.size.toLowerCase() !== "one size" &&
-              v.size !== "—"
-            ) {
-              size = v.size;
-            }
+
+          if (pick) {
+            lineProduct = {
+              ...product,
+              price: formatEuro(pick.price / 100),
+            };
+            variantId = pick.id;
+            size = pick.title.trim();
           }
+
           addToCart({
             product: lineProduct,
             quantity: 1,

@@ -4,15 +4,17 @@ import {
   fetchPrintifyProducts,
   type PrintifyProduct,
   type PrintifyVariant,
+  type PrintifyVariantRow,
 } from "@/lib/printify";
 
 export type StoreCategory = "POSTERS" | "APPAREL" | "ACCESSORIES";
 
 export type StoreProductVariant = {
-  id: string;
-  size: string;
-  color: string;
-  price: string;
+  id: number;
+  title: string;
+  isAvailable: boolean;
+  /** Price in minor units (same as Printify: cents when currency is EUR). */
+  price: number;
 };
 
 export type StoreProduct = {
@@ -20,6 +22,7 @@ export type StoreProduct = {
   slug: string;
   name: string;
   description: string;
+  /** Display formatted min variant price */
   price: string;
   originalPrice: string;
   imageSrc: string;
@@ -47,7 +50,7 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-function formatCents(cents: number): string {
+export function formatCents(cents: number): string {
   return new Intl.NumberFormat(undefined, {
     style: "currency",
     currency: DISPLAY_CURRENCY,
@@ -55,45 +58,41 @@ function formatCents(cents: number): string {
   }).format(cents / 100);
 }
 
-function parseVariantLabels(variant: PrintifyVariant): { size: string; color: string } {
-  const opts = variant.options;
-  if (opts && typeof opts === "object") {
-    const o = opts as Record<string, string | number | undefined>;
-    const sizeRaw =
-      o.size ?? o.Size ?? o.dimensions ?? o["Dimensions"] ?? o["Clothing size"] ?? o["Sizes"];
-    const colorRaw =
-      o.color ?? o.Color ?? o.colour ?? o.Colour ?? o.colors ?? o["Colors"];
-    const size =
-      sizeRaw !== undefined && String(sizeRaw).trim() !== ""
-        ? String(sizeRaw)
-        : "";
-    const color =
-      colorRaw !== undefined && String(colorRaw).trim() !== ""
-        ? String(colorRaw)
-        : "";
-    if (size || color) {
-      return {
-        size: size || "One size",
-        color: color || "—",
-      };
-    }
+function coerceOptionsArray(raw: unknown): (string | number)[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw.filter((v) => v != null && `${String(v).trim()} !== ""`);
   }
-
-  const title = variant.title?.trim() ?? "";
-  const parts = title.split("/").map((s) => s.trim()).filter(Boolean);
-  if (parts.length >= 2) {
-    return { color: parts[0]!, size: parts[1]! };
+  if (typeof raw === "object") {
+    return Object.values(raw as Record<string, unknown>).filter(
+      (v) => v != null && `${String(v).trim()}` !== "",
+    ) as (string | number)[];
   }
-  if (parts.length === 1) {
-    return { color: "—", size: parts[0]! };
-  }
-  return { color: "—", size: "One size" };
+  return [];
 }
 
-function isVariantSellable(v: PrintifyVariant): boolean {
-  if (v.is_enabled === false) return false;
-  if (v.is_available === false) return false;
-  return Number.isFinite(v.price);
+function normalizePrintifyVariant(row: PrintifyVariantRow): PrintifyVariant | null {
+  const idNum = typeof row.id === "string" ? Number.parseInt(row.id, 10) : Number(row.id);
+  const priceNum = typeof row.price === "number" ? row.price : Number(row.price);
+
+  if (!Number.isFinite(idNum) || !Number.isFinite(priceNum)) return null;
+
+  const options = coerceOptionsArray(row.options);
+  const trimmedTitle =
+    typeof row.title === "string" && row.title.trim() !== "" ? row.title.trim() : "";
+  const synthesizedTitle =
+    trimmedTitle ||
+    (options.length > 0 ? options.map((o) => String(o).trim()).join(" / ") : `Variant ${idNum}`);
+
+  const isAvailable = row.is_available !== false && row.is_enabled !== false;
+
+  return {
+    id: idNum,
+    title: synthesizedTitle,
+    options,
+    is_available: isAvailable,
+    price: priceNum,
+  };
 }
 
 function inferCategory(p: PrintifyProduct): StoreCategory {
@@ -140,6 +139,22 @@ function galleryFromProduct(p: PrintifyProduct): string[] {
   return unique;
 }
 
+/** Parse "size / color" convention (size first): "S / Black" → S, Black */
+export function parseVariantTitleSegments(title: string): {
+  size: string;
+  color: string | null;
+} {
+  const t = title.trim();
+  if (!t) return { size: "One size", color: null };
+  if (!t.includes("/")) {
+    return { size: t, color: null };
+  }
+  const parts = t.split("/").map((s) => s.trim()).filter(Boolean);
+  const size = parts[0]!;
+  const color = parts.slice(1).join(" / ").trim();
+  return { size, color: color.length > 0 ? color : null };
+}
+
 export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
   const id = String(p.id);
   const name = p.title?.trim() || "Untitled";
@@ -147,37 +162,32 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
   const description = stripHtml(p.description ?? "");
   const imageAlt = name;
 
-  const sellable = (p.variants ?? []).filter(isVariantSellable);
-  const priceSamples = sellable.map((v) => v.price).filter((n) => Number.isFinite(n));
-  const minCents = priceSamples.length > 0 ? Math.min(...priceSamples) : 0;
-  const maxCents = priceSamples.length > 0 ? Math.max(...priceSamples) : 0;
+  const rows = (p.variants ?? [])
+    .map((v) => normalizePrintifyVariant(v))
+    .filter((v): v is PrintifyVariant => Boolean(v));
 
-  const price = formatCents(minCents);
-  const originalPrice =
-    maxCents > minCents && maxCents > 0 ? formatCents(maxCents) : price;
+  const variants: StoreProductVariant[] = rows.map((v) => ({
+    id: v.id,
+    title: v.title,
+    isAvailable: v.is_available,
+    price: v.price,
+  }));
+
+  let price = formatCents(0);
+  let originalPrice = formatCents(0);
+
+  if (variants.length > 0) {
+    const allPrices = variants.map((v) => v.price);
+    const availablePrices = variants.filter((v) => v.isAvailable).map((v) => v.price);
+    const pool = availablePrices.length > 0 ? availablePrices : allPrices;
+    const minCents = Math.min(...pool);
+    const maxCents = Math.max(...allPrices);
+    price = formatCents(minCents);
+    originalPrice = maxCents > minCents ? formatCents(maxCents) : price;
+  }
 
   const galleryImages = galleryFromProduct(p);
   const imageSrc = galleryImages[0] ?? "/globe.svg";
-
-  const variants: StoreProductVariant[] =
-    sellable.length > 0
-      ? sellable.map((v) => {
-          const { size, color } = parseVariantLabels(v);
-          return {
-            id: String(v.id),
-            size,
-            color,
-            price: formatCents(v.price),
-          };
-        })
-      : [
-          {
-            id: `${id}-default`,
-            size: "One size",
-            color: "—",
-            price,
-          },
-        ];
 
   return {
     id,

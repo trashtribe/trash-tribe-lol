@@ -63,7 +63,7 @@ function cartLinesForApi(items: CartItem[]) {
     productId: i.productId,
     quantity: i.quantity,
     unitPrice: i.unitPrice,
-    ...(i.printifyVariantId ? { printifyVariantId: i.printifyVariantId } : {}),
+    ...(i.variantId !== undefined ? { printifyVariantId: i.variantId } : {}),
   }));
 }
 
