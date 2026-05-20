@@ -82,7 +82,7 @@ export async function fetchPrintifyProducts(): Promise<PrintifyProduct[]> {
   console.log('Printify fetch URL:', url);
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${apiKey}` },
-    next: { revalidate: 60 },
+    next: { revalidate: 3600 },
   });
 
   if (!res.ok) {
