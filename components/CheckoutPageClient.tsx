@@ -63,6 +63,7 @@ function cartLinesForApi(items: CartItem[]) {
     productId: i.productId,
     quantity: i.quantity,
     unitPrice: i.unitPrice,
+    ...(i.printifyVariantId ? { printifyVariantId: i.printifyVariantId } : {}),
   }));
 }
 
@@ -259,6 +260,8 @@ export function CheckoutPageClient() {
       );
       const amount = eurToStripeCents(total);
 
+      const shippingName = `${firstName} ${lastName}`.trim();
+
       const res = await fetch("/api/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -268,6 +271,13 @@ export function CheckoutPageClient() {
           accessToken: session.access_token,
           items: lines,
           shippingMethod,
+          shippingName,
+          shippingAddress1: address1.trim(),
+          shippingAddress2: address2.trim() || undefined,
+          shippingCity: city.trim(),
+          shippingPostalCode: postalCode.trim(),
+          shippingCountry: country,
+          shippingPhone: phone.trim(),
         }),
       });
 
@@ -287,7 +297,19 @@ export function CheckoutPageClient() {
     } finally {
       setPreparingPayment(false);
     }
-  }, [items, shippingMethod, validateAll]);
+  }, [
+    items,
+    shippingMethod,
+    validateAll,
+    firstName,
+    lastName,
+    address1,
+    address2,
+    city,
+    postalCode,
+    country,
+    phone,
+  ]);
 
   const handlePaymentSuccess = useCallback(
     (_paymentIntentId: string) => {

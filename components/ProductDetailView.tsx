@@ -184,6 +184,7 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
                     product: lineProduct,
                     quantity,
                     size: isApparel ? selectedSize : undefined,
+                    variantId: selectedVariant?.id,
                   });
                 }}
                 className="w-full bg-[color:var(--tt-bg-dark)] px-6 py-4 text-sm font-bold tracking-[0.2em] tt-text-primary uppercase transition-colors hover:tt-text-secondary"

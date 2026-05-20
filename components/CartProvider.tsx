@@ -14,12 +14,14 @@ export type CartItem = {
   unitPrice: number;
   quantity: number;
   size?: string;
+  printifyVariantId?: string;
 };
 
 type AddToCartInput = {
   product: StoreProduct;
   quantity?: number;
   size?: string;
+  variantId?: string;
 };
 
 type CartContextValue = {
@@ -54,7 +56,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
 
-  const addToCart = useCallback(({ product, quantity = 1, size }: AddToCartInput) => {
+  const addToCart = useCallback(({ product, quantity = 1, size, variantId }: AddToCartInput) => {
     const safeQuantity = Math.max(1, quantity);
     const key = buildKey(product.id, size);
 
@@ -63,7 +65,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (existing) {
         return prev.map((item) =>
           item.key == key
-            ? { ...item, quantity: item.quantity + safeQuantity }
+            ? {
+                ...item,
+                quantity: item.quantity + safeQuantity,
+                printifyVariantId: variantId ?? item.printifyVariantId,
+              }
             : item,
         );
       }
@@ -80,6 +86,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           unitPrice: parseEuroPrice(product.price),
           quantity: safeQuantity,
           size,
+          printifyVariantId: variantId,
         },
       ];
     });

@@ -32,9 +32,14 @@ type ShopProductCardProps = {
 function quickBuyPayload(product: StoreProduct): {
   product: StoreProduct;
   size?: string;
+  variantId?: string;
 } {
   if (product.category !== "APPAREL") {
-    return { product };
+    const v = product.variants[0];
+    return {
+      product: v ? { ...product, price: v.price } : product,
+      variantId: v?.id,
+    };
   }
   const v = product.variants[0];
   if (!v) return { product };
@@ -43,6 +48,7 @@ function quickBuyPayload(product: StoreProduct): {
   return {
     product: { ...product, price: v.price },
     size,
+    variantId: v.id,
   };
 }
 
@@ -76,8 +82,9 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
             type="button"
             onClick={(event) => {
               event.preventDefault();
-              const { product: cartProduct, size } = quickBuyPayload(product);
-              addToCart({ product: cartProduct, quantity: 1, size });
+              const { product: cartProduct, size, variantId } =
+                quickBuyPayload(product);
+              addToCart({ product: cartProduct, quantity: 1, size, variantId });
             }}
             className="absolute bottom-0 left-0 right-0 z-10 translate-y-full tt-bg-primary px-2 py-2 text-center text-[9px] font-bold tracking-[0.18em] tt-text-on-light uppercase transition-transform duration-200 group-hover:translate-y-0"
           >

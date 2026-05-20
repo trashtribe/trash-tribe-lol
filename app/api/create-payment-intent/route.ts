@@ -14,7 +14,18 @@ type Body = {
   accessToken?: string;
   items?: CheckoutLineInput[];
   shippingMethod?: "standard" | "express";
+  shippingName?: string;
+  shippingAddress1?: string;
+  shippingAddress2?: string;
+  shippingCity?: string;
+  shippingPostalCode?: string;
+  shippingCountry?: string;
+  shippingPhone?: string;
 };
+
+function isNonEmptyString(v: unknown): v is string {
+  return typeof v === "string" && v.trim().length > 0;
+}
 
 export async function POST(request: Request) {
   try {
@@ -25,6 +36,13 @@ export async function POST(request: Request) {
       accessToken,
       items,
       shippingMethod = "standard",
+      shippingName,
+      shippingAddress1,
+      shippingAddress2,
+      shippingCity,
+      shippingPostalCode,
+      shippingCountry,
+      shippingPhone,
     } = body;
 
     if (
@@ -36,6 +54,20 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         { error: "Invalid request: amount, accessToken, and items are required." },
+        { status: 400 },
+      );
+    }
+
+    if (
+      !isNonEmptyString(shippingName) ||
+      !isNonEmptyString(shippingAddress1) ||
+      !isNonEmptyString(shippingCity) ||
+      !isNonEmptyString(shippingPostalCode) ||
+      !isNonEmptyString(shippingCountry) ||
+      !isNonEmptyString(shippingPhone)
+    ) {
+      return NextResponse.json(
+        { error: "Invalid request: shipping name, address, city, postal code, country, and phone are required." },
         { status: 400 },
       );
     }
@@ -53,11 +85,26 @@ export async function POST(request: Request) {
           { status: 400 },
         );
       }
+      if (
+        line.printifyVariantId !== undefined &&
+        line.printifyVariantId !== null &&
+        typeof line.printifyVariantId !== "string"
+      ) {
+        return NextResponse.json(
+          { error: "Invalid printify_variant_id on line item." },
+          { status: 400 },
+        );
+      }
     }
 
     if (shippingMethod !== "standard" && shippingMethod !== "express") {
       return NextResponse.json({ error: "Invalid shipping method." }, { status: 400 });
     }
+
+    const shippingAddress2Trimmed =
+      typeof shippingAddress2 === "string" && shippingAddress2.trim()
+        ? shippingAddress2.trim()
+        : null;
 
     const supabase = createSupabaseUserClient(accessToken);
     const {
@@ -69,7 +116,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
 
-    const { subtotal, shipping, total } = computeCheckoutTotalEur(
+    const { total } = computeCheckoutTotalEur(
       items,
       shippingMethod,
     );
@@ -88,6 +135,14 @@ export async function POST(request: Request) {
         user_id: user.id,
         status: "pending",
         total,
+        shipping_name: shippingName.trim(),
+        shipping_address1: shippingAddress1.trim(),
+        shipping_address2: shippingAddress2Trimmed,
+        shipping_city: shippingCity.trim(),
+        shipping_postal_code: shippingPostalCode.trim(),
+        shipping_country: shippingCountry.trim(),
+        shipping_phone: shippingPhone.trim(),
+        shipping_method: shippingMethod,
       })
       .select("id")
       .single();
@@ -108,6 +163,11 @@ export async function POST(request: Request) {
         product_id: line.productId,
         quantity: line.quantity,
         price: line.unitPrice,
+        printify_variant_id:
+          typeof line.printifyVariantId === "string" &&
+          line.printifyVariantId.trim()
+            ? line.printifyVariantId.trim()
+            : null,
       })),
     );
 

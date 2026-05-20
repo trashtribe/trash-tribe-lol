@@ -26,6 +26,47 @@ type OrderRow = {
   created_at: string;
 };
 
+function EyeIcon({ visible }: { visible: boolean }) {
+  if (visible) {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={20}
+        height={20}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    );
+  }
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={20}
+      height={20}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+      <line x1="2" x2="22" y1="2" y2="22" />
+    </svg>
+  );
+}
+
 function formatOrderDate(iso: string) {
   try {
     return new Intl.DateTimeFormat("en-IE", {
@@ -41,6 +82,9 @@ export function AccountPageClient() {
   const [tab, setTab] = useState<Tab>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showSignupConfirmPassword, setShowSignupConfirmPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [formInfo, setFormInfo] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -101,12 +145,17 @@ export function AccountPageClient() {
     e.preventDefault();
     setFormError(null);
     setFormInfo(null);
+    if (password !== confirmPassword) {
+      setFormError("Passwords do not match");
+      return;
+    }
     setPending(true);
     const { error } = await signUp(email.trim(), password);
     setPending(false);
     if (error) setFormError(error);
     else {
       setPassword("");
+      setConfirmPassword("");
       setFormInfo(
         "Check your email to confirm your account, if required by your project settings.",
       );
@@ -197,8 +246,10 @@ export function AccountPageClient() {
     );
   }
 
-  const inputClass =
-    "mt-1 w-full border border-black/15 bg-white px-3 py-2.5 text-sm text-black placeholder:text-black/35 focus:border-black focus:outline-none focus:ring-1 focus:ring-black/20";
+  const inputBaseClass =
+    "w-full border border-black/15 bg-white px-3 py-2.5 text-sm text-black placeholder:text-black/35 focus:border-black focus:outline-none focus:ring-1 focus:ring-black/20";
+  const inputClass = `mt-1 ${inputBaseClass}`;
+  const signupPasswordInputClass = `mt-1 ${inputBaseClass} pr-10`;
   const labelClass =
     "text-[11px] font-bold tracking-[0.14em] text-black uppercase";
 
@@ -226,6 +277,7 @@ export function AccountPageClient() {
             setTab("signin");
             setFormError(null);
             setFormInfo(null);
+            setConfirmPassword("");
           }}
         >
           Sign in
@@ -243,6 +295,7 @@ export function AccountPageClient() {
             setTab("signup");
             setFormError(null);
             setFormInfo(null);
+            setConfirmPassword("");
           }}
         >
           Create account
@@ -320,20 +373,62 @@ export function AccountPageClient() {
             <label htmlFor="account-password-up" className={labelClass}>
               Password
             </label>
-            <input
-              id="account-password-up"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={inputClass}
-            />
+            <div className="relative">
+              <input
+                id="account-password-up"
+                name="password"
+                type={showSignupPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={signupPasswordInputClass}
+              />
+              <button
+                type="button"
+                className="absolute right-0 top-0 flex h-full items-center px-3 text-black/45 transition-colors hover:text-black"
+                aria-label={
+                  showSignupPassword ? "Hide password" : "Show password"
+                }
+                onClick={() => setShowSignupPassword((v) => !v)}
+              >
+                <EyeIcon visible={showSignupPassword} />
+              </button>
+            </div>
             <p className="mt-1 text-[11px] text-black/45">
               At least 6 characters.
             </p>
+          </div>
+          <div>
+            <label htmlFor="account-password-confirm-up" className={labelClass}>
+              Confirm password
+            </label>
+            <div className="relative">
+              <input
+                id="account-password-confirm-up"
+                name="confirmPassword"
+                type={showSignupConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                minLength={6}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={signupPasswordInputClass}
+              />
+              <button
+                type="button"
+                className="absolute right-0 top-0 flex h-full items-center px-3 text-black/45 transition-colors hover:text-black"
+                aria-label={
+                  showSignupConfirmPassword
+                    ? "Hide confirm password"
+                    : "Show confirm password"
+                }
+                onClick={() => setShowSignupConfirmPassword((v) => !v)}
+              >
+                <EyeIcon visible={showSignupConfirmPassword} />
+              </button>
+            </div>
           </div>
           {formError ? (
             <p className="text-sm text-[#ff53e3]" role="alert">

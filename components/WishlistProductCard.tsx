@@ -54,7 +54,34 @@ export function WishlistProductCard({ product }: WishlistProductCardProps) {
       </Link>
       <button
         type="button"
-        onClick={() => addToCart({ product, quantity: 1 })}
+        onClick={() => {
+          const v =
+            product.category === "APPAREL"
+              ? product.variants.find((x) => x.size?.toUpperCase() === "M") ??
+                product.variants[0]
+              : product.variants[0];
+          let lineProduct = product;
+          let size: string | undefined;
+          let variantId: string | undefined;
+          if (v) {
+            lineProduct = { ...product, price: v.price };
+            variantId = v.id;
+            if (
+              product.category === "APPAREL" &&
+              v.size &&
+              v.size.toLowerCase() !== "one size" &&
+              v.size !== "—"
+            ) {
+              size = v.size;
+            }
+          }
+          addToCart({
+            product: lineProduct,
+            quantity: 1,
+            size,
+            variantId,
+          });
+        }}
         className="w-full bg-[color:var(--tt-bg-dark)] px-3 py-2.5 text-[10px] font-bold tracking-[0.16em] tt-text-primary uppercase transition-colors hover:tt-text-secondary"
       >
         Add to cart
