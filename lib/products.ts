@@ -2,6 +2,7 @@ import { cache } from "react";
 
 import {
   fetchPrintifyProducts,
+  variantRowIsSellable,
   type PrintifyProduct,
   type PrintifyVariant,
   type PrintifyVariantRow,
@@ -81,6 +82,8 @@ function coerceOptionsArray(raw: unknown): (string | number)[] {
 }
 
 function normalizePrintifyVariant(row: PrintifyVariantRow): PrintifyVariant | null {
+  if (!variantRowIsSellable(row)) return null;
+
   const idNum = typeof row.id === "string" ? Number.parseInt(row.id, 10) : Number(row.id);
   const priceNum = typeof row.price === "number" ? row.price : Number(row.price);
 
@@ -93,13 +96,11 @@ function normalizePrintifyVariant(row: PrintifyVariantRow): PrintifyVariant | nu
     trimmedTitle ||
     (options.length > 0 ? options.map((o) => String(o).trim()).join(" / ") : `Variant ${idNum}`);
 
-  const isAvailable = row.is_available !== false && row.is_enabled !== false;
-
   return {
     id: idNum,
     title: synthesizedTitle,
     options,
-    is_available: isAvailable,
+    is_available: true,
     price: priceNum,
   };
 }
