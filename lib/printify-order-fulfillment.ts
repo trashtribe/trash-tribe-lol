@@ -42,7 +42,8 @@ function splitShippingName(full: string): { first_name: string; last_name: strin
 
 type OrderShippingRow = {
   id: string;
-  user_id: string;
+  user_id: string | null;
+  guest_email?: string | null;
   shipping_name: string | null;
   shipping_address1: string | null;
   shipping_address2: string | null;
@@ -84,6 +85,7 @@ export async function submitPaidOrderToPrintify(
         `
         id,
         user_id,
+        guest_email,
         shipping_name,
         shipping_address1,
         shipping_address2,
@@ -152,21 +154,24 @@ export async function submitPaidOrderToPrintify(
       });
     }
 
-    let email = "";
-    try {
-      const { data: userData, error: userErr } =
-        await admin.auth.admin.getUserById(order.user_id);
-      if (!userErr && userData.user?.email) {
-        email = userData.user.email;
-      } else if (userErr) {
-        console.error("[printify fulfillment] auth.getUserById:", userErr.message);
+    let email = (order.guest_email ?? "").trim();
+    if (!email && order.user_id) {
+      try {
+        const { data: userData, error: userErr } = await admin.auth.admin.getUserById(
+          order.user_id,
+        );
+        if (!userErr && userData.user?.email) {
+          email = userData.user.email;
+        } else if (userErr) {
+          console.error("[printify fulfillment] auth.getUserById:", userErr.message);
+        }
+      } catch (e) {
+        console.error("[printify fulfillment] auth.getUserById threw:", e);
       }
-    } catch (e) {
-      console.error("[printify fulfillment] auth.getUserById threw:", e);
     }
 
     if (!email) {
-      console.warn("[printify fulfillment] No user email; sending empty string to Printify.");
+      console.warn("[printify fulfillment] No customer email; sending empty string to Printify.");
     }
 
     const { first_name, last_name } = splitShippingName(order.shipping_name);

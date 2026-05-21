@@ -79,6 +79,7 @@ export function CheckoutPageClient({
 } = {}) {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
+  // Same AuthProvider as root layout (`app/layout.tsx`) — wraps all routes via `<Providers>`; session is app-wide.
   const { user, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -240,19 +241,15 @@ export function CheckoutPageClient({
     setSubmitAttempted(true);
     if (!validateAll()) return;
 
+    let accessToken: string | undefined;
     const supabase = createBrowserSupabaseClient();
-    if (!supabase) {
-      setPrepareError("Checkout is unavailable (Supabase not configured).");
-      return;
-    }
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session?.access_token) {
-      setPrepareError("Sign in to pay.");
-      return;
+    if (supabase) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        accessToken = session.access_token;
+      }
     }
 
     setPrepareError(null);
@@ -268,23 +265,30 @@ export function CheckoutPageClient({
 
       const shippingName = `${firstName} ${lastName}`.trim();
 
+      const payload: Record<string, unknown> = {
+        amount,
+        currency: "eur",
+        items: lines,
+        shippingMethod,
+        shippingName,
+        shippingAddress1: address1.trim(),
+        shippingAddress2: address2.trim() || undefined,
+        shippingCity: city.trim(),
+        shippingPostalCode: postalCode.trim(),
+        shippingCountry: country,
+        shippingPhone: phone.trim(),
+      };
+
+      if (accessToken) {
+        payload.accessToken = accessToken;
+      } else {
+        payload.guestEmail = email.trim();
+      }
+
       const res = await fetch("/api/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount,
-          currency: "eur",
-          accessToken: session.access_token,
-          items: lines,
-          shippingMethod,
-          shippingName,
-          shippingAddress1: address1.trim(),
-          shippingAddress2: address2.trim() || undefined,
-          shippingCity: city.trim(),
-          shippingPostalCode: postalCode.trim(),
-          shippingCountry: country,
-          shippingPhone: phone.trim(),
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = (await res.json()) as {
@@ -316,6 +320,7 @@ export function CheckoutPageClient({
     postalCode,
     country,
     phone,
+    email,
     onStripeElementsActiveChange,
   ]);
 
@@ -408,6 +413,17 @@ export function CheckoutPageClient({
                   Keep me updated on new drops
                 </span>
               </label>
+              {!authLoading && !user ? (
+                <p className="text-[11px] text-black/50">
+                  <Link
+                    href="/account"
+                    className="underline underline-offset-4 tt-text-secondary transition-opacity hover:opacity-80"
+                  >
+                    Sign in
+                  </Link>{" "}
+                  for faster checkout next time.
+                </p>
+              ) : null}
             </div>
           </section>
 
@@ -730,8 +746,6 @@ function OrderSummaryBlock({
   prepareError,
   onContinueToPayment,
 }: OrderSummaryBlockProps) {
-  const needsSignIn = !authLoading && !user;
-
   return (
     <div className="border border-black/10 bg-white p-6">
       <h2 className="text-sm font-bold tracking-[0.2em] tt-text-on-light uppercase">
@@ -786,24 +800,24 @@ function OrderSummaryBlock({
         <p className="mt-4 text-center text-xs text-[#ff53e3]">{prepareError}</p>
       ) : null}
 
-      {needsSignIn ? (
-        <div className="mt-6 space-y-3 text-center">
-          <p className="text-[11px] text-black/55">
-            Sign in to complete your purchase.
-          </p>
-          <Link
-            href="/account"
-            className="inline-block w-full bg-black py-3.5 text-center text-[11px] font-bold tracking-[0.22em] text-[#b8ff06] uppercase transition-opacity hover:opacity-90"
-          >
-            GO TO ACCOUNT
-          </Link>
-        </div>
-      ) : paymentReady ? (
+      {paymentReady ? (
         <p className="mt-6 text-center text-[11px] text-black/55">
           Enter your card details in the payment section and pay.
         </p>
       ) : (
         <>
+          {!user && !authLoading ? (
+            <p className="mt-6 text-center text-[11px] text-black/50">
+              Checking out as guest.{" "}
+              <Link
+                href="/account"
+                className="underline underline-offset-4 tt-text-secondary transition-opacity hover:opacity-80"
+              >
+                Sign in
+              </Link>{" "}
+              to track your orders.
+            </p>
+          ) : null}
           <button
             type="button"
             onClick={onContinueToPayment}
@@ -811,8 +825,7 @@ function OrderSummaryBlock({
               orderSuccess ||
               items.length === 0 ||
               !isFormValid ||
-              preparingPayment ||
-              authLoading
+              preparingPayment
             }
             className="mt-6 w-full bg-black py-3.5 text-center text-[11px] font-bold tracking-[0.22em] text-[#b8ff06] uppercase transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >

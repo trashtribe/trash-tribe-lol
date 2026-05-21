@@ -38,26 +38,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     let cancelled = false;
+    const subRef: { current: { unsubscribe: () => void } | null } = {
+      current: null,
+    };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!cancelled) {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    });
+    void (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (cancelled) return;
+      setUser(session?.user ?? null);
+      setLoading(false);
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!cancelled) {
-        setUser(session?.user ?? null);
-        setLoading(false);
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+        if (cancelled) return;
+        setUser(nextSession?.user ?? null);
+      });
+
+      if (cancelled) {
+        subscription.unsubscribe();
+        return;
       }
-    });
+      subRef.current = subscription;
+    })();
 
     return () => {
       cancelled = true;
-      subscription.unsubscribe();
+      subRef.current?.unsubscribe();
     };
   }, []);
 

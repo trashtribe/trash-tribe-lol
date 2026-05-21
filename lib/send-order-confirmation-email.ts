@@ -16,7 +16,8 @@ type OrderRow = {
   shipping_phone: string | null;
   shipping_method: string | null;
   created_at: string;
-  user_id: string;
+  user_id: string | null;
+  guest_email: string | null;
 };
 
 type ItemRow = {
@@ -153,7 +154,8 @@ export async function sendOrderConfirmationEmail(
       shipping_phone,
       shipping_method,
       created_at,
-      user_id`,
+      user_id,
+      guest_email`,
     )
     .eq("id", orderId)
     .maybeSingle();
@@ -164,15 +166,28 @@ export async function sendOrderConfirmationEmail(
 
   const o = order as OrderRow;
 
-  const { data: userData, error: userErr } = await admin.auth.admin.getUserById(o.user_id);
-  if (userErr || !userData?.user?.email?.trim()) {
-    return {
-      ok: false,
-      error: userErr?.message ?? "Could not resolve customer email.",
-    };
+  let toEmail = "";
+
+  if (o.user_id) {
+    const { data: userData, error: userErr } =
+      await admin.auth.admin.getUserById(o.user_id);
+    if (!userErr && userData?.user?.email?.trim()) {
+      toEmail = userData.user.email.trim();
+    } else if (userErr) {
+      console.error("[send-order-confirmation] getUserById:", userErr.message);
+    }
   }
 
-  const toEmail = userData.user.email.trim();
+  if (!toEmail && o.guest_email?.trim()) {
+    toEmail = o.guest_email.trim();
+  }
+
+  if (!toEmail) {
+    return {
+      ok: false,
+      error: "Could not resolve customer email for this order.",
+    };
+  }
 
   const { data: itemRows, error: itemsErr } = await admin
     .from("order_items")

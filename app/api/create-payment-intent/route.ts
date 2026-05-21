@@ -6,12 +6,15 @@ import {
   type CheckoutLineInput,
 } from "@/lib/checkout-totals";
 import { getStripe } from "@/lib/stripe-server";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createSupabaseUserClient } from "@/lib/supabase-route";
 
 type Body = {
   amount?: number;
   currency?: string;
   accessToken?: string;
+  /** Required for guest checkout (no accessToken). */
+  guestEmail?: string;
   items?: CheckoutLineInput[];
   shippingMethod?: "standard" | "express";
   shippingName?: string;
@@ -27,6 +30,10 @@ function isNonEmptyString(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0;
 }
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Body;
@@ -34,6 +41,7 @@ export async function POST(request: Request) {
       amount,
       currency = "eur",
       accessToken,
+      guestEmail,
       items,
       shippingMethod = "standard",
       shippingName,
@@ -45,17 +53,34 @@ export async function POST(request: Request) {
       shippingPhone,
     } = body;
 
+    const tokenTrimmed =
+      typeof accessToken === "string" && accessToken.trim() ? accessToken.trim() : "";
+
     if (
       typeof amount !== "number" ||
       amount < 50 ||
-      !accessToken ||
       !Array.isArray(items) ||
       items.length === 0
     ) {
       return NextResponse.json(
-        { error: "Invalid request: amount, accessToken, and items are required." },
+        {
+          error: "Invalid request: amount and items are required.",
+        },
         { status: 400 },
       );
+    }
+
+    if (!tokenTrimmed) {
+      const rawGuest =
+        typeof guestEmail === "string" ? guestEmail.trim() : "";
+      if (!isValidEmail(rawGuest)) {
+        return NextResponse.json(
+          {
+            error: "Guest checkout requires a valid email address.",
+          },
+          { status: 400 },
+        );
+      }
     }
 
     if (
@@ -67,7 +92,10 @@ export async function POST(request: Request) {
       !isNonEmptyString(shippingPhone)
     ) {
       return NextResponse.json(
-        { error: "Invalid request: shipping name, address, city, postal code, country, and phone are required." },
+        {
+          error:
+            "Invalid request: shipping name, address, city, postal code, country, and phone are required.",
+        },
         { status: 400 },
       );
     }
@@ -99,7 +127,10 @@ export async function POST(request: Request) {
     }
 
     if (shippingMethod !== "standard" && shippingMethod !== "express") {
-      return NextResponse.json({ error: "Invalid shipping method." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid shipping method." },
+        { status: 400 },
+      );
     }
 
     const shippingAddress2Trimmed =
@@ -107,20 +138,33 @@ export async function POST(request: Request) {
         ? shippingAddress2.trim()
         : null;
 
-    const supabase = createSupabaseUserClient(accessToken);
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    let resolvedUserId: string | null = null;
+    let resolvedGuestEmail: string | null = null;
+    let receiptEmail: string | undefined;
 
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    if (tokenTrimmed) {
+      const sb = createSupabaseUserClient(tokenTrimmed);
+      const {
+        data: { user },
+        error: userError,
+      } = await sb.auth.getUser();
+
+      if (userError || !user) {
+        return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      }
+
+      resolvedUserId = user.id;
+      resolvedGuestEmail = null;
+      if (user.email?.trim()) {
+        receiptEmail = user.email.trim();
+      }
+    } else {
+      resolvedGuestEmail =
+        typeof guestEmail === "string" ? guestEmail.trim() : "";
+      receiptEmail = resolvedGuestEmail || undefined;
     }
 
-    const { total } = computeCheckoutTotalEur(
-      items,
-      shippingMethod,
-    );
+    const { total } = computeCheckoutTotalEur(items, shippingMethod);
     const expectedCents = eurToStripeCents(total);
 
     if (amount !== expectedCents) {
@@ -130,10 +174,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: order, error: orderError } = await supabase
+    const admin = createSupabaseAdminClient();
+
+    const { data: order, error: orderError } = await admin
       .from("orders")
       .insert({
-        user_id: user.id,
+        user_id: resolvedUserId,
+        guest_email: resolvedGuestEmail,
         status: "pending",
         total,
         shipping_name: shippingName.trim(),
@@ -158,7 +205,7 @@ export async function POST(request: Request) {
 
     const orderId = order.id as string;
 
-    const { error: itemsError } = await supabase.from("order_items").insert(
+    const { error: itemsError } = await admin.from("order_items").insert(
       items.map((line) => ({
         order_id: orderId,
         product_id: line.productId,
@@ -166,7 +213,8 @@ export async function POST(request: Request) {
         price: line.unitPrice,
         printify_variant_id:
           line.printifyVariantId == null ||
-          (typeof line.printifyVariantId === "string" && !line.printifyVariantId.trim())
+          (typeof line.printifyVariantId === "string" &&
+            !line.printifyVariantId.trim())
             ? null
             : String(line.printifyVariantId).trim(),
       })),
@@ -174,7 +222,7 @@ export async function POST(request: Request) {
 
     if (itemsError) {
       console.error("[create-payment-intent] order_items insert:", itemsError);
-      await supabase.from("orders").delete().eq("id", orderId);
+      await admin.from("orders").delete().eq("id", orderId);
       return NextResponse.json(
         { error: "Could not save order lines." },
         { status: 500 },
@@ -182,14 +230,18 @@ export async function POST(request: Request) {
     }
 
     const stripe = getStripe();
+
+    const metadata: Record<string, string> = { order_id: orderId };
+    if (resolvedUserId) {
+      metadata.user_id = resolvedUserId;
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency: currency.toLowerCase(),
       automatic_payment_methods: { enabled: true },
-      metadata: {
-        order_id: orderId,
-        user_id: user.id,
-      },
+      ...(receiptEmail ? { receipt_email: receiptEmail } : {}),
+      metadata,
     });
 
     return NextResponse.json({
