@@ -63,6 +63,10 @@ export async function submitPaidOrderToPrintify(
   admin: SupabaseClient,
   orderId: string,
 ): Promise<void> {
+  if (process.env.PRINTIFY_FULFILLMENT_ENABLED !== "true") {
+    console.log("[Printify] Fulfillment disabled — skipping order submission");
+    return;
+  }
   try {
     const apiKey = process.env.PRINTIFY_API_KEY?.trim();
     const shopId = process.env.PRINTIFY_SHOP_ID?.trim();

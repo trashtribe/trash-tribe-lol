@@ -62,7 +62,7 @@ const nextConfig: NextConfig = {
     ],
   },
   /*
-  // Re-enable before launch: production "coming soon" redirects for non-exempt routes.
+  // DISABLED — shop always visible. Re-enable this block before launch for production "coming-soon".
   async redirects() {
     if (process.env.NODE_ENV !== "production") {
       return [];
