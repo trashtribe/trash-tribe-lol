@@ -71,7 +71,12 @@ function cartSignature(items: CartItem[]) {
   return items.map((i) => `${i.key}:${i.quantity}`).join("|");
 }
 
-export function CheckoutPageClient() {
+export function CheckoutPageClient({
+  onStripeElementsActiveChange,
+}: {
+  /** Enable Stripe Elements only after the customer starts payment (receives a PaymentIntent). */
+  onStripeElementsActiveChange?: (active: boolean) => void;
+} = {}) {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
   const { user, loading: authLoading } = useAuth();
@@ -111,7 +116,8 @@ export function CheckoutPageClient() {
   useEffect(() => {
     setClientSecret(null);
     setPrepareError(null);
-  }, [shippingMethod, cartSig]);
+    onStripeElementsActiveChange?.(false);
+  }, [shippingMethod, cartSig, onStripeElementsActiveChange]);
 
   const displayItems = summarySnapshot ?? items;
   const displaySubtotal = totalsSnapshot?.subtotal ?? subtotal;
@@ -291,6 +297,7 @@ export function CheckoutPageClient() {
         return;
       }
 
+      onStripeElementsActiveChange?.(true);
       setClientSecret(data.clientSecret);
     } catch {
       setPrepareError("Network error. Try again.");
@@ -309,6 +316,7 @@ export function CheckoutPageClient() {
     postalCode,
     country,
     phone,
+    onStripeElementsActiveChange,
   ]);
 
   const handlePaymentSuccess = useCallback(
