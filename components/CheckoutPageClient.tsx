@@ -67,6 +67,7 @@ function cartLinesForApi(items: CartItem[]) {
   }));
 }
 
+export function CheckoutPageClient({
   onStripeElementsActiveChange,
 }: {
   /** Enable Stripe Elements only after the customer starts payment (receives a PaymentIntent). */
