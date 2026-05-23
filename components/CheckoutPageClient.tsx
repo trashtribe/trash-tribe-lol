@@ -238,6 +238,7 @@ export function CheckoutPageClient({
   ]);
 
   const preparePayment = useCallback(async () => {
+    console.log("[DEBUG] preparePayment START");
     console.log(
       "[preparePayment] called, email:",
       email,
