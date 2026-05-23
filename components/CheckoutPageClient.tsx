@@ -821,12 +821,7 @@ function OrderSummaryBlock({
           <button
             type="button"
             onClick={() => {
-              console.log(
-                "[Checkout] button clicked, isFormValid:",
-                isFormValid,
-                "preparingPayment:",
-                preparingPayment,
-              );
+              alert("clicked");
               onContinueToPayment();
             }}
             disabled={
