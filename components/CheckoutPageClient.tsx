@@ -255,20 +255,26 @@ export function CheckoutPageClient({
     if (!validated) return;
 
     let accessToken: string | undefined;
-    const supabase = createBrowserSupabaseClient();
-    if (supabase) {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      console.log(
-        "[preparePayment] session:",
-        session?.access_token ? "found" : "not found",
-      );
-      if (session?.access_token) {
-        accessToken = session.access_token;
+    try {
+      console.log("[preparePayment] getting supabase client...");
+      const supabase = createBrowserSupabaseClient();
+      console.log("[preparePayment] supabase client:", supabase ? "ok" : "null");
+      if (!supabase) {
+        console.log("[preparePayment] no supabase client - proceeding as guest");
+      } else {
+        const { data, error } = await supabase.auth.getSession();
+        console.log(
+          "[preparePayment] session data:",
+          data?.session ? "found" : "not found",
+          "error:",
+          error?.message,
+        );
+        if (data?.session?.access_token) {
+          accessToken = data.session.access_token;
+        }
       }
-    } else {
-      console.log("[preparePayment] session:", "not found");
+    } catch (e) {
+      console.log("[preparePayment] session error:", e);
     }
 
     setPrepareError(null);
