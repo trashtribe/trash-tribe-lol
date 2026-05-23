@@ -238,8 +238,20 @@ export function CheckoutPageClient({
   ]);
 
   const preparePayment = useCallback(async () => {
+    console.log(
+      "[preparePayment] called, email:",
+      email,
+      "firstName:",
+      firstName,
+      "country:",
+      country,
+      "phone:",
+      phone,
+    );
     setSubmitAttempted(true);
-    if (!validateAll()) return;
+    const validated = validateAll();
+    console.log("[preparePayment] validateAll result:", validated);
+    if (!validated) return;
 
     let accessToken: string | undefined;
     const supabase = createBrowserSupabaseClient();
@@ -247,9 +259,15 @@ export function CheckoutPageClient({
       const {
         data: { session },
       } = await supabase.auth.getSession();
+      console.log(
+        "[preparePayment] session:",
+        session?.access_token ? "found" : "not found",
+      );
       if (session?.access_token) {
         accessToken = session.access_token;
       }
+    } else {
+      console.log("[preparePayment] session:", "not found");
     }
 
     setPrepareError(null);
