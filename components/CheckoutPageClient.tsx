@@ -67,11 +67,6 @@ function cartLinesForApi(items: CartItem[]) {
   }));
 }
 
-function cartSignature(items: CartItem[]) {
-  return items.map((i) => `${i.key}:${i.quantity}`).join("|");
-}
-
-export function CheckoutPageClient({
   onStripeElementsActiveChange,
 }: {
   /** Enable Stripe Elements only after the customer starts payment (receives a PaymentIntent). */
@@ -112,13 +107,13 @@ export function CheckoutPageClient({
   const [prepareError, setPrepareError] = useState<string | null>(null);
   const [preparingPayment, setPreparingPayment] = useState(false);
 
-  const cartSig = useMemo(() => cartSignature(items), [items]);
-
+  // Reset payment intent only when checkout inputs that affect totals change—not when cart
+  // identity flickers mid-flow (would clear clientSecret right after preparePayment).
   useEffect(() => {
     setClientSecret(null);
     setPrepareError(null);
     onStripeElementsActiveChange?.(false);
-  }, [shippingMethod, cartSig, onStripeElementsActiveChange]);
+  }, [shippingMethod, onStripeElementsActiveChange]);
 
   useEffect(() => {
     console.log("[Checkout] clientSecret set:", clientSecret?.slice(0, 20));
@@ -332,6 +327,10 @@ export function CheckoutPageClient({
 
       onStripeElementsActiveChange?.(true);
       setClientSecret(data.clientSecret);
+      console.log(
+        "[preparePayment] clientSecret received:",
+        data.clientSecret?.slice(0, 20),
+      );
     } catch {
       setPrepareError("Network error. Try again.");
     } finally {
