@@ -820,7 +820,15 @@ function OrderSummaryBlock({
           ) : null}
           <button
             type="button"
-            onClick={onContinueToPayment}
+            onClick={() => {
+              console.log(
+                "[Checkout] button clicked, isFormValid:",
+                isFormValid,
+                "preparingPayment:",
+                preparingPayment,
+              );
+              onContinueToPayment();
+            }}
             disabled={
               orderSuccess ||
               items.length === 0 ||
