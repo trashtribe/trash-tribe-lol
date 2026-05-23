@@ -120,6 +120,10 @@ export function CheckoutPageClient({
     onStripeElementsActiveChange?.(false);
   }, [shippingMethod, cartSig, onStripeElementsActiveChange]);
 
+  useEffect(() => {
+    console.log("[Checkout] clientSecret set:", clientSecret?.slice(0, 20));
+  }, [clientSecret]);
+
   const displayItems = summarySnapshot ?? items;
   const displaySubtotal = totalsSnapshot?.subtotal ?? subtotal;
   const displayShipping =
