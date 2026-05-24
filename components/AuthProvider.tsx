@@ -18,6 +18,8 @@ type AuthResult = { error?: string };
 
 type AuthContextValue = {
   user: User | null;
+  /** JWT from the current Supabase session, for authenticated API routes. Null if signed out or no client. */
+  accessToken: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signUp: (email: string, password: string) => Promise<AuthResult>;
@@ -28,11 +30,14 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
     if (!supabase) {
+      setUser(null);
+      setAccessToken(null);
       setLoading(false);
       return;
     }
@@ -48,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } = await supabase.auth.getSession();
       if (cancelled) return;
       setUser(session?.user ?? null);
+      setAccessToken(session?.access_token ?? null);
       setLoading(false);
 
       const {
@@ -55,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } = supabase.auth.onAuthStateChange((_event, nextSession) => {
         if (cancelled) return;
         setUser(nextSession?.user ?? null);
+        setAccessToken(nextSession?.access_token ?? null);
       });
 
       if (cancelled) {
@@ -103,12 +110,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      accessToken,
       loading,
       signIn,
       signUp,
       signOut,
     }),
-    [user, loading, signIn, signUp, signOut],
+    [user, accessToken, loading, signIn, signUp, signOut],
   );
 
   return (
