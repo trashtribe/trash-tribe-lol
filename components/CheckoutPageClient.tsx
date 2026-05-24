@@ -238,55 +238,91 @@ export function CheckoutPageClient({
   ]);
 
   const preparePayment = useCallback(async () => {
-    console.log("[DEBUG] preparePayment START");
-    console.log(
-      "[preparePayment] called, email:",
-      email,
-      "firstName:",
-      firstName,
-      "country:",
-      country,
-      "phone:",
-      phone,
-    );
-    setSubmitAttempted(true);
-    const validated = validateAll();
-    console.log("[preparePayment] validateAll result:", validated);
-    if (!validated) return;
-
-    let accessToken: string | undefined;
+    console.log("[preparePayment] step 1: START");
     try {
-      console.log("[preparePayment] getting supabase client...");
-      const supabase = createBrowserSupabaseClient();
-      console.log("[preparePayment] supabase client:", supabase ? "ok" : "null");
-      if (!supabase) {
-        console.log("[preparePayment] no supabase client - proceeding as guest");
-      } else {
-        const { data, error } = await supabase.auth.getSession();
-        console.log(
-          "[preparePayment] session data:",
-          data?.session ? "found" : "not found",
-          "error:",
-          error?.message,
-        );
-        if (data?.session?.access_token) {
-          accessToken = data.session.access_token;
-        }
+      console.log(
+        "[preparePayment] step 2: inputs",
+        "email:",
+        email,
+        "firstName:",
+        firstName,
+        "country:",
+        country,
+        "phone:",
+        phone,
+      );
+      setSubmitAttempted(true);
+
+      console.log("[preparePayment] step 3: calling validateAll()");
+      const validated = validateAll();
+      console.log("[preparePayment] step 4: validateAll result:", validated);
+      if (!validated) {
+        console.log("[preparePayment] early exit: validation failed");
+        return;
       }
-    } catch (e) {
-      console.log("[preparePayment] session error:", e);
-    }
 
-    setPrepareError(null);
-    setPreparingPayment(true);
+      let accessToken: string | undefined;
 
-    try {
+      console.log("[preparePayment] step 5: Supabase session block begin");
+      try {
+        console.log("[preparePayment] step 5a: creating browser Supabase client");
+        const supabase = createBrowserSupabaseClient();
+        console.log("[preparePayment] step 5b: supabase client:", supabase ? "ok" : "null");
+
+        if (!supabase) {
+          console.log(
+            "[preparePayment] step 5c: no supabase client — guest checkout, skipping getSession",
+          );
+        } else {
+          console.log(
+            "[preparePayment] step 5d: about to await supabase.auth.getSession() (if this is the last log, getSession is hanging)",
+          );
+          const { data: sessionData, error: sessionError } =
+            await supabase.auth.getSession();
+          console.log(
+            "[preparePayment] step 5e: getSession resolved",
+            "session:",
+            sessionData?.session ? "found" : "not found",
+            "error:",
+            sessionError?.message ?? "(none)",
+          );
+          if (sessionData?.session?.access_token) {
+            accessToken = sessionData.session.access_token;
+          }
+        }
+      } catch (sessionErr) {
+        console.error("[preparePayment] step 5 ERROR (session block):", sessionErr);
+      }
+      console.log(
+        "[preparePayment] step 6: session block done, accessToken present:",
+        Boolean(accessToken),
+      );
+
+      console.log("[preparePayment] step 7: clear prepare error, preparingPayment=true");
+      setPrepareError(null);
+      setPreparingPayment(true);
+
+      console.log("[preparePayment] step 8: build cart lines for API");
       const lines = cartLinesForApi(items);
+      console.log("[preparePayment] step 9: lines built, count:", lines.length);
+
+      console.log("[preparePayment] step 10: compute totals");
       const { subtotal: st, shipping, total } = computeCheckoutTotalEur(
         lines,
         shippingMethod,
       );
       const amount = eurToStripeCents(total);
+      console.log(
+        "[preparePayment] step 11: totals OK",
+        "subtotal:",
+        st,
+        "shipping:",
+        shipping,
+        "total:",
+        total,
+        "amountCents:",
+        amount,
+      );
 
       const shippingName = `${firstName} ${lastName}`.trim();
 
@@ -310,31 +346,67 @@ export function CheckoutPageClient({
         payload.guestEmail = email.trim();
       }
 
-      const res = await fetch("/api/create-payment-intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      console.log(
+        "[preparePayment] step 12: POST /api/create-payment-intent — payload keys:",
+        Object.keys(payload),
+      );
 
-      const data = (await res.json()) as {
-        clientSecret?: string;
-        error?: string;
-      };
+      let res: Response;
+      try {
+        res = await fetch("/api/create-payment-intent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } catch (fetchErr) {
+        console.error("[preparePayment] step 13 ERROR: fetch threw:", fetchErr);
+        throw fetchErr;
+      }
 
-      if (!res.ok || !data.clientSecret) {
-        setPrepareError(data.error ?? "Could not start payment.");
+      console.log("[preparePayment] step 13: fetch returned, HTTP status:", res.status);
+
+      let apiJson: { clientSecret?: string; error?: string };
+      try {
+        apiJson = (await res.json()) as {
+          clientSecret?: string;
+          error?: string;
+        };
+      } catch (jsonErr) {
+        console.error("[preparePayment] step 14 ERROR: res.json():", jsonErr);
+        setPrepareError("Invalid response from server.");
         return;
       }
 
-      onStripeElementsActiveChange?.(true);
-      setClientSecret(data.clientSecret);
       console.log(
-        "[preparePayment] clientSecret received:",
-        data.clientSecret?.slice(0, 20),
+        "[preparePayment] step 14: JSON parsed, clientSecret present:",
+        Boolean(apiJson.clientSecret),
+        "API error message:",
+        apiJson.error ?? "(none)",
       );
-    } catch {
-      setPrepareError("Network error. Try again.");
+
+      if (!res.ok || !apiJson.clientSecret) {
+        console.log(
+          "[preparePayment] step 15: API rejected or missing clientSecret, not updating state",
+        );
+        setPrepareError(apiJson.error ?? "Could not start payment.");
+        return;
+      }
+
+      console.log("[preparePayment] step 16: success — notifying Stripe Elements + setClientSecret");
+      onStripeElementsActiveChange?.(true);
+      setClientSecret(apiJson.clientSecret);
+      console.log(
+        "[preparePayment] step 17: clientSecret prefix:",
+        apiJson.clientSecret.slice(0, 20),
+      );
+      console.log("[preparePayment] step 18: DONE");
+    } catch (err) {
+      console.error("[preparePayment] FATAL / uncaught error in preparePayment:", err);
+      const message =
+        err instanceof Error ? err.message : String(err);
+      setPrepareError(`Error: ${message}. See console (preparePayment).`);
     } finally {
+      console.log("[preparePayment] finally: preparingPayment=false");
       setPreparingPayment(false);
     }
   }, [
