@@ -4,6 +4,7 @@ import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useState } from "react";
 
 const cardElementOptions = {
+  hidePostalCode: true,
   style: {
     base: {
       color: "#111",
