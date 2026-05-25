@@ -72,11 +72,27 @@ export async function POST(request: Request) {
 
   if (event.type === "payment_intent.succeeded") {
     const pi = event.data.object as import("stripe").Stripe.PaymentIntent;
-    const orderId = pi.metadata?.order_id;
+    const admin = createSupabaseAdminClient();
+
+    let orderId: string =
+      typeof pi.metadata?.order_id === "string" ? pi.metadata.order_id.trim() : "";
+
+    if (!orderId && pi.id) {
+      const { data: row, error: findErr } = await admin
+        .from("orders")
+        .select("id")
+        .eq("stripe_payment_intent_id", pi.id)
+        .maybeSingle();
+
+      if (findErr) {
+        console.error("[stripe webhook] order lookup failed:", findErr);
+      }
+      orderId =
+        typeof row?.id === "string" ? row.id : "";
+    }
 
     if (orderId) {
       try {
-        const admin = createSupabaseAdminClient();
         const { error } = await admin
           .from("orders")
           .update({ status: "paid" })
@@ -91,6 +107,12 @@ export async function POST(request: Request) {
       } catch (e) {
         console.error("[stripe webhook] Supabase admin / Printify error:", e);
       }
+    } else {
+      console.warn(
+        "[stripe webhook] payment_intent.succeeded: could not resolve order (metadata.order_id missing and no row for stripe_payment_intent_id:",
+        pi.id,
+        ")",
+      );
     }
   }
 

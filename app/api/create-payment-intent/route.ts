@@ -244,6 +244,28 @@ export async function POST(request: Request) {
       metadata,
     });
 
+    const { error: piLinkError } = await admin
+      .from("orders")
+      .update({ stripe_payment_intent_id: paymentIntent.id })
+      .eq("id", orderId);
+
+    if (piLinkError) {
+      console.error(
+        "[create-payment-intent] stripe_payment_intent_id update:",
+        piLinkError,
+      );
+      try {
+        await stripe.paymentIntents.cancel(paymentIntent.id);
+      } catch {
+        /* best effort */
+      }
+      await admin.from("orders").delete().eq("id", orderId);
+      return NextResponse.json(
+        { error: "Could not link payment to order." },
+        { status: 500 },
+      );
+    }
+
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
       orderId,
