@@ -133,13 +133,43 @@ export function verifySendOrderConfirmationAuth(request: Request): boolean {
   return secrets.some((s) => s === token);
 }
 
+/** Console / API trace for debugging confirmation email delivery (no secrets). */
+export type OrderConfirmationEmailTrace = {
+  resendApiKeySet: boolean;
+  orderFound: boolean;
+  orderLookupError?: string;
+  recipientEmailResolved: boolean;
+  lineItemsOk: boolean;
+  lineItemsError?: string;
+  resendHttpStatus?: number;
+  resendSuccess?: boolean;
+  /** First ~200 chars of Resend JSON body (success or error). */
+  resendResponsePreview?: string;
+};
+
 export async function sendOrderConfirmationEmail(
   admin: SupabaseClient,
   orderId: string,
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{
+  ok: boolean;
+  error?: string;
+  trace: OrderConfirmationEmailTrace;
+}> {
+  const trace: OrderConfirmationEmailTrace = {
+    resendApiKeySet: false,
+    orderFound: false,
+    recipientEmailResolved: false,
+    lineItemsOk: false,
+  };
+
   const apiKey = process.env.RESEND_API_KEY?.trim();
+  trace.resendApiKeySet = Boolean(apiKey);
   if (!apiKey) {
-    return { ok: false, error: "RESEND_API_KEY is not set." };
+    return {
+      ok: false,
+      error: "RESEND_API_KEY is not set.",
+      trace,
+    };
   }
 
   const { data: order, error: orderErr } = await admin
@@ -161,8 +191,15 @@ export async function sendOrderConfirmationEmail(
     .eq("id", orderId)
     .maybeSingle();
 
+  trace.orderFound = Boolean(order) && !orderErr;
+  trace.orderLookupError = orderErr?.message;
+
   if (orderErr || !order) {
-    return { ok: false, error: orderErr?.message ?? "Order not found." };
+    return {
+      ok: false,
+      error: orderErr?.message ?? "Order not found.",
+      trace,
+    };
   }
 
   const o = order as OrderRow;
@@ -175,7 +212,7 @@ export async function sendOrderConfirmationEmail(
     if (!userErr && userData?.user?.email?.trim()) {
       toEmail = userData.user.email.trim();
     } else if (userErr) {
-      console.error("[send-order-confirmation] getUserById:", userErr.message);
+      console.error("[send-order-confirmation-email] getUserById:", userErr.message);
     }
   }
 
@@ -183,10 +220,13 @@ export async function sendOrderConfirmationEmail(
     toEmail = o.guest_email.trim();
   }
 
+  trace.recipientEmailResolved = Boolean(toEmail);
+
   if (!toEmail) {
     return {
       ok: false,
       error: "Could not resolve customer email for this order.",
+      trace,
     };
   }
 
@@ -195,8 +235,15 @@ export async function sendOrderConfirmationEmail(
     .select("product_id, product_name, quantity, price")
     .eq("order_id", orderId);
 
+  trace.lineItemsOk = Boolean(!itemsErr && itemRows && itemRows.length > 0);
+  trace.lineItemsError = itemsErr?.message;
+
   if (itemsErr || !itemRows?.length) {
-    return { ok: false, error: itemsErr?.message ?? "No order line items." };
+    return {
+      ok: false,
+      error: itemsErr?.message ?? "No order line items.",
+      trace,
+    };
   }
 
   const items = itemRows as ItemRow[];
@@ -246,11 +293,23 @@ export async function sendOrderConfirmationEmail(
     }),
   });
 
+  trace.resendHttpStatus = res.status;
+  const resBodyText = await res.text().catch(() => "");
+  trace.resendResponsePreview = resBodyText.slice(0, 280);
+  trace.resendSuccess = res.ok;
+
   if (!res.ok) {
-    const details = await res.text().catch(() => "");
-    console.error("[send-order-confirmation] Resend error:", res.status, details);
-    return { ok: false, error: "Resend rejected the send." };
+    console.error(
+      "[send-order-confirmation-email] Resend error:",
+      res.status,
+      trace.resendResponsePreview,
+    );
+    return {
+      ok: false,
+      error: "Resend rejected the send.",
+      trace,
+    };
   }
 
-  return { ok: true };
+  return { ok: true, trace };
 }

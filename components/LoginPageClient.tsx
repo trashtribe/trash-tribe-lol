@@ -98,26 +98,9 @@ export function LoginPageClient() {
           />
         </div>
         <div>
-          <div className="flex items-center justify-between gap-2">
-            <label htmlFor="login-password" className={labelClass}>
-              Password
-            </label>
-            <button
-              type="button"
-              onClick={() => {
-                setForgotOpen((open) => {
-                  const next = !open;
-                  if (next) setResetEmail(email.trim());
-                  return next;
-                });
-                setResetError(null);
-                setResetSuccess(false);
-              }}
-              className="text-[11px] underline underline-offset-4 text-black/50 transition-colors hover:text-black/80"
-            >
-              Forgot your password?
-            </button>
-          </div>
+          <label htmlFor="login-password" className={labelClass}>
+            Password
+          </label>
           <input
             id="login-password"
             name="password"
@@ -128,6 +111,23 @@ export function LoginPageClient() {
             onChange={(e) => setPassword(e.target.value)}
             className={inputClass}
           />
+          <p className="mt-3 text-center sm:text-left">
+            <button
+              type="button"
+              className="text-sm font-medium uppercase tracking-[0.12em] text-black underline decoration-black/35 underline-offset-4 transition-colors hover:text-[#ff53e3] hover:decoration-[#ff53e3]/60"
+              onClick={() => {
+                setForgotOpen((open) => {
+                  const next = !open;
+                  if (next) setResetEmail(email.trim());
+                  return next;
+                });
+                setResetError(null);
+                setResetSuccess(false);
+              }}
+            >
+              Forgot your password?
+            </button>
+          </p>
         </div>
 
         {signInError ? (
