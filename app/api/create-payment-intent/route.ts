@@ -124,6 +124,17 @@ export async function POST(request: Request) {
           { status: 400 },
         );
       }
+      if (line.productName !== undefined && line.productName !== null) {
+        if (
+          typeof line.productName !== "string" ||
+          line.productName.trim().length > 500
+        ) {
+          return NextResponse.json(
+            { error: "Invalid product name on line item." },
+            { status: 400 },
+          );
+        }
+      }
     }
 
     if (shippingMethod !== "standard" && shippingMethod !== "express") {
@@ -209,6 +220,10 @@ export async function POST(request: Request) {
       items.map((line) => ({
         order_id: orderId,
         product_id: line.productId,
+        product_name:
+          typeof line.productName === "string" && line.productName.trim()
+            ? line.productName.trim().slice(0, 500)
+            : null,
         quantity: line.quantity,
         price: line.unitPrice,
         printify_variant_id:

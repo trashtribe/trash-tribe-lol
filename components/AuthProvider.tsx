@@ -14,6 +14,9 @@ import {
 import * as auth from "@/lib/auth";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
+/** If `getSession()` never settles (seen with some guest browsers), still finish loading UI. */
+const AUTH_SESSION_BOOTSTRAP_MS = 3500;
+
 type AuthResult = { error?: string };
 
 type AuthContextValue = {
@@ -48,13 +51,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     void (async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      try {
+        const outcome = await Promise.race([
+          supabase.auth.getSession().then((res) => ({
+            tag: "session" as const,
+            res,
+          })),
+          new Promise<{ tag: "timeout" }>((resolve) =>
+            setTimeout(() => resolve({ tag: "timeout" }), AUTH_SESSION_BOOTSTRAP_MS),
+          ),
+        ]);
+
+        if (cancelled) return;
+
+        if (outcome.tag === "timeout") {
+          console.warn(
+            "[AuthProvider] getSession timed out; showing signed-out state until auth fires.",
+          );
+          setUser(null);
+          setAccessToken(null);
+        } else {
+          const {
+            data: { session },
+          } = outcome.res;
+          setUser(session?.user ?? null);
+          setAccessToken(session?.access_token ?? null);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.error("[AuthProvider] getSession error:", err);
+        setUser(null);
+        setAccessToken(null);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+
       if (cancelled) return;
-      setUser(session?.user ?? null);
-      setAccessToken(session?.access_token ?? null);
-      setLoading(false);
 
       const {
         data: { subscription },

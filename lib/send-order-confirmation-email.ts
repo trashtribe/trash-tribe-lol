@@ -22,6 +22,7 @@ type OrderRow = {
 
 type ItemRow = {
   product_id: string;
+  product_name: string | null;
   quantity: number;
   price: number | string;
 };
@@ -191,7 +192,7 @@ export async function sendOrderConfirmationEmail(
 
   const { data: itemRows, error: itemsErr } = await admin
     .from("order_items")
-    .select("product_id, quantity, price")
+    .select("product_id, product_name, quantity, price")
     .eq("order_id", orderId);
 
   if (itemsErr || !itemRows?.length) {
@@ -205,7 +206,11 @@ export async function sendOrderConfirmationEmail(
     const safeUnit = Number.isFinite(unit) ? unit : 0;
     const safeQty = Number.isFinite(qty) && qty > 0 ? qty : 0;
     const lineTotalFmt = formatEuro(safeUnit * safeQty);
-    const title = `${row.product_id} × ${safeQty}`;
+    const displayName =
+      typeof row.product_name === "string" && row.product_name.trim()
+        ? row.product_name.trim()
+        : row.product_id;
+    const title = `${displayName} × ${safeQty}`;
     return { title, lineTotal: lineTotalFmt };
   });
 
@@ -234,7 +239,7 @@ export async function sendOrderConfirmationEmail(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "noreply@trashtribe.lol",
+      from: "Trash Tribe <noreply@trashtribe.lol>",
       to: [toEmail],
       subject: "Your Trash Tribe order is confirmed",
       html,

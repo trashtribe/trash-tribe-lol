@@ -258,6 +258,10 @@ export function AccountPageClient() {
       <h1 className="text-center text-2xl font-bold tracking-[0.16em] tt-text-on-light uppercase sm:text-3xl">
         Account
       </h1>
+      <p className="mt-5 text-center text-sm text-black/55">
+        You&apos;re not signed in yet. Sign in below to view your orders and checkout
+        faster next time — or bookmark <span className="font-medium">/login</span>.
+      </p>
 
       <div
         className="mt-8 flex border-b border-black/15"
