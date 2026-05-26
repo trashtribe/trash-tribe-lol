@@ -185,6 +185,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Single service-role client for all DB writes here — bypasses RLS (required for guest orders).
     const admin = createSupabaseAdminClient();
 
     const { data: order, error: orderError } = await admin
@@ -216,24 +217,49 @@ export async function POST(request: Request) {
 
     const orderId = order.id as string;
 
-    const { error: itemsError } = await admin.from("order_items").insert(
-      items.map((line) => ({
-        order_id: orderId,
-        product_id: line.productId,
-        product_name:
-          typeof line.productName === "string" && line.productName.trim()
-            ? line.productName.trim().slice(0, 500)
-            : null,
-        quantity: line.quantity,
-        price: line.unitPrice,
-        printify_variant_id:
-          line.printifyVariantId == null ||
-          (typeof line.printifyVariantId === "string" &&
-            !line.printifyVariantId.trim())
-            ? null
-            : String(line.printifyVariantId).trim(),
-      })),
-    );
+    const printifyCol = (line: (typeof items)[number]) =>
+      line.printifyVariantId == null ||
+      (typeof line.printifyVariantId === "string" &&
+        !line.printifyVariantId.trim())
+        ? null
+        : String(line.printifyVariantId).trim();
+
+    const orderItemRows = (includeProductName: boolean) =>
+      items.map((line) => {
+        const row: Record<string, unknown> = {
+          order_id: orderId,
+          product_id: line.productId,
+          quantity: line.quantity,
+          price: line.unitPrice,
+          printify_variant_id: printifyCol(line),
+        };
+        if (includeProductName) {
+          row.product_name =
+            typeof line.productName === "string" && line.productName.trim()
+              ? line.productName.trim().slice(0, 500)
+              : null;
+        }
+        return row;
+      });
+
+    let itemsError = (
+      await admin.from("order_items").insert(orderItemRows(true))
+    ).error;
+
+    // Older DBs without migration 005 (`product_name`) fail the insert; retry without it.
+    const msg = itemsError?.message ?? "";
+    if (
+      itemsError &&
+      /product_name|schema cache|does not exist|Could not find/i.test(msg)
+    ) {
+      console.warn(
+        "[create-payment-intent] order_items with product_name failed; retrying without column:",
+        msg,
+      );
+      itemsError = (
+        await admin.from("order_items").insert(orderItemRows(false))
+      ).error;
+    }
 
     if (itemsError) {
       console.error("[create-payment-intent] order_items insert:", itemsError);

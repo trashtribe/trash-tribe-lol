@@ -2,20 +2,20 @@ import type { Metadata } from "next";
 
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
-import { LoginPageClient } from "@/components/LoginPageClient";
+import { ResetPasswordPageClient } from "@/components/ResetPasswordPageClient";
 
 export const metadata: Metadata = {
-  title: "Sign in",
-  description: "Sign in to your Trash Tribe account.",
-  alternates: { canonical: "/login" },
+  title: "Reset password",
+  description: "Set a new password for your Trash Tribe account.",
+  alternates: { canonical: "/reset-password" },
 };
 
-export default function LoginPage() {
+export default function ResetPasswordPage() {
   return (
     <>
       <Header />
       <main className="flex min-h-0 flex-1 flex-col bg-background">
-        <LoginPageClient />
+        <ResetPasswordPageClient />
       </main>
       <Footer />
     </>

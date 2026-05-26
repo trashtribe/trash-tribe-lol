@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 
+import { passwordResetRedirectTo } from "@/lib/password-reset-redirect";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 function requireSupabase() {
@@ -25,6 +26,12 @@ export async function signIn(email: string, password: string) {
 export async function signOut() {
   const supabase = requireSupabase();
   return supabase.auth.signOut();
+}
+
+export async function sendPasswordResetEmail(email: string) {
+  const supabase = requireSupabase();
+  const redirectTo = passwordResetRedirectTo();
+  return supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
 }
 
 /** Current user from the session (client-only; returns null if not configured or signed out). */
