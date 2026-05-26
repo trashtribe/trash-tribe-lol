@@ -1,10 +1,13 @@
 "use client";
 
+import type { StripeCardElementOptions } from "@stripe/stripe-js";
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useState } from "react";
 
-const cardElementOptions = {
+const cardElementOptions: StripeCardElementOptions = {
   hidePostalCode: true,
+  /** Hide “Save with Link” / Link button in Card Element — see Stripe Card Element docs. */
+  disableLink: true,
   style: {
     base: {
       color: "#111",
