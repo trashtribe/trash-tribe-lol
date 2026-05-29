@@ -28,6 +28,13 @@ export function LoginPageClient() {
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
 
+  const openForgot = () => {
+    setForgotOpen(true);
+    setResetEmail(email.trim());
+    setResetError(null);
+    setResetSuccess(false);
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setSignInError(null);
@@ -111,23 +118,6 @@ export function LoginPageClient() {
             onChange={(e) => setPassword(e.target.value)}
             className={inputClass}
           />
-          <p className="mt-3 text-center sm:text-left">
-            <button
-              type="button"
-              className="text-sm font-medium uppercase tracking-[0.12em] text-black underline decoration-black/35 underline-offset-4 transition-colors hover:text-[#ff53e3] hover:decoration-[#ff53e3]/60"
-              onClick={() => {
-                setForgotOpen((open) => {
-                  const next = !open;
-                  if (next) setResetEmail(email.trim());
-                  return next;
-                });
-                setResetError(null);
-                setResetSuccess(false);
-              }}
-            >
-              Forgot your password?
-            </button>
-          </p>
         </div>
 
         {signInError ? (
@@ -145,14 +135,32 @@ export function LoginPageClient() {
         </button>
       </form>
 
+      {/* Always visible — not gated by forgotOpen */}
+      <p className="mt-4 text-center">
+        <button
+          type="button"
+          id="forgot-password-trigger"
+          onClick={openForgot}
+          className="cursor-pointer border-0 bg-transparent p-0 text-sm font-normal text-[#ff53e3] underline underline-offset-4 hover:opacity-80"
+        >
+          Forgot your password?
+        </button>
+      </p>
+
       {forgotOpen ? (
-        <div className="mt-10 border border-black/10 bg-white p-5">
-          <h2 className="text-[11px] font-bold tracking-[0.14em] text-black uppercase">
+        <section
+          className="mt-8 border border-black/15 bg-white p-5"
+          aria-labelledby="reset-password-heading"
+        >
+          <h2
+            id="reset-password-heading"
+            className="text-[11px] font-bold tracking-[0.14em] text-black uppercase"
+          >
             Reset password
           </h2>
           <p className="mt-2 text-sm text-black/55">
-            We&apos;ll send a link to reset your password. Open it on this
-            device to choose a new password.
+            Enter your email and we&apos;ll send you a link to set a new
+            password.
           </p>
           <form onSubmit={handleSendReset} className="mt-5 space-y-4">
             <div>
@@ -176,9 +184,9 @@ export function LoginPageClient() {
               </p>
             ) : null}
             {resetSuccess ? (
-              <p className="text-sm tt-text-on-light" role="status">
-                Check your inbox for a reset link from Trash Tribe /
-                Supabase. It may take a minute to arrive.
+              <p className="text-sm text-black/70" role="status">
+                Check your inbox for a reset link. It may take a minute to
+                arrive.
               </p>
             ) : null}
             <button
@@ -189,7 +197,7 @@ export function LoginPageClient() {
               {resetPending ? "Sending…" : "Send reset email"}
             </button>
           </form>
-        </div>
+        </section>
       ) : null}
 
       <p className="mt-10 text-center text-[11px] text-black/40">
