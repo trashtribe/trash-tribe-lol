@@ -399,7 +399,7 @@ export function CheckoutPageClient({
               {!authLoading && !user ? (
                 <p className="text-[11px] text-black/50">
                   <Link
-                    href="/account"
+                    href="/login"
                     className="underline underline-offset-4 tt-text-secondary transition-opacity hover:opacity-80"
                   >
                     Sign in
@@ -793,7 +793,7 @@ function OrderSummaryBlock({
             <p className="mt-6 text-center text-[11px] text-black/50">
               Checking out as guest.{" "}
               <Link
-                href="/account"
+                href="/login"
                 className="underline underline-offset-4 tt-text-secondary transition-opacity hover:opacity-80"
               >
                 Sign in

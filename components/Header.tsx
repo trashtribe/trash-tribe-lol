@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "@/components/AuthProvider";
 import { useCart } from "./CartProvider";
 import { useSearchModal } from "./SearchModalContext";
 import { useWishlist } from "./WishlistProvider";
@@ -50,9 +51,12 @@ function CartIcon() {
 }
 
 export function Header() {
+  const { user } = useAuth();
   const { itemCount, openCart } = useCart();
   const { openSearch } = useSearchModal();
   const { count: wishlistCount } = useWishlist();
+
+  const accountHref = user ? "/account" : "/login";
 
   return (
     <header className="sticky top-0 z-[100] border-b tt-border-light bg-background">
@@ -83,9 +87,9 @@ export function Header() {
 
         <div className="flex items-center justify-end gap-1 sm:gap-3">
           <Link
-            href="/account"
+            href={accountHref}
             className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
-            aria-label="Account"
+            aria-label={user ? "Account" : "Sign in"}
           >
             <AccountIcon />
           </Link>
