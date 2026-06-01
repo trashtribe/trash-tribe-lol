@@ -1,10 +1,7 @@
-/*
 import fs from "fs";
 import path from "path";
-*/
 import type { NextConfig } from "next";
 
-/*
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -29,7 +26,6 @@ function listPublicUrlPaths(publicDir: string): string[] {
   }
   return out;
 }
-*/
 
 const nextConfig: NextConfig = {
   images: {
@@ -61,8 +57,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  /*
-  // DISABLED — shop always visible. Re-enable this block before launch for production "coming-soon".
+  // Production: gate the storefront behind /coming-soon (dev/preview unchanged).
   async redirects() {
     if (process.env.NODE_ENV !== "production") {
       return [];
@@ -71,7 +66,7 @@ const nextConfig: NextConfig = {
     const destination = "/coming-soon";
     const publicPaths = listPublicUrlPaths(path.join(process.cwd(), "public"));
     const publicAlt = publicPaths.map(escapeRegex).join("|");
-    const notPublicOrSystem = `(?!coming-soon$|coming-soon/|contact(?:/|$)|account(?:/|$)|checkout(?:/|$)|order-confirmation(?:/|$)|api(?:/|$)|_next/|_next$|(?:${publicAlt})$)`;
+    const notPublicOrSystem = `(?!coming-soon$|coming-soon/|contact(?:/|$)|login(?:/|$)|reset-password(?:/|$)|account(?:/|$)|checkout(?:/|$)|order-confirmation(?:/|$)|api(?:/|$)|_next/|_next$|(?:${publicAlt})$)`;
 
     return [
       { source: "/", destination, permanent: false },
@@ -86,7 +81,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  */
 };
 
 export default nextConfig;
