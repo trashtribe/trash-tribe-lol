@@ -88,11 +88,16 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const [ids, setIds] = useState<string[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const idsRef = useRef<string[]>([]);
-  idsRef.current = ids;
 
   useEffect(() => {
-    setIds(readStoredIds());
-    setHydrated(true);
+    idsRef.current = ids;
+  }, [ids]);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setIds(readStoredIds());
+      setHydrated(true);
+    });
   }, []);
 
   useEffect(() => {

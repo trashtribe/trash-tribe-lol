@@ -33,7 +33,7 @@ export function SearchModal() {
 
   useEffect(() => {
     if (!isOpen) {
-      setQuery("");
+      queueMicrotask(() => setQuery(""));
       return;
     }
     const t = requestAnimationFrame(() => inputRef.current?.focus());

@@ -51,15 +51,19 @@ export function AccountPageClient() {
 
   useEffect(() => {
     if (!user) {
-      setOrders([]);
-      setOrdersLoading(false);
+      queueMicrotask(() => {
+        setOrders([]);
+        setOrdersLoading(false);
+      });
       return;
     }
 
     const supabase = createBrowserSupabaseClient();
     if (!supabase) {
-      setOrders([]);
-      setOrdersLoading(false);
+      queueMicrotask(() => {
+        setOrders([]);
+        setOrdersLoading(false);
+      });
       return;
     }
 
@@ -85,6 +89,9 @@ export function AccountPageClient() {
     return () => {
       cancelled = true;
     };
+    // Depend on the id, not the `user` object — a new object reference from
+    // AuthProvider on every render would otherwise refetch orders needlessly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   if (loading || !user) {
