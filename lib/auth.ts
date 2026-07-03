@@ -71,11 +71,6 @@ export async function sendPasswordResetEmail(
   const redirectTo = passwordResetRedirectTo();
   const trimmedEmail = email.trim();
 
-  console.log("[auth] resetPasswordForEmail request:", {
-    email: trimmedEmail,
-    redirectTo,
-  });
-
   const { data, error } = await supabase.auth.resetPasswordForEmail(
     trimmedEmail,
     { redirectTo },
@@ -92,12 +87,6 @@ export async function sendPasswordResetEmail(
     });
     return { data: null, redirectTo, error: details };
   }
-
-  console.log("[auth] resetPasswordForEmail OK:", {
-    email: trimmedEmail,
-    redirectTo,
-    data,
-  });
 
   return { data, redirectTo, error: null };
 }
