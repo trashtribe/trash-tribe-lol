@@ -90,20 +90,23 @@ export function LoginPageClient() {
 
     try {
       setResetPending(true);
-      const { error } = await sendPasswordResetEmail(resetEmail.trim());
+      const result = await sendPasswordResetEmail(resetEmail.trim());
       setResetPending(false);
 
-      if (error) {
-        setResetError(error.message);
+      if (result.error) {
+        setResetError(
+          `${result.error.displayMessage} — redirect: ${result.redirectTo}`,
+        );
         return;
       }
 
       setResetSuccess(true);
     } catch (err) {
       setResetPending(false);
-      setResetError(
-        err instanceof Error ? err.message : "Could not send reset email.",
-      );
+      const msg =
+        err instanceof Error ? err.message : "Could not send reset email.";
+      console.error("[LoginPageClient] sendPasswordResetEmail threw:", err);
+      setResetError(msg);
     }
   };
 
@@ -262,9 +265,17 @@ export function LoginPageClient() {
                   />
                 </div>
                 {resetError ? (
-                  <p className="text-sm text-[#ff53e3]" role="alert">
-                    {resetError}
-                  </p>
+                  <div
+                    className="rounded border border-[#ff53e3]/30 bg-[color:color-mix(in_srgb,var(--tt-soft-pink)_12%,white)] px-3 py-2.5 text-sm text-[#ff53e3]"
+                    role="alert"
+                  >
+                    <p className="font-bold tracking-[0.06em] uppercase text-[11px]">
+                      Could not send reset email
+                    </p>
+                    <p className="mt-1.5 break-words text-xs leading-relaxed">
+                      {resetError}
+                    </p>
+                  </div>
                 ) : null}
                 {resetSuccess ? (
                   <p className="text-sm text-black/70" role="status">
