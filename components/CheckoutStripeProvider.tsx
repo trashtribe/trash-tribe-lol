@@ -3,7 +3,6 @@
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import type { ReactNode } from "react";
-import { useEffect } from "react";
 
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
@@ -20,15 +19,6 @@ export function CheckoutStripeProvider({
   active: boolean;
   children: ReactNode;
 }) {
-  useEffect(() => {
-    console.log(
-      "[CheckoutStripeProvider] active:",
-      active,
-      "stripeConfigured:",
-      !!stripePromise,
-    );
-  }, [active]);
-
   if (!stripePromise) {
     return (
       <>

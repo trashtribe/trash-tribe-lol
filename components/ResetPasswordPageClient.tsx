@@ -27,8 +27,10 @@ export function ResetPasswordPageClient() {
   useEffect(() => {
     const sb = createBrowserSupabaseClient();
     if (!sb) {
-      setChecking(false);
-      setBlockedReason("Sign-in is not configured on this deployment.");
+      queueMicrotask(() => {
+        setChecking(false);
+        setBlockedReason("Sign-in is not configured on this deployment.");
+      });
       return;
     }
 

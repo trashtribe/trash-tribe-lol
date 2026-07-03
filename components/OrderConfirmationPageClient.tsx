@@ -14,7 +14,7 @@ export function OrderConfirmationPageClient() {
   );
 
   useEffect(() => {
-    setOrder(loadCompletedOrder());
+    queueMicrotask(() => setOrder(loadCompletedOrder()));
   }, []);
 
   if (order === undefined) {

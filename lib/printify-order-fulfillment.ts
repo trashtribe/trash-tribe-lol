@@ -65,7 +65,6 @@ export async function submitPaidOrderToPrintify(
   orderId: string,
 ): Promise<void> {
   if (process.env.PRINTIFY_FULFILLMENT_ENABLED !== "true") {
-    console.log("[Printify] Fulfillment disabled — skipping order submission");
     return;
   }
   try {
@@ -217,8 +216,6 @@ export async function submitPaidOrderToPrintify(
       );
       return;
     }
-
-    console.log("[printify fulfillment] Printify order accepted:", orderId);
   } catch (e) {
     console.error("[printify fulfillment] Unexpected error:", e);
   }

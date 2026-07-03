@@ -166,7 +166,6 @@ export function CheckoutPageClient({
     postalCode,
     country,
     phone,
-    shippingMethod,
     touched,
     submitAttempted,
   ]);
