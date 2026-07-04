@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/AuthProvider";
 import { Providers } from "@/components/Providers";
-import { getProducts } from "@/lib/products";
 import { Space_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -44,20 +43,26 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+// Deliberately NOT async / no data fetching here. Any dynamic fetch directly
+// in the root layout forces the whole app into dynamic rendering, which made
+// Next re-fetch/re-render this layout on every navigation — remounting
+// AuthProvider/CartProvider/WishlistProvider and resetting their state (lost
+// session on navigating away from /account, wishlist items reappearing from
+// a stale local snapshot). Anything that needs live product data fetches it
+// itself (leaf pages call getProducts() directly; SearchModal calls
+// /api/products on demand).
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const products = await getProducts();
-
   return (
     <html lang="en" className={`${spaceMono.variable} h-full antialiased`}>
       <body
         className={`${spaceMono.className} flex min-h-full flex-col bg-background text-foreground`}
       >
         <AuthProvider>
-          <Providers products={products}>{children}</Providers>
+          <Providers>{children}</Providers>
         </AuthProvider>
       </body>
     </html>

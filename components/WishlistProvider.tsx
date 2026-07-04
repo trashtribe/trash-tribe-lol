@@ -119,16 +119,20 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
 
     let cancelled = false;
 
+    const loadServerIds = async (userId: string) => {
+      const serverIds = await fetchWishlistProductIds(userId);
+      if (cancelled || !serverIds) return;
+      setIds(serverIds);
+      persistLocal(serverIds);
+    };
+
     const syncForUser = async (userId: string) => {
       const local =
         idsRef.current.length > 0 ? idsRef.current : readStoredIds();
       if (local.length > 0) {
         await mergeLocalIntoSupabase(userId, local);
       }
-      const serverIds = await fetchWishlistProductIds(userId);
-      if (cancelled || !serverIds) return;
-      setIds(serverIds);
-      persistLocal(serverIds);
+      await loadServerIds(userId);
     };
 
     const {
@@ -136,11 +140,18 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (cancelled) return;
 
-      if (
-        session?.user &&
-        (event === "INITIAL_SESSION" || event === "SIGNED_IN")
-      ) {
+      // SIGNED_IN = an actual login action: merge whatever was wishlisted
+      // locally as a guest into the account. INITIAL_SESSION just restores
+      // an already-signed-in session (fires on every page load) — it must
+      // NOT re-push local/sessionStorage state, or a stale local snapshot
+      // can resurrect items the user already removed from their account.
+      if (session?.user && event === "SIGNED_IN") {
         await syncForUser(session.user.id);
+        return;
+      }
+
+      if (session?.user && event === "INITIAL_SESSION") {
+        await loadServerIds(session.user.id);
         return;
       }
 

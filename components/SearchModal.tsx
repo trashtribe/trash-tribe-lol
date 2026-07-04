@@ -21,9 +21,11 @@ function matchesQuery(product: StoreProduct, q: string) {
   return hay.includes(needle);
 }
 
-export function SearchModal({ products }: { products: StoreProduct[] }) {
+export function SearchModal() {
   const { isOpen, closeSearch } = useSearchModal();
   const [query, setQuery] = useState("");
+  const [products, setProducts] = useState<StoreProduct[]>([]);
+  const [productsLoaded, setProductsLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const filtered = useMemo(() => {
@@ -31,6 +33,30 @@ export function SearchModal({ products }: { products: StoreProduct[] }) {
     if (!q) return [];
     return products.filter((p) => matchesQuery(p, q));
   }, [query, products]);
+
+  // Fetched on demand instead of passed down from the root layout — keeps
+  // the layout static so navigating between pages doesn't remount the
+  // cart/wishlist/auth providers (see /api/products for why).
+  useEffect(() => {
+    if (!isOpen || productsLoaded) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/products");
+        const data = (await res.json()) as { products?: StoreProduct[] };
+        if (cancelled) return;
+        queueMicrotask(() => {
+          setProducts(data.products ?? []);
+          setProductsLoaded(true);
+        });
+      } catch {
+        // Leave products empty; the modal still works, just shows no results.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, productsLoaded]);
 
   useEffect(() => {
     if (!isOpen) {
