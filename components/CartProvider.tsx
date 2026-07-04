@@ -1,8 +1,18 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import type { StoreProduct } from "@/lib/products";
+
+const CART_STORAGE_KEY = "tt-cart-v1";
 
 export type CartItem = {
   key: string;
@@ -55,6 +65,38 @@ function buildKey(productId: string, variantId?: number, fallbackLabel?: string)
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const hydratedRef = useRef(false);
+
+  // Load any cart saved from a previous visit. Runs once after mount (client
+  // only), so the server-rendered empty cart never mismatches during hydration.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as unknown;
+        if (Array.isArray(parsed)) {
+          queueMicrotask(() => setItems(parsed as CartItem[]));
+        }
+      }
+    } catch {
+      // Corrupt or inaccessible storage (e.g. private browsing) — start empty.
+    } finally {
+      queueMicrotask(() => {
+        hydratedRef.current = true;
+      });
+    }
+  }, []);
+
+  // Persist on every change, but only once the load above has run — otherwise
+  // this fires first (with the initial empty array) and wipes a saved cart.
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    try {
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // Quota exceeded or storage disabled — non-fatal, cart still works in-memory.
+    }
+  }, [items]);
 
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
