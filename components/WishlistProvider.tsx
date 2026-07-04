@@ -66,21 +66,25 @@ async function fetchWishlistProductIds(
     return null;
   }
 
-  return (data ?? []).map((row) => row.product_id as string);
+  // Dedupe defensively: pre-existing duplicate rows (from before the unique
+  // index was added) shouldn't surface as repeated cards in the UI.
+  return Array.from(new Set((data ?? []).map((row) => row.product_id as string)));
 }
 
 async function mergeLocalIntoSupabase(userId: string, localIds: string[]) {
   const supabase = createBrowserSupabaseClient();
   if (!supabase || localIds.length === 0) return;
 
-  for (const product_id of localIds) {
-    const { error } = await supabase.from("wishlist").insert({
-      user_id: userId,
-      product_id,
-    });
-    if (error && error.code !== "23505") {
-      console.error("[wishlist] merge failed:", error.message);
-    }
+  const uniqueIds = Array.from(new Set(localIds));
+
+  const { error } = await supabase
+    .from("wishlist")
+    .upsert(
+      uniqueIds.map((product_id) => ({ user_id: userId, product_id })),
+      { onConflict: "user_id,product_id", ignoreDuplicates: true },
+    );
+  if (error) {
+    console.error("[wishlist] merge failed:", error.message);
   }
 }
 
@@ -173,11 +177,13 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
           console.error("[wishlist] delete failed:", error.message);
         }
       } else {
-        const { error } = await supabase.from("wishlist").insert({
-          user_id: uid,
-          product_id: productId,
-        });
-        if (error && error.code !== "23505") {
+        const { error } = await supabase
+          .from("wishlist")
+          .upsert(
+            { user_id: uid, product_id: productId },
+            { onConflict: "user_id,product_id", ignoreDuplicates: true },
+          );
+        if (error) {
           console.error("[wishlist] insert failed:", error.message);
         }
       }
