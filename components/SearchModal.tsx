@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { products } from "./product-data";
+import type { StoreProduct } from "@/lib/products";
+
 import { ShopProductCard } from "./ShopProductCard";
 import { useSearchModal } from "./SearchModalContext";
 
-function matchesQuery(product: (typeof products)[number], q: string) {
+function matchesQuery(product: StoreProduct, q: string) {
   const needle = q.trim().toLowerCase();
   if (!needle) return false;
   const hay = [
@@ -20,7 +21,7 @@ function matchesQuery(product: (typeof products)[number], q: string) {
   return hay.includes(needle);
 }
 
-export function SearchModal() {
+export function SearchModal({ products }: { products: StoreProduct[] }) {
   const { isOpen, closeSearch } = useSearchModal();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -29,7 +30,7 @@ export function SearchModal() {
     const q = query.trim();
     if (!q) return [];
     return products.filter((p) => matchesQuery(p, q));
-  }, [query]);
+  }, [query, products]);
 
   useEffect(() => {
     if (!isOpen) {

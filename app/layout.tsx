@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/AuthProvider";
 import { Providers } from "@/components/Providers";
+import { getProducts } from "@/lib/products";
 import { Space_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -43,18 +44,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const products = await getProducts();
+
   return (
     <html lang="en" className={`${spaceMono.variable} h-full antialiased`}>
       <body
         className={`${spaceMono.className} flex min-h-full flex-col bg-background text-foreground`}
       >
         <AuthProvider>
-          <Providers>{children}</Providers>
+          <Providers products={products}>{children}</Providers>
         </AuthProvider>
       </body>
     </html>
