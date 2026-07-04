@@ -75,12 +75,17 @@ function requirePrintifyConfig(): { shopId: string; apiKey: string } {
 
 const PRINTIFY_API_BASE = "https://api.printify.com/v1";
 
+/** Tag used to invalidate the product list on demand — see /api/printify-webhook. */
+export const PRINTIFY_PRODUCTS_TAG = "printify-products";
+
 export async function fetchPrintifyProducts(): Promise<PrintifyProduct[]> {
   const { shopId, apiKey } = requirePrintifyConfig();
   const url = `${PRINTIFY_API_BASE}/shops/${shopId}/products.json?limit=24`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${apiKey}` },
-    next: { revalidate: 3600 },
+    // Falls back to this time-based refresh even if the webhook below never
+    // fires (e.g. not yet registered, or Printify retries exhausted).
+    next: { revalidate: 300, tags: [PRINTIFY_PRODUCTS_TAG] },
   });
 
   if (!res.ok) {
