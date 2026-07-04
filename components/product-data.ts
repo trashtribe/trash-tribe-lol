@@ -3,7 +3,7 @@ import type { StoreProduct } from "@/lib/products";
 
 export type Product = StoreProduct;
 
-type ProductSeed = Omit<StoreProduct, "slug" | "price" | "originalPrice">;
+type ProductSeed = Omit<StoreProduct, "slug" | "price" | "originalPrice" | "images">;
 
 function slugify(value: string) {
   return value
@@ -263,5 +263,8 @@ export const products: StoreProduct[] = productSeeds.map((product) => {
   const max = Math.max(...prices);
   const price = formatEuro(min / 100);
   const originalPrice = max > min ? formatEuro(max / 100) : price;
-  return { ...product, slug, price, originalPrice };
+  // This mock catalog has no per-variant image data — every image applies to
+  // every variant, matching the old (pre-variant-aware) gallery behaviour.
+  const images = product.galleryImages.map((src) => ({ src, variantIds: [] }));
+  return { ...product, slug, price, originalPrice, images };
 });

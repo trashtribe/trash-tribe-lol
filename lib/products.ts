@@ -18,6 +18,12 @@ export type StoreProductVariant = {
   price: number;
 };
 
+/** A product image tagged with the Printify variant ids it applies to (empty = applies to all). */
+export type StoreProductImage = {
+  src: string;
+  variantIds: number[];
+};
+
 export type StoreProduct = {
   id: string;
   slug: string;
@@ -29,6 +35,9 @@ export type StoreProduct = {
   imageSrc: string;
   imageAlt: string;
   galleryImages: string[];
+  /** Same images as galleryImages, but with each one's Printify variant_ids preserved
+   * so the product page can show the right shots when a color is selected. */
+  images: StoreProductImage[];
   category: StoreCategory;
   variants: StoreProductVariant[];
   /** Optional merchandising label (seed catalog / future providers). */
@@ -147,6 +156,36 @@ function galleryFromProduct(p: PrintifyProduct): string[] {
     unique.push(src);
   }
   return unique;
+}
+
+/**
+ * Same source images as `galleryFromProduct`, but keeping each image's
+ * Printify `variant_ids` so the product page can show only the shots that
+ * belong to the selected color instead of the full mixed gallery.
+ */
+function imagesFromProduct(p: PrintifyProduct): StoreProductImage[] {
+  const variantIdsBySrc = new Map<string, Set<number>>();
+  const order: string[] = [];
+
+  for (const img of p.images ?? []) {
+    const src = img.src?.trim();
+    if (!src) continue;
+    if (!variantIdsBySrc.has(src)) {
+      variantIdsBySrc.set(src, new Set());
+      order.push(src);
+    }
+    const ids = Array.isArray(img.variant_ids) ? img.variant_ids : [];
+    for (const id of ids) {
+      if (typeof id === "number" && Number.isFinite(id)) {
+        variantIdsBySrc.get(src)!.add(id);
+      }
+    }
+  }
+
+  return order.map((src) => ({
+    src,
+    variantIds: [...(variantIdsBySrc.get(src) ?? [])],
+  }));
 }
 
 /**
@@ -309,6 +348,7 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
 
   const galleryImages = galleryFromProduct(p);
   const imageSrc = galleryImages[0] ?? "/globe.svg";
+  const images = imagesFromProduct(p);
 
   return {
     id,
@@ -320,6 +360,7 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
     imageSrc,
     imageAlt,
     galleryImages: galleryImages.length > 0 ? galleryImages : [imageSrc],
+    images: images.length > 0 ? images : [{ src: imageSrc, variantIds: [] }],
     category: inferCategory(p),
     variants,
   };

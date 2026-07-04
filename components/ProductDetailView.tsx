@@ -280,7 +280,18 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
     [effectiveSize, mode, variants],
   );
 
-  const gallery = product.galleryImages.slice(0, 4);
+  // Printify tags each image with the variant ids it depicts (e.g. one set of
+  // shots per color). When the selected variant has its own images, show
+  // those instead of the full mixed-color gallery.
+  const variantGallery = useMemo(() => {
+    if (!matchingVariant) return null;
+    const forVariant = product.images
+      .filter((img) => img.variantIds.includes(matchingVariant.id))
+      .map((img) => img.src);
+    return forVariant.length > 0 ? forVariant : null;
+  }, [product.images, matchingVariant]);
+
+  const gallery = (variantGallery ?? product.galleryImages).slice(0, 4);
   const showCompareAt =
     product.originalPrice.trim() !== "" && product.originalPrice.trim() !== product.price.trim();
 
