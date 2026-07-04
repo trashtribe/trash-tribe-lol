@@ -20,6 +20,7 @@ import {
   saveCompletedOrder,
 } from "@/lib/checkout-order-storage";
 import { formatEuro } from "@/lib/format-currency";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 const COUNTRIES = [
   "Ireland",
@@ -115,6 +116,73 @@ export function CheckoutPageClient({
     setPrepareError(null);
     onStripeElementsActiveChange?.(false);
   }, [shippingMethod, onStripeElementsActiveChange]);
+
+  // Prefill email + saved shipping address for a signed-in customer. Only
+  // fills fields the customer hasn't already touched, so we never clobber
+  // something they're mid-typing.
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+
+    if (user.email?.trim()) {
+      const savedEmail = user.email.trim();
+      queueMicrotask(() => {
+        if (cancelled) return;
+        setEmail((prev) => (prev.trim() ? prev : savedEmail));
+      });
+    }
+
+    const supabase = createBrowserSupabaseClient();
+    if (!supabase) return;
+
+    void (async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(
+          "shipping_name, shipping_address1, shipping_address2, shipping_city, shipping_postal_code, shipping_country, shipping_phone",
+        )
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (cancelled || error || !data) return;
+
+      queueMicrotask(() => {
+        if (cancelled) return;
+        const fullName = (data.shipping_name ?? "").trim();
+        if (fullName) {
+          const [first, ...rest] = fullName.split(" ");
+          setFirstName((prev) => (prev.trim() ? prev : (first ?? "")));
+          setLastName((prev) => (prev.trim() ? prev : rest.join(" ")));
+        }
+        if (data.shipping_address1) {
+          setAddress1((prev) => (prev.trim() ? prev : data.shipping_address1));
+        }
+        if (data.shipping_address2) {
+          setAddress2((prev) => (prev.trim() ? prev : data.shipping_address2));
+        }
+        if (data.shipping_city) {
+          setCity((prev) => (prev.trim() ? prev : data.shipping_city));
+        }
+        if (data.shipping_postal_code) {
+          setPostalCode((prev) => (prev.trim() ? prev : data.shipping_postal_code));
+        }
+        if (data.shipping_country) {
+          setCountry((prev) => (prev ? prev : data.shipping_country));
+        }
+        if (data.shipping_phone) {
+          setPhone((prev) => (prev.trim() ? prev : data.shipping_phone));
+        }
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // Only re-run when the signed-in user changes — the setters above are
+    // stable and reading them in deps would just make this fire on typing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const displayItems = summarySnapshot ?? items;
   const displaySubtotal = totalsSnapshot?.subtotal ?? subtotal;
@@ -326,10 +394,50 @@ export function CheckoutPageClient({
       setTotalsSnapshot({ subtotal: st, shipping, total });
       setSummarySnapshot([...items]);
       setOrderSuccess(true);
+
+      if (user) {
+        const supabase = createBrowserSupabaseClient();
+        if (supabase) {
+          const shippingName = `${firstName} ${lastName}`.trim();
+          void supabase
+            .from("profiles")
+            .update({
+              shipping_name: shippingName || null,
+              shipping_address1: address1.trim() || null,
+              shipping_address2: address2.trim() || null,
+              shipping_city: city.trim() || null,
+              shipping_postal_code: postalCode.trim() || null,
+              shipping_country: country || null,
+              shipping_phone: phone.trim() || null,
+            })
+            .eq("id", user.id)
+            .then(({ error }) => {
+              if (error) {
+                console.error("[checkout] save shipping address to profile:", error);
+              }
+            });
+        }
+      }
+
       clearCart();
       router.push("/order-confirmation");
     },
-    [items, shippingMethod, email, clearCart, router],
+    [
+      items,
+      shippingMethod,
+      email,
+      clearCart,
+      router,
+      user,
+      firstName,
+      lastName,
+      address1,
+      address2,
+      city,
+      postalCode,
+      country,
+      phone,
+    ],
   );
 
   if (displayItems.length === 0 && !orderSuccess) {
