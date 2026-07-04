@@ -100,6 +100,39 @@ export async function fetchPrintifyProducts(): Promise<PrintifyProduct[]> {
   return body.data;
 }
 
+export type PrintifyShipment = {
+  carrier?: string;
+  number?: string;
+  url?: string;
+  delivered_at?: string;
+};
+
+export type PrintifyOrder = {
+  id: string;
+  status?: string;
+  shipments?: PrintifyShipment[];
+};
+
+/** Live fulfillment/tracking status for an order already pushed to Printify. */
+export async function fetchPrintifyOrderById(printifyOrderId: string): Promise<PrintifyOrder | null> {
+  const { shopId, apiKey } = requirePrintifyConfig();
+  const url = `${PRINTIFY_API_BASE}/shops/${shopId}/orders/${encodeURIComponent(printifyOrderId)}.json`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+    cache: "no-store",
+  });
+
+  if (res.status === 404) {
+    return null;
+  }
+
+  if (!res.ok) {
+    throw new Error(`Printify get order failed: ${res.status} ${res.statusText}`);
+  }
+
+  return (await res.json()) as PrintifyOrder;
+}
+
 export async function fetchPrintifyProductById(id: string): Promise<PrintifyProduct | null> {
   const { shopId, apiKey } = requirePrintifyConfig();
   const url = `${PRINTIFY_API_BASE}/shops/${shopId}/products/${encodeURIComponent(id)}.json`;

@@ -216,6 +216,28 @@ export async function submitPaidOrderToPrintify(
       );
       return;
     }
+
+    try {
+      const created = JSON.parse(resText) as { id?: string };
+      if (created.id) {
+        const { error: linkError } = await admin
+          .from("orders")
+          .update({ printify_order_id: created.id })
+          .eq("id", orderId);
+        if (linkError) {
+          console.error(
+            "[printify fulfillment] Could not save printify_order_id:",
+            linkError,
+          );
+        }
+      } else {
+        console.warn(
+          "[printify fulfillment] Printify order created but response had no id; tracking won't be available for this order.",
+        );
+      }
+    } catch (e) {
+      console.error("[printify fulfillment] Could not parse Printify order response:", e);
+    }
   } catch (e) {
     console.error("[printify fulfillment] Unexpected error:", e);
   }

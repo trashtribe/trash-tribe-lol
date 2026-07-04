@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "@/components/AuthProvider";
 import { formatEuro } from "@/lib/format-currency";
@@ -35,12 +36,46 @@ function formatOrderDate(iso: string) {
   }
 }
 
+type TrackingInfo = {
+  status?: string;
+  printifyStatus?: string | null;
+  tracking?: { carrier?: string | null; number?: string | null; url?: string | null } | null;
+  message?: string;
+  error?: string;
+};
+
 export function AccountPageClient() {
   const router = useRouter();
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, accessToken } = useAuth();
 
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [tracking, setTracking] = useState<Record<string, TrackingInfo | "loading">>({});
+
+  const checkTracking = useCallback(
+    (orderId: string) => {
+      if (!accessToken) return;
+      setTracking((prev) => ({ ...prev, [orderId]: "loading" }));
+      void (async () => {
+        try {
+          const res = await fetch(`/api/order-tracking?orderId=${encodeURIComponent(orderId)}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          const data = (await res.json()) as TrackingInfo;
+          setTracking((prev) => ({
+            ...prev,
+            [orderId]: res.ok ? data : { error: data.error ?? "Could not check tracking." },
+          }));
+        } catch {
+          setTracking((prev) => ({
+            ...prev,
+            [orderId]: { error: "Could not check tracking." },
+          }));
+        }
+      })();
+    },
+    [accessToken],
+  );
 
   useEffect(() => {
     if (loading) return;
@@ -125,6 +160,14 @@ export function AccountPageClient() {
         </div>
       </dl>
 
+      <Link
+        href="/wishlist"
+        className="mt-6 flex items-center justify-between border border-black/10 bg-white px-6 py-4 text-sm font-bold tracking-[0.1em] tt-text-on-light uppercase transition-colors hover:border-black/30"
+      >
+        My favourites
+        <span aria-hidden="true">→</span>
+      </Link>
+
       <section className="mt-10">
         <h2 className="text-sm font-bold tracking-[0.18em] tt-text-on-light uppercase">
           Order history
@@ -141,27 +184,77 @@ export function AccountPageClient() {
           </div>
         ) : (
           <ul className="mt-4 space-y-3">
-            {orders.map((order) => (
-              <li
-                key={order.id}
-                className="flex flex-wrap items-center justify-between gap-3 border border-black/10 bg-white px-4 py-3 sm:px-5"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="font-mono text-[11px] tracking-tight text-black/70">
-                    {order.id.slice(0, 8)}
-                  </p>
-                  <p className="mt-0.5 text-sm tt-text-on-light">
-                    {formatOrderDate(order.created_at)}
-                  </p>
-                </div>
-                <span className="inline-flex shrink-0 items-center border border-black/15 bg-[color:color-mix(in_srgb,var(--tt-soft-pink)_15%,white)] px-2.5 py-1 text-[10px] font-bold tracking-[0.12em] uppercase tt-text-on-light">
-                  {order.status}
-                </span>
-                <p className="shrink-0 text-sm font-semibold tabular-nums tt-text-on-light">
-                  {formatEuro(Number(order.total))}
-                </p>
-              </li>
-            ))}
+            {orders.map((order) => {
+              const t = tracking[order.id];
+              return (
+                <li
+                  key={order.id}
+                  className="border border-black/10 bg-white px-4 py-3 sm:px-5"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-mono text-[11px] tracking-tight text-black/70">
+                        {order.id.slice(0, 8)}
+                      </p>
+                      <p className="mt-0.5 text-sm tt-text-on-light">
+                        {formatOrderDate(order.created_at)}
+                      </p>
+                    </div>
+                    <span className="inline-flex shrink-0 items-center border border-black/15 bg-[color:color-mix(in_srgb,var(--tt-soft-pink)_15%,white)] px-2.5 py-1 text-[10px] font-bold tracking-[0.12em] uppercase tt-text-on-light">
+                      {order.status}
+                    </span>
+                    <p className="shrink-0 text-sm font-semibold tabular-nums tt-text-on-light">
+                      {formatEuro(Number(order.total))}
+                    </p>
+                  </div>
+
+                  <div className="mt-3">
+                    {!t ? (
+                      <button
+                        type="button"
+                        onClick={() => checkTracking(order.id)}
+                        className="text-[11px] font-bold tracking-[0.12em] tt-text-secondary underline underline-offset-4 uppercase"
+                      >
+                        Check tracking
+                      </button>
+                    ) : t === "loading" ? (
+                      <p className="text-[11px] text-black/50">Checking tracking…</p>
+                    ) : t.error ? (
+                      <p className="text-[11px] text-black/50">{t.error}</p>
+                    ) : (
+                      <div className="text-[11px] text-black/70">
+                        {t.printifyStatus ? (
+                          <p>
+                            Fulfillment:{" "}
+                            <span className="font-bold">{t.printifyStatus}</span>
+                          </p>
+                        ) : null}
+                        {t.tracking?.number ? (
+                          <p className="mt-0.5">
+                            {t.tracking.carrier ? `${t.tracking.carrier} — ` : ""}
+                            {t.tracking.url ? (
+                              <a
+                                href={t.tracking.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline underline-offset-4 tt-text-secondary"
+                              >
+                                {t.tracking.number}
+                              </a>
+                            ) : (
+                              t.tracking.number
+                            )}
+                          </p>
+                        ) : null}
+                        {!t.printifyStatus && !t.tracking?.number ? (
+                          <p>{t.message ?? "No tracking available yet."}</p>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
