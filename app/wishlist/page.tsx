@@ -3,8 +3,11 @@ import Link from "next/link";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { WishlistGrid } from "@/components/WishlistGrid";
+import { getProducts } from "@/lib/products";
 
-export default function WishlistPage() {
+export default async function WishlistPage() {
+  const products = await getProducts();
+
   return (
     <>
       <Header />
@@ -17,6 +20,7 @@ export default function WishlistPage() {
           </div>
         </section>
         <WishlistGrid
+          products={products}
           emptyAction={
             <Link
               href="/shop"

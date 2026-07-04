@@ -2,15 +2,17 @@
 
 import type { ReactNode } from "react";
 
-import { products } from "./product-data";
+import type { StoreProduct } from "@/lib/products";
+
 import { WishlistProductCard } from "./WishlistProductCard";
 import { useWishlist } from "./WishlistProvider";
 
 type WishlistGridProps = {
+  products: StoreProduct[];
   emptyAction: ReactNode;
 };
 
-export function WishlistGrid({ emptyAction }: WishlistGridProps) {
+export function WishlistGrid({ products, emptyAction }: WishlistGridProps) {
   const { ids, hydrated } = useWishlist();
 
   const wishlistProducts = hydrated
