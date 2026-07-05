@@ -13,6 +13,8 @@ import {
 
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
+// localStorage (not sessionStorage) so a guest's favourites survive closing
+// the tab/browser, same as the cart — not just page-to-page navigation.
 const STORAGE_KEY = "trashtribe-wishlist-ids";
 
 type WishlistContextValue = {
@@ -31,7 +33,7 @@ const WishlistContext = createContext<WishlistContextValue | undefined>(
 function readStoredIds(): string[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
@@ -44,7 +46,7 @@ function readStoredIds(): string[] {
 function persistLocal(ids: string[]) {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
   } catch {
     /* ignore quota */
   }
