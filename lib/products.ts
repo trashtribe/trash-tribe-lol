@@ -8,6 +8,26 @@ import {
   type PrintifyVariantRow,
 } from "@/lib/printify";
 
+/**
+ * Positions (front/back/etc.) that actually have artwork placed on them,
+ * per Printify's print_areas. A garment with print only on the front still
+ * gets a "back" mockup photo from Printify — this tells that apart from a
+ * position that's genuinely printed.
+ */
+function printedPositionsFromProduct(p: PrintifyProduct): Set<string> {
+  const positions = new Set<string>();
+  for (const area of p.print_areas ?? []) {
+    for (const placeholder of area.placeholders ?? []) {
+      const position = placeholder.position?.trim().toLowerCase();
+      if (!position) continue;
+      if (Array.isArray(placeholder.images) && placeholder.images.length > 0) {
+        positions.add(position);
+      }
+    }
+  }
+  return positions;
+}
+
 export type StoreCategory = "POSTERS" | "APPAREL" | "ACCESSORIES";
 
 export type StoreProductVariant = {
@@ -38,6 +58,11 @@ export type StoreProduct = {
   /** Same images as galleryImages, but with each one's Printify variant_ids preserved
    * so the product page can show the right shots when a color is selected. */
   images: StoreProductImage[];
+  /** A second product photo that shows genuinely different artwork (e.g. a
+   * printed back), confirmed against print_areas — not just any second
+   * gallery photo, which for a front-only garment would be a blank mockup.
+   * Null when the product is only printed on one side. */
+  secondaryImageSrc: string | null;
   category: StoreCategory;
   variants: StoreProductVariant[];
   /** Optional merchandising label (seed catalog / future providers). */
@@ -315,6 +340,33 @@ export function parseVariantTitleSegments(title: string): {
   };
 }
 
+/**
+ * Picks a second gallery photo to use as a hover swap, but only when it's
+ * confirmed to show a genuinely different printed side (see
+ * printedPositionsFromProduct) — not just any other angle/mockup.
+ */
+function secondaryImageFromProduct(p: PrintifyProduct, primarySrc: string): string | null {
+  const printedPositions = printedPositionsFromProduct(p);
+  if (printedPositions.size < 2) return null;
+
+  const images = p.images ?? [];
+  const primaryPosition = images
+    .find((img) => img.src?.trim() === primarySrc)
+    ?.position?.trim()
+    .toLowerCase();
+
+  for (const img of images) {
+    const src = img.src?.trim();
+    if (!src || src === primarySrc) continue;
+    const position = img.position?.trim().toLowerCase();
+    if (!position || position === primaryPosition) continue;
+    if (printedPositions.has(position)) {
+      return src;
+    }
+  }
+  return null;
+}
+
 export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
   const id = String(p.id);
   const name = p.title?.trim() || "Untitled";
@@ -349,6 +401,7 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
   const galleryImages = galleryFromProduct(p);
   const imageSrc = galleryImages[0] ?? "/globe.svg";
   const images = imagesFromProduct(p);
+  const secondaryImageSrc = secondaryImageFromProduct(p, imageSrc);
 
   return {
     id,
@@ -361,6 +414,7 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
     imageAlt,
     galleryImages: galleryImages.length > 0 ? galleryImages : [imageSrc],
     images: images.length > 0 ? images : [{ src: imageSrc, variantIds: [] }],
+    secondaryImageSrc,
     category: inferCategory(p),
     variants,
   };
