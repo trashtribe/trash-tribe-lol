@@ -7,7 +7,7 @@ import { Header } from "@/components/Header";
 export const metadata: Metadata = {
   title: "Account",
   description:
-    "Sign in or create a Trash Tribe account. Manage your profile and view order history.",
+    "Sign in or create a trashtribe account. Manage your profile and view order history.",
   alternates: { canonical: "/account" },
 };
 

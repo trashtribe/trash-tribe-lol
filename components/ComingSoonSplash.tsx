@@ -6,7 +6,7 @@ export function ComingSoonSplash() {
       <div className="relative h-48 w-full max-w-lg md:h-64 md:max-w-2xl">
         <Image
           src="/ttt.png"
-          alt="Trash Tribe"
+          alt="trashtribe"
           fill
           className="object-contain"
           priority

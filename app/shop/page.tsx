@@ -10,7 +10,7 @@ import { getProducts } from "@/lib/products";
 export const metadata: Metadata = {
   title: "Shop",
   description:
-    "Browse posters, apparel, and accessories from Trash Tribe. Independent print-on-demand merch with bold graphics.",
+    "Browse posters, apparel, and accessories from trashtribe. Independent print-on-demand merch with bold graphics.",
   alternates: { canonical: "/shop" },
 };
 

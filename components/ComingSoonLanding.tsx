@@ -8,7 +8,7 @@ export function ComingSoonLanding() {
       <div style={{ width: 300, height: 180, position: 'relative' }} className="sm:w-[380px] sm:h-[228px] md:w-[460px] md:h-[276px]">
         <Image
           src="/ttt.png"
-          alt="Trash Tribe"
+          alt="trashtribe"
           fill
           className="object-contain"
           priority

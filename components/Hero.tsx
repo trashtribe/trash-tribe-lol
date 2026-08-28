@@ -10,7 +10,7 @@ export function Hero() {
       <div className="relative w-full">
         <Image
           src="/hero-join-the-tribe.webp"
-          alt="Trash Tribe — Join the tribe"
+          alt="trashtribe — Join the tribe"
           width={2561}
           height={900}
           sizes="100vw"

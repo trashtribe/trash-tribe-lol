@@ -6,7 +6,7 @@ import { ResetPasswordPageClient } from "@/components/ResetPasswordPageClient";
 
 export const metadata: Metadata = {
   title: "Reset password",
-  description: "Set a new password for your Trash Tribe account.",
+  description: "Set a new password for your trashtribe account.",
   alternates: { canonical: "/reset-password" },
 };
 

@@ -86,14 +86,14 @@ function buildOrderConfirmationHtml(opts: {
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Your Trash Tribe order is confirmed</title>
+<title>Your trashtribe order is confirmed</title>
 </head>
 <body style="margin:0;padding:0;background:#f6f6f6;-webkit-font-smoothing:antialiased;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f6f6;padding:40px 16px;">
 <tr><td align="center">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:#ffffff;border:1px solid #eaeaea;">
 <tr><td style="padding:36px 32px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,'Liberation Mono','Courier New',monospace;font-size:13px;line-height:1.55;color:#111111;">
-<img src="${LOGO_URL}" alt="Trash Tribe" width="132" height="132" style="display:block;margin:0 auto 28px;width:132px;height:auto;max-width:100%;border:0;"/>
+<img src="${LOGO_URL}" alt="trashtribe" width="132" height="132" style="display:block;margin:0 auto 28px;width:132px;height:auto;max-width:100%;border:0;"/>
 <p style="margin:0 0 14px;text-align:center;text-transform:uppercase;letter-spacing:0.18em;font-size:11px;font-weight:bold;color:#555;">Order confirmed</p>
 <h1 style="margin:0 0 28px;text-align:center;font-size:17px;font-weight:bold;letter-spacing:0.04em;line-height:1.3;">Thanks — we got your order</h1>
 <p style="margin:0 0 8px;">Order reference:</p>
@@ -112,7 +112,7 @@ ${itemRowsHtml}
 
 <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;"><tr><td bgcolor="#000000" style="background-color:#000000;padding:13px 32px;text-align:center"><a href="${escapeHtml(opts.ordersUrl)}" style="display:inline-block;font-family:inherit;font-size:11px;font-weight:bold;color:#b8ff06;text-decoration:none;text-transform:uppercase;letter-spacing:0.2em;">VIEW ORDERS</a></td></tr></table>
 
-<p style="margin:36px 0 0;color:#777;font-size:11px;line-height:1.5;text-align:center;">Trash Tribe • Independent merch</p>
+<p style="margin:36px 0 0;color:#777;font-size:11px;line-height:1.5;text-align:center;">trashtribe • Independent merch</p>
 </td></tr></table>
 </td></tr></table>
 </body></html>`;
@@ -286,9 +286,9 @@ export async function sendOrderConfirmationEmail(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Trash Tribe <noreply@trashtribe.lol>",
+      from: "trashtribe <noreply@trashtribe.lol>",
       to: [toEmail],
-      subject: "Your Trash Tribe order is confirmed",
+      subject: "Your trashtribe order is confirmed",
       html,
     }),
   });

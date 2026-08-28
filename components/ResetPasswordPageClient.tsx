@@ -160,7 +160,7 @@ export function ResetPasswordPageClient() {
         New password
       </h1>
       <p className="mt-4 text-center text-sm text-black/55">
-        Enter a new password for your Trash Tribe account.
+        Enter a new password for your trashtribe account.
       </p>
 
       {checking ? (

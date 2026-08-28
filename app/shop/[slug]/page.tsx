@@ -43,14 +43,14 @@ export async function generateMetadata({
     description,
     alternates: { canonical: path },
     openGraph: {
-      title: `${product.name} | Trash Tribe`,
+      title: `${product.name} | trashtribe`,
       description,
       url: path,
       images: [{ url: product.imageSrc, alt: product.imageAlt }],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${product.name} | Trash Tribe`,
+      title: `${product.name} | trashtribe`,
       description,
       images: [product.imageSrc],
     },

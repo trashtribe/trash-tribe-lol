@@ -9,10 +9,10 @@ import { getProducts } from "@/lib/products";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Trash Tribe | Independent Merch",
+    absolute: "trashtribe | Independent Merch",
   },
   description:
-    "Independent print-on-demand posters, tees, hats, and accessories. Shop bold wall art and streetwear from Trash Tribe.",
+    "Independent print-on-demand posters, tees, hats, and accessories. Shop bold wall art and streetwear from trashtribe.",
   alternates: { canonical: "/" },
 };
 

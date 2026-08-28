@@ -8,7 +8,7 @@ import { Header } from "@/components/Header";
 const values = [
   {
     title: "Independent",
-    body: "No corporate BS. Trash Tribe is a small, self-run merch line — we make what we like and stand behind it.",
+    body: "No corporate BS. trashtribe is a small, self-run merch line — we make what we like and stand behind it.",
   },
   {
     title: "Sustainable",
@@ -23,7 +23,7 @@ const values = [
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Learn about Trash Tribe — independent print-on-demand merch, bold design, and on-demand production with less waste.",
+    "Learn about trashtribe — independent print-on-demand merch, bold design, and on-demand production with less waste.",
   alternates: { canonical: "/about" },
 };
 
@@ -40,7 +40,7 @@ export default function AboutPage() {
           <div className="relative w-full">
             <Image
               src="/about-us-hero.webp"
-              alt="About Us — Trash Tribe"
+              alt="About Us — trashtribe"
               width={2561}
               height={900}
               sizes="100vw"
@@ -60,7 +60,7 @@ export default function AboutPage() {
                 trashtribe — early 2000s energy, queer by design, un poco locas, no apologies.
               </p>
               <p>
-                Trash Tribe is an independent merch brand — not a faceless label, just a crew that
+                trashtribe is an independent merch brand — not a faceless label, just a crew that
                 cares about graphics, quality, and wearing your point of view on your sleeve (literally).
               </p>
               <p>

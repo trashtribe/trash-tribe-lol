@@ -6,7 +6,7 @@ import { LoginPageClient } from "@/components/LoginPageClient";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Sign in to your Trash Tribe account.",
+  description: "Sign in to your trashtribe account.",
   alternates: { canonical: "/login" },
 };
 

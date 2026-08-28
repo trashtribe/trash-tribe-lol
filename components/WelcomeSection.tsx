@@ -8,7 +8,7 @@ export function WelcomeSection() {
           Welcome
         </h2>
         <p className="mt-8 text-[13px] leading-relaxed tracking-[0.06em] tt-text-on-light sm:text-[14px]">
-          Trash Tribe is independent merch for people who live loud in small rooms. Posters, apparel, and gear — printed on demand, shipped with intent.
+          trashtribe is independent merch for people who live loud in small rooms. Posters, apparel, and gear — printed on demand, shipped with intent.
         </p>
         <p className="mt-4 text-[13px] leading-relaxed tracking-[0.06em] tt-text-on-light sm:text-[14px]">
           No polish required. Just work that holds up on a wall and on the street.

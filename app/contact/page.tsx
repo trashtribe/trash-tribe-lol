@@ -25,7 +25,7 @@ function PinterestIcon() {
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Contact Trash Tribe for order help, collaborations, or questions. Reach us by email or the contact form.",
+    "Contact trashtribe for order help, collaborations, or questions. Reach us by email or the contact form.",
   alternates: { canonical: "/contact" },
 };
 

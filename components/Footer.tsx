@@ -44,7 +44,7 @@ export function Footer() {
 
       <div className="mx-auto mt-14 max-w-[1600px] border-t tt-border-dark pt-8">
         <p className="text-center text-[10px] tracking-[0.12em] tt-text-on-dark sm:text-left">
-          © {new Date().getFullYear()} Trash Tribe. All rights reserved.
+          © {new Date().getFullYear()} trashtribe. All rights reserved.
         </p>
       </div>
     </footer>
