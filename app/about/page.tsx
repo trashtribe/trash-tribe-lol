@@ -37,13 +37,13 @@ export default function AboutPage() {
           aria-label="About us"
         >
           <h1 className="sr-only">About Us</h1>
-          <div className="relative mx-auto w-full max-w-[1100px] px-6 py-10 sm:py-14">
+          <div className="relative w-full">
             <Image
               src="/about-us-hero.webp"
               alt="About Us — Trash Tribe"
               width={2561}
               height={900}
-              sizes="(max-width: 1100px) 100vw, 1100px"
+              sizes="100vw"
               className="h-auto w-full object-contain"
               priority
             />
