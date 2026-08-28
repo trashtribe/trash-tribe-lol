@@ -121,3 +121,41 @@ body {
     transform: translateX(0);
   }
 }
+
+/* ProductScroller (components/ProductScroller.tsx) — horizontal
+   scroll-snap strip with a hidden scrollbar and per-card hover
+   scale + slight rotation. */
+.tt-scroller {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.tt-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.tt-scroller-item {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.tt-scroller-card {
+  transition: transform 300ms ease;
+}
+
+.tt-scroller-card:hover {
+  transform: scale(1.1) rotate(var(--tt-rotate, -2deg));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-scroller-card {
+    transition: none;
+  }
+
+  .tt-scroller-card:hover {
+    transform: none;
+  }
+}

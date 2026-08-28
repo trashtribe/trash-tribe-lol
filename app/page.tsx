@@ -4,8 +4,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { MarqueeBanner } from "@/components/MarqueeBanner";
-import { ProductGrid } from "@/components/ProductGrid";
-import { WelcomeSection } from "@/components/WelcomeSection";
+import { ProductScroller } from "@/components/ProductScroller";
 import { getProducts } from "@/lib/products";
 
 export const metadata: Metadata = {
@@ -19,6 +18,7 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const products = await getProducts();
+  const tees = products.filter((p) => p.category === "APPAREL").slice(0, 6);
 
   return (
     <>
@@ -37,13 +37,7 @@ export default async function Home() {
           textClassName="tt-text-on-light"
           direction="right"
         />
-        <WelcomeSection />
-        <ProductGrid
-          id="shop"
-          title="Shop"
-          products={products}
-          ariaLabelledBy="shop-heading"
-        />
+        <ProductScroller title="T-Shirts" products={tees} />
       </main>
       <Footer />
     </>
