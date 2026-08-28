@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 
 import { ContactForm } from "@/components/ContactForm";
 import { Footer } from "@/components/Footer";
@@ -37,6 +38,14 @@ export default function ContactPage() {
         <section className="border-b tt-border-light px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
           <div className="mx-auto grid max-w-[1600px] gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-24">
             <div className="flex flex-col gap-8 lg:max-w-lg">
+              <Image
+                src="/trashtribe%20logo%20final.png"
+                alt="trashtribe"
+                width={4983}
+                height={2266}
+                sizes="(max-width: 1024px) 60vw, 320px"
+                className="h-auto w-[220px] object-contain sm:w-[280px]"
+              />
               <h1 className="text-4xl font-bold tracking-[0.14em] tt-text-on-light uppercase sm:text-5xl lg:text-6xl">
                 GET IN TOUCH
               </h1>
