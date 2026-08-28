@@ -17,7 +17,7 @@ function ProductCard({
   index: number;
   hidden?: boolean;
 }) {
-  const altImage = product.secondaryImageSrc;
+  const altImage = product.galleryImages[1];
   const useImageSwap = Boolean(altImage);
 
   const cardStyle: CSSProperties & Record<"--tt-rotate", string> = {

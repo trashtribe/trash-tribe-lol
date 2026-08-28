@@ -3,10 +3,7 @@ import type { StoreProduct } from "@/lib/products";
 
 export type Product = StoreProduct;
 
-type ProductSeed = Omit<
-  StoreProduct,
-  "slug" | "price" | "originalPrice" | "images" | "secondaryImageSrc"
->;
+type ProductSeed = Omit<StoreProduct, "slug" | "price" | "originalPrice" | "images">;
 
 function slugify(value: string) {
   return value
@@ -269,8 +266,5 @@ export const products: StoreProduct[] = productSeeds.map((product) => {
   // This mock catalog has no per-variant image data — every image applies to
   // every variant, matching the old (pre-variant-aware) gallery behaviour.
   const images = product.galleryImages.map((src) => ({ src, variantIds: [] }));
-  // This mock catalog has no Printify print_areas to confirm a genuine
-  // second printed side against — always null, cards fall back to scale.
-  const secondaryImageSrc = null;
-  return { ...product, slug, price, originalPrice, images, secondaryImageSrc };
+  return { ...product, slug, price, originalPrice, images };
 });

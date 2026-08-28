@@ -50,18 +50,6 @@ export function variantRowIsSellable(row: PrintifyVariantRow): boolean {
   return gates.every(Boolean);
 }
 
-export type PrintifyPlaceholder = {
-  /** e.g. "front", "back", "neck" */
-  position?: string;
-  /** Design files placed in this print area. Empty/missing = nothing printed here. */
-  images?: unknown[];
-};
-
-export type PrintifyPrintArea = {
-  variant_ids?: number[];
-  placeholders?: PrintifyPlaceholder[];
-};
-
 export type PrintifyProduct = {
   id: string;
   title: string;
@@ -70,9 +58,6 @@ export type PrintifyProduct = {
   images?: PrintifyImage[];
   variants?: PrintifyVariantRow[];
   visible?: boolean;
-  /** Which placements (front/back/etc.) actually have artwork — used to
-   * tell an actual second printed side apart from a blank mockup photo. */
-  print_areas?: PrintifyPrintArea[];
 };
 
 type PrintifyListResponse = {
