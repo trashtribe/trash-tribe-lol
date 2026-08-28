@@ -170,15 +170,17 @@ export function ProductScroller({ products }: ProductScrollerProps) {
   if (products.length === 0) return null;
 
   return (
-    <section className="relative border-b tt-border-light bg-background px-4 py-12 sm:px-6 sm:py-16">
+    <section className="relative border-b tt-border-light bg-background px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16">
       <div className="mx-auto max-w-[1600px]">
-        <div className="mb-8 flex justify-center sm:mb-10">
+        <div className="mb-6 flex items-center justify-center gap-4 sm:mb-8 sm:gap-6">
+          <span className="h-[2px] flex-1 tt-bg-dark" aria-hidden="true" />
           <Link
             href="/shop"
-            className="tt-bg-primary inline-flex min-w-[280px] items-center justify-center px-20 py-7 text-lg font-bold tracking-[0.3em] tt-text-on-light uppercase transition-transform duration-200 hover:scale-110 sm:min-w-[340px] sm:px-24 sm:py-8 sm:text-xl"
+            className="tt-bg-primary inline-flex min-w-[280px] shrink-0 rotate-[-2deg] items-center justify-center px-20 py-7 text-lg font-bold tracking-[0.3em] tt-text-on-light uppercase transition-transform duration-200 hover:scale-110 hover:rotate-0 sm:min-w-[340px] sm:px-24 sm:py-8 sm:text-xl"
           >
-            Shop
+            ★ SHOP ALL ★
           </Link>
+          <span className="h-[2px] flex-1 tt-bg-dark" aria-hidden="true" />
         </div>
 
         <div className="relative">
