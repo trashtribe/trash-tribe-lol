@@ -7,21 +7,27 @@ export function Hero() {
       className="relative w-full overflow-hidden border-b tt-border-light bg-background"
       aria-label="Featured"
     >
-      <Link
-        href="/shop"
-        aria-label="Join the tribe — shop Trash Tribe"
-        className="relative mx-auto block w-full max-w-[1180px] px-6 py-10 transition-transform duration-300 hover:scale-[1.015] sm:py-14"
-      >
+      <div className="relative w-full">
         <Image
           src="/hero-join-the-tribe.webp"
           alt="Trash Tribe — Join the tribe"
           width={2561}
           height={900}
-          sizes="(max-width: 1180px) 100vw, 1180px"
+          sizes="100vw"
           className="h-auto w-full object-contain"
           priority
         />
-      </Link>
+        {/* Clickable hit area limited to the "JOIN THE TRIBE" pill baked
+            into the artwork — positioned as a % of the image so it tracks
+            the button at any viewport width. Coordinates measured from the
+            source .webp (pill spans x:867-1668, y:673-783 of 2561x900). */}
+        <Link
+          href="/login?tab=signup"
+          aria-label="Join the tribe — create an account"
+          className="absolute transition-opacity hover:opacity-80"
+          style={{ left: "32.5%", top: "73%", width: "34%", height: "16%" }}
+        />
+      </div>
     </section>
   );
 }

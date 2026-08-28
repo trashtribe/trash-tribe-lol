@@ -10,12 +10,19 @@ export const metadata: Metadata = {
   alternates: { canonical: "/login" },
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
+  const initialTab = tab === "signup" ? "signup" : "signin";
+
   return (
     <>
       <Header />
       <main className="flex min-h-0 flex-1 flex-col bg-background">
-        <LoginPageClient />
+        <LoginPageClient initialTab={initialTab} />
       </main>
       <Footer />
     </>

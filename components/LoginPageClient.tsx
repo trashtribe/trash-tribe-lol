@@ -15,11 +15,15 @@ const labelClass =
 const inputClass =
   "mt-1 w-full border border-black/15 bg-white px-3 py-2.5 text-sm text-black placeholder:text-black/35 focus:border-black focus:outline-none focus:ring-1 focus:ring-black/20";
 
-export function LoginPageClient() {
+export function LoginPageClient({
+  initialTab = "signin",
+}: {
+  initialTab?: Tab;
+}) {
   const router = useRouter();
   const { user, loading, signIn, signUp } = useAuth();
 
-  const [tab, setTab] = useState<Tab>("signin");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
