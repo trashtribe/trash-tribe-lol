@@ -1,15 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { CloudBackground } from "./CloudBackground";
-
 export function Hero() {
   return (
     <section
-      className="tt-sky-bg relative w-full overflow-hidden border-b tt-border-light"
+      className="relative w-full overflow-hidden border-b tt-border-light bg-background"
       aria-label="Featured"
     >
-      <CloudBackground />
       <Link
         href="/shop"
         aria-label="Join the tribe — shop Trash Tribe"

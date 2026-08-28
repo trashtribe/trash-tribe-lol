@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
-import { CloudBackground } from "@/components/CloudBackground";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 
@@ -34,10 +33,9 @@ export default function AboutPage() {
       <Header />
       <main className="flex flex-1 flex-col bg-background">
         <section
-          className="tt-sky-bg relative w-full overflow-hidden border-b tt-border-light"
+          className="relative w-full overflow-hidden border-b tt-border-light bg-background"
           aria-label="About us"
         >
-          <CloudBackground />
           <h1 className="sr-only">About Us</h1>
           <div className="relative mx-auto w-full max-w-[1100px] px-6 py-10 sm:py-14">
             <Image
