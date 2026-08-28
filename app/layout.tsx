@@ -4,7 +4,7 @@ import { Providers } from "@/components/Providers";
 import { Space_Mono } from "next/font/google";
 import "./globals.css";
 
-const siteUrl = "https://trash-tribe.lol";
+const siteUrl = "https://www.trashtribe.lol";
 
 const spaceMono = Space_Mono({
   subsets: ["latin"],
@@ -33,13 +33,13 @@ export const metadata: Metadata = {
     siteName: "Trash Tribe",
     title,
     description,
-    images: [{ url: "/ttt.png", alt: "Trash Tribe" }],
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "Trash Tribe — Join the tribe" }],
   },
   twitter: {
     card: "summary_large_image",
     title,
     description,
-    images: ["/ttt.png"],
+    images: ["/og-image.jpg"],
   },
 };
 
