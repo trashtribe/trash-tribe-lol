@@ -12,7 +12,7 @@ const spaceMono = Space_Mono({
   variable: "--font-space-mono",
 });
 
-const title = "Trash Tribe | Independent Merch";
+const title = "trashtribe | Independent Merch";
 const description =
   "Print-on-demand posters, t-shirts, hats and accessories. Independent merch for people who live loud.";
 
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: title,
-    template: "%s | Trash Tribe",
+    template: "%s | trashtribe",
   },
   description,
   alternates: {
@@ -30,10 +30,10 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IE",
     url: siteUrl,
-    siteName: "Trash Tribe",
+    siteName: "trashtribe",
     title,
     description,
-    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "Trash Tribe — Join the tribe" }],
+    images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "trashtribe — Join the tribe" }],
   },
   twitter: {
     card: "summary_large_image",
