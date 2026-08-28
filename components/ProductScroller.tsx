@@ -187,7 +187,7 @@ export function ProductScroller({ products }: ProductScrollerProps) {
 
           <div
             ref={trackRef}
-            className="tt-carousel-scroll gap-5 sm:gap-6"
+            className="tt-carousel-scroll gap-5 py-6 sm:gap-6 sm:py-8"
             onPointerEnter={() => {
               pausedRef.current = true;
             }}
