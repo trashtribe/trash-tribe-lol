@@ -27,32 +27,6 @@ function ChevronRightIcon() {
   );
 }
 
-function ShopAllCard({ hidden = false }: { hidden?: boolean }) {
-  const cardStyle: CSSProperties & Record<"--tt-rotate", string> = {
-    "--tt-rotate": "-2deg",
-  };
-
-  return (
-    <Link
-      href="/shop"
-      className="tt-scroller-item"
-      aria-hidden={hidden}
-      tabIndex={hidden ? -1 : undefined}
-    >
-      <article
-        className="tt-scroller-card flex h-full w-[220px] flex-col sm:w-[260px]"
-        style={cardStyle}
-      >
-        <div className="flex h-full flex-col items-center justify-center gap-1 tt-bg-primary px-4 text-center">
-          <span className="text-lg font-extrabold tracking-[0.12em] tt-text-on-light uppercase sm:text-xl">
-            Shop All ★
-          </span>
-        </div>
-      </article>
-    </Link>
-  );
-}
-
 function ProductCard({
   product,
   index,
@@ -198,20 +172,12 @@ export function ProductScroller({ products }: ProductScrollerProps) {
   return (
     <section className="relative border-b tt-border-light bg-background px-4 py-12 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-[1600px]">
-        <div className="mb-4 flex flex-col gap-1 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[11px] font-bold tracking-[0.3em] tt-text-primary uppercase sm:text-[12px]">
-              ★ NEW DROPS
-            </p>
-            <h2 className="mt-1 text-4xl font-extrabold tracking-tight tt-text-on-light uppercase sm:text-5xl">
-              Shop
-            </h2>
-          </div>
+        <div className="mb-8 flex justify-center sm:mb-10">
           <Link
             href="/shop"
-            className="tt-gradient-text-link inline-block text-[11px] font-bold tracking-[0.18em] uppercase underline-offset-4 transition-colors hover:tt-text-secondary sm:mb-2"
+            className="tt-bg-primary inline-flex min-w-[280px] items-center justify-center px-20 py-7 text-lg font-bold tracking-[0.3em] tt-text-on-light uppercase transition-transform duration-200 hover:scale-110 sm:min-w-[340px] sm:px-24 sm:py-8 sm:text-xl"
           >
-            View all →
+            Shop
           </Link>
         </div>
 
@@ -239,11 +205,9 @@ export function ProductScroller({ products }: ProductScrollerProps) {
             {products.map((product, i) => (
               <ProductCard key={`a-${product.id}`} product={product} index={i} />
             ))}
-            <ShopAllCard />
             {products.map((product, i) => (
               <ProductCard key={`b-${product.id}`} product={product} index={i} hidden />
             ))}
-            <ShopAllCard hidden />
           </div>
 
           <button
