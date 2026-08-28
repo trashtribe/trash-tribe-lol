@@ -122,41 +122,21 @@ body {
   }
 }
 
-/* ProductScroller (components/ProductScroller.tsx) — auto-scrolling
-   product carousel. Same duplicate-track/-50% loop technique as the
-   marquee banners, but for a row of product cards. Pauses on hover so
-   people can actually interact with a card. */
-.tt-carousel {
-  position: relative;
-  overflow: hidden;
-}
-
-.tt-carousel-track {
+/* ProductScroller (components/ProductScroller.tsx) — product carousel.
+   Auto-advances via JS (scrollLeft += a bit per frame, see the
+   component), but it's a real scroll container underneath: trackpad,
+   touch swipe, and the prev/next buttons (track.scrollBy) all work too.
+   Content is duplicated 2x and wraps around on scroll for a seamless
+   infinite loop in both directions. */
+.tt-carousel-scroll {
   display: flex;
-  width: max-content;
-  animation-name: tt-carousel-scroll;
-  animation-duration: 60s;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
-.tt-carousel-track:hover {
-  animation-play-state: paused;
-}
-
-@keyframes tt-carousel-scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tt-carousel-track {
-    animation: none;
-  }
+.tt-carousel-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .tt-scroller-item {
