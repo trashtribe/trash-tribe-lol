@@ -27,7 +27,7 @@ export function MarqueeBanner({
       {Array.from({ length: repeat }).map((_, i) => (
         <span
           key={i}
-          className="whitespace-nowrap px-3 text-[11px] font-bold tracking-[0.2em] uppercase sm:text-[12px]"
+          className="whitespace-nowrap px-3 text-[13px] font-bold tracking-[0.2em] uppercase sm:text-[15px]"
         >
           {content}
         </span>
@@ -39,7 +39,7 @@ export function MarqueeBanner({
     <div
       role="marquee"
       aria-label={content.replace(/★/g, "").trim()}
-      className={`relative flex h-9 w-full items-center overflow-hidden sm:h-11 ${bgClassName} ${textClassName}`}
+      className={`relative flex h-11 w-full items-center overflow-hidden sm:h-14 ${bgClassName} ${textClassName}`}
     >
       <div className="tt-marquee-track" data-direction={direction}>
         {block}

@@ -10,9 +10,11 @@ type ProductScrollerProps = {
 };
 
 /**
- * Horizontal scroll-snap showcase strip. Cards alternate a slight tilt
- * (via the --tt-rotate custom property, read by .tt-scroller-card:hover
- * in globals.css) so the hover scale + rotate doesn't look uniform.
+ * Horizontal scroll-snap showcase strip. Hover treatment alternates per
+ * card: even cards scale up + tilt slightly (.tt-scroller-card, tilt via
+ * the --tt-rotate custom property read in globals.css); odd cards instead
+ * cross-fade to a second product photo (a different angle) if one exists,
+ * falling back to the scale treatment when a product only has one image.
  */
 export function ProductScroller({ title = "T-Shirts", products }: ProductScrollerProps) {
   if (products.length === 0) return null;
@@ -30,59 +32,57 @@ export function ProductScroller({ title = "T-Shirts", products }: ProductScrolle
           {title}
         </h2>
 
-        <div className="relative">
-          <div className="tt-scroller gap-5 px-1 pb-2 sm:gap-6">
-            {products.map((product, i) => {
-              const cardStyle: CSSProperties & Record<"--tt-rotate", string> = {
-                "--tt-rotate": i % 2 === 0 ? "-2deg" : "2deg",
-              };
+        <div className="tt-scroller gap-5 px-1 pb-2 sm:gap-6">
+          {products.map((product, i) => {
+            const altImage = product.galleryImages[1];
+            const useImageSwap = i % 2 === 1 && Boolean(altImage);
 
-              return (
-                <Link
-                  key={product.id}
-                  href={`/shop/${product.slug}`}
-                  className="tt-scroller-item"
+            const cardStyle: CSSProperties & Record<"--tt-rotate", string> = {
+              "--tt-rotate": i % 2 === 0 ? "-2deg" : "2deg",
+            };
+
+            return (
+              <Link key={product.id} href={`/shop/${product.slug}`} className="tt-scroller-item">
+                <article
+                  className={`group flex w-[220px] flex-col sm:w-[260px] ${useImageSwap ? "" : "tt-scroller-card"}`}
+                  style={useImageSwap ? undefined : cardStyle}
                 >
-                  <article
-                    className="tt-scroller-card flex w-[220px] flex-col sm:w-[260px]"
-                    style={cardStyle}
-                  >
-                    <div className="relative h-[220px] overflow-hidden border tt-border-light bg-background sm:h-[260px]">
-                      {product.saleTag ? (
-                        <span className="absolute left-2 top-2 z-[5] tt-bg-primary px-2 py-1 text-[9px] font-bold tracking-[0.16em] tt-text-on-light uppercase">
-                          {product.saleTag}
-                        </span>
-                      ) : null}
+                  <div className="relative h-[220px] overflow-hidden border tt-border-light bg-background sm:h-[260px]">
+                    {product.saleTag ? (
+                      <span className="absolute left-2 top-2 z-[5] tt-bg-primary px-2 py-1 text-[9px] font-bold tracking-[0.16em] tt-text-on-light uppercase">
+                        {product.saleTag}
+                      </span>
+                    ) : null}
+                    <Image
+                      src={product.imageSrc}
+                      alt={product.imageAlt}
+                      fill
+                      className={`object-contain object-center p-3 ${useImageSwap ? "transition-opacity duration-300 group-hover:opacity-0" : ""}`}
+                      sizes="(max-width: 640px) 60vw, 260px"
+                    />
+                    {useImageSwap ? (
                       <Image
-                        src={product.imageSrc}
+                        src={altImage!}
                         alt={product.imageAlt}
                         fill
-                        className="object-contain object-center p-3"
+                        aria-hidden="true"
+                        className="object-contain object-center p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                         sizes="(max-width: 640px) 60vw, 260px"
                       />
-                    </div>
-                    <div className="mt-3 flex flex-col gap-1">
-                      <h3 className="text-[11px] font-bold tracking-[0.06em] tt-text-on-light uppercase leading-snug sm:text-[12px]">
-                        {product.name}
-                      </h3>
-                      <p className="text-[11px] font-bold tracking-[0.05em] tt-text-on-light sm:text-[12px]">
-                        {product.price}
-                      </p>
-                    </div>
-                  </article>
-                </Link>
-              );
-            })}
-          </div>
-
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-background to-transparent sm:w-16"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-background to-transparent sm:w-16"
-          />
+                    ) : null}
+                  </div>
+                  <div className="mt-3 flex flex-col gap-1">
+                    <h3 className="text-[11px] font-bold tracking-[0.06em] tt-text-on-light uppercase leading-snug sm:text-[12px]">
+                      {product.name}
+                    </h3>
+                    <p className="text-[11px] font-bold tracking-[0.05em] tt-text-on-light sm:text-[12px]">
+                      {product.price}
+                    </p>
+                  </div>
+                </article>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </section>
