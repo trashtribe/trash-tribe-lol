@@ -18,7 +18,7 @@ function ProductCard({
   hidden?: boolean;
 }) {
   const altImage = product.galleryImages[1];
-  const useImageSwap = index % 2 === 1 && Boolean(altImage);
+  const useImageSwap = Boolean(altImage);
 
   const cardStyle: CSSProperties & Record<"--tt-rotate", string> = {
     "--tt-rotate": index % 2 === 0 ? "-2deg" : "2deg",
@@ -76,8 +76,9 @@ function ProductCard({
  * Full catalog, auto-scrolling like the marquee banners: the track holds
  * two identical copies of every product and slides -50%, so the loop is
  * seamless. Hover pauses the scroll (via .tt-carousel-track:hover) and,
- * per-card, either scales it up or cross-fades to a second product photo
- * (alternating — see ProductCard).
+ * per-card: products with a second gallery photo (a back/alt shot) cross-
+ * fade to it on hover; products with only one photo (e.g. most tees) scale
+ * up + tilt instead — see ProductCard.
  */
 export function ProductScroller({ products }: ProductScrollerProps) {
   if (products.length === 0) return null;
@@ -88,7 +89,7 @@ export function ProductScroller({ products }: ProductScrollerProps) {
         <div className="mb-8 flex justify-center sm:mb-10">
           <Link
             href="/shop"
-            className="tt-bg-primary inline-flex min-w-[240px] items-center justify-center px-16 py-5 text-base font-bold tracking-[0.28em] tt-text-on-light uppercase transition-opacity hover:opacity-90 sm:text-lg"
+            className="tt-bg-primary inline-flex min-w-[280px] items-center justify-center px-20 py-7 text-lg font-bold tracking-[0.3em] tt-text-on-light uppercase transition-transform duration-200 hover:scale-110 sm:min-w-[340px] sm:px-24 sm:py-8 sm:text-xl"
           >
             Shop
           </Link>
