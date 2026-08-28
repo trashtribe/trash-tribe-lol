@@ -53,7 +53,7 @@ export default function ContactPage() {
               </p>
               <div className="flex flex-wrap items-center gap-6">
                 <a
-                  href="https://www.instagram.com/trashtribe"
+                  href="https://www.instagram.com/trashtribelol/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
@@ -62,7 +62,7 @@ export default function ContactPage() {
                   Instagram
                 </a>
                 <a
-                  href="https://www.pinterest.com/trashtribe"
+                  href="https://www.pinterest.com/trashtribe/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
