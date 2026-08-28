@@ -36,11 +36,17 @@ function ProductCard({
   index: number;
   hidden?: boolean;
 }) {
-  // Tees (and other apparel) mostly only have front art — a second gallery
-  // photo there is usually just a blank back mockup, so only non-apparel
-  // (posters, accessories) gets the image swap; apparel scales + tilts.
+  // Neither Printify's `category` inference nor raw gallery-image count is a
+  // reliable signal here: briefs/keychains/tees are all "front print, blank
+  // back mockup" (one real photo) despite having 2+ gallery images, while
+  // tees can rack up dozens of lifestyle/person shots and still only show
+  // one real design. Checked against the actual catalog, socks are the one
+  // product type that genuinely has multiple distinct photos worth swapping
+  // between — everything else (tees, tanks, briefs, keychains, bags) only
+  // has one real shot, so it scales + tilts instead.
   const altImage = product.galleryImages[1];
-  const useImageSwap = product.category !== "APPAREL" && Boolean(altImage);
+  const isSock = /\bsocks?\b/i.test(product.name);
+  const useImageSwap = isSock && Boolean(altImage);
 
   const cardStyle: CSSProperties & Record<"--tt-rotate", string> = {
     "--tt-rotate": index % 2 === 0 ? "-2deg" : "2deg",
