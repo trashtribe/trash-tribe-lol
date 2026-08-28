@@ -86,3 +86,47 @@ body {
   color: var(--foreground);
   font-family: var(--font-space-mono), ui-monospace, monospace;
 }
+
+/* Sky backdrop used behind the "join the tribe" / "about us" banner art,
+   matched to the blue edges baked into those .webp files so the art blends
+   into the section instead of sitting on a hard rectangle. */
+.tt-sky-bg {
+  background: radial-gradient(
+    120% 100% at 50% 40%,
+    #d9edf3 0%,
+    #bfe3f0 30%,
+    #3badd6 70%,
+    #1c9bc3 100%
+  );
+}
+
+.tt-cloud-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.tt-cloud {
+  position: absolute;
+  animation-name: tt-cloud-drift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: translate;
+}
+
+@keyframes tt-cloud-drift {
+  from {
+    translate: -35% 0;
+  }
+  to {
+    translate: 135% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-cloud {
+    animation: none;
+    translate: 20% 0;
+  }
+}

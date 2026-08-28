@@ -55,7 +55,17 @@ export function CartSidebar() {
 
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
             {items.length === 0 ? (
-              <p className="text-sm tt-text-on-light">Your cart is empty.</p>
+              <div className="flex flex-col items-center gap-4 pt-10 text-center">
+                <Image
+                  src="/cart-empty.svg"
+                  alt=""
+                  width={111}
+                  height={157}
+                  className="h-auto w-[140px]"
+                  aria-hidden="true"
+                />
+                <p className="text-sm tt-text-on-light">Your cart is empty.</p>
+              </div>
             ) : (
               <ul className="space-y-4">
                 {items.map((item) => (

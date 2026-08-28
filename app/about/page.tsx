@@ -2,14 +2,9 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
+import { CloudBackground } from "@/components/CloudBackground";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
-
-const heroImage =
-  "https://images.unsplash.com/photo-1519501025264-65baa15a8232?auto=format&fit=crop&w=2400&q=80";
-
-const sideImage =
-  "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=1400&q=80";
 
 const values = [
   {
@@ -38,58 +33,46 @@ export default function AboutPage() {
     <>
       <Header />
       <main className="flex flex-1 flex-col bg-background">
-        <section className="relative min-h-[min(72vh,640px)] w-full">
-          <Image
-            src={heroImage}
-            alt="Urban cityscape at night with lights and density"
-            fill
-            priority
-            className="object-cover object-center"
-            sizes="100vw"
-          />
-          <div
-            className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/45 to-black/30"
-            aria-hidden
-          />
-          <div className="absolute inset-0 flex items-end justify-center px-4 pb-16 pt-24 sm:items-center sm:pb-24 sm:pt-28">
-            <h1 className="text-center text-5xl font-bold tracking-[0.22em] tt-text-on-dark uppercase sm:text-6xl md:text-7xl">
-              ABOUT US
-            </h1>
+        <section
+          className="tt-sky-bg relative flex min-h-[min(56vh,520px)] w-full items-center justify-center overflow-hidden border-b tt-border-light px-6 py-12 sm:py-16"
+          aria-label="About us"
+        >
+          <CloudBackground />
+          <h1 className="sr-only">About Us</h1>
+          <div className="relative mx-auto w-full max-w-[min(94vw,1100px)]">
+            <Image
+              src="/about-us-hero.webp"
+              alt="About Us — Trash Tribe"
+              width={2561}
+              height={900}
+              sizes="(max-width: 1100px) 94vw, 1100px"
+              className="h-auto w-full object-contain"
+              priority
+            />
           </div>
         </section>
 
         <section className="border-b tt-border-light px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
-          <div className="mx-auto grid max-w-[1600px] items-start gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-20">
-            <div className="flex flex-col gap-6 lg:max-w-xl">
-              <h2 className="text-3xl font-bold tracking-[0.14em] tt-text-on-light uppercase sm:text-4xl">
-                WHO WE ARE
-              </h2>
-              <div className="flex flex-col gap-4 text-[15px] leading-relaxed tracking-[0.04em] tt-text-on-light sm:text-base">
-                <p className="text-[15px] font-bold leading-relaxed tracking-[0.04em] tt-text-on-light sm:text-base">
-                  trashtribe — early 2000s energy, queer by design, un poco locas, no apologies.
-                </p>
-                <p>
-                  Trash Tribe is an independent merch brand — not a faceless label, just a crew that
-                  cares about graphics, quality, and wearing your point of view on your sleeve (literally).
-                </p>
-                <p>
-                  Everything is print on demand: your order goes straight into production, so there are
-                  no minimums and no pressure to move bulk inventory. You get what you want, when you want it.
-                </p>
-                <p>
-                  We design with attitude — bold type, unapologetic visuals, and pieces that feel like
-                  they belong on the street, at a show, or anywhere but boring.
-                </p>
-              </div>
-            </div>
-            <div className="relative aspect-[4/5] w-full overflow-hidden border tt-border-light sm:aspect-[3/4] lg:min-h-[420px]">
-              <Image
-                src={sideImage}
-                alt="Neon-lit urban alley and city atmosphere"
-                fill
-                className="object-cover object-center"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
+          <div className="mx-auto flex max-w-3xl flex-col gap-6">
+            <h2 className="text-3xl font-bold tracking-[0.14em] tt-text-on-light uppercase sm:text-4xl">
+              WHO WE ARE
+            </h2>
+            <div className="flex flex-col gap-4 text-[15px] leading-relaxed tracking-[0.04em] tt-text-on-light sm:text-base">
+              <p className="text-[15px] font-bold leading-relaxed tracking-[0.04em] tt-text-on-light sm:text-base">
+                trashtribe — early 2000s energy, queer by design, un poco locas, no apologies.
+              </p>
+              <p>
+                Trash Tribe is an independent merch brand — not a faceless label, just a crew that
+                cares about graphics, quality, and wearing your point of view on your sleeve (literally).
+              </p>
+              <p>
+                Everything is print on demand: your order goes straight into production, so there are
+                no minimums and no pressure to move bulk inventory. You get what you want, when you want it.
+              </p>
+              <p>
+                We design with attitude — bold type, unapologetic visuals, and pieces that feel like
+                they belong on the street, at a show, or anywhere but boring.
+              </p>
             </div>
           </div>
         </section>
