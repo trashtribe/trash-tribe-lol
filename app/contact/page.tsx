@@ -37,43 +37,45 @@ export default function ContactPage() {
       <main className="flex flex-1 flex-col bg-background">
         <section className="border-b tt-border-light px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
           <div className="mx-auto grid max-w-[1600px] gap-12 lg:grid-cols-2 lg:gap-16 xl:gap-24">
-            <div className="flex flex-col gap-8 lg:max-w-lg">
+            <div className="relative overflow-hidden lg:max-w-lg">
               <Image
                 src="/trashtribe%20logo%20final.png"
-                alt="trashtribe"
+                alt=""
+                aria-hidden="true"
                 width={4983}
                 height={2266}
-                sizes="(max-width: 1024px) 60vw, 320px"
-                className="h-auto w-[220px] object-contain sm:w-[280px]"
+                className="pointer-events-none absolute -right-20 -top-12 z-0 w-[560px] max-w-none rotate-[8deg] object-contain opacity-10 select-none sm:w-[620px]"
               />
-              <h1 className="text-4xl font-bold tracking-[0.14em] tt-text-on-light uppercase sm:text-5xl lg:text-6xl">
-                GET IN TOUCH
-              </h1>
-              <p className="text-[15px] leading-relaxed tracking-[0.04em] tt-text-on-light sm:text-base">
-                Questions about your order, collabs, or just want to say hi?
-              </p>
-              <p>
-                <a href="mailto:hello@trashtribe.lol">hello@trashtribe.lol</a>
-              </p>
-              <div className="flex flex-wrap items-center gap-6">
-                <a
-                  href="https://www.instagram.com/trashtribe"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
-                >
-                  <InstagramIcon />
-                  Instagram
-                </a>
-                <a
-                  href="https://www.pinterest.com/trashtribe"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
-                >
-                  <PinterestIcon />
-                  Pinterest
-                </a>
+              <div className="relative z-10 flex flex-col gap-8">
+                <h1 className="text-4xl font-bold tracking-[0.14em] tt-text-on-light uppercase sm:text-5xl lg:text-6xl">
+                  GET IN TOUCH
+                </h1>
+                <p className="text-[15px] leading-relaxed tracking-[0.04em] tt-text-on-light sm:text-base">
+                  Questions about your order, collabs, or just want to say hi?
+                </p>
+                <p>
+                  <a href="mailto:hello@trashtribe.lol">hello@trashtribe.lol</a>
+                </p>
+                <div className="flex flex-wrap items-center gap-6">
+                  <a
+                    href="https://www.instagram.com/trashtribe"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
+                  >
+                    <InstagramIcon />
+                    Instagram
+                  </a>
+                  <a
+                    href="https://www.pinterest.com/trashtribe"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
+                  >
+                    <PinterestIcon />
+                    Pinterest
+                  </a>
+                </div>
               </div>
             </div>
 
