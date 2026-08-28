@@ -18,7 +18,6 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const products = await getProducts();
-  const tees = products.filter((p) => p.category === "APPAREL").slice(0, 6);
 
   return (
     <>
@@ -37,7 +36,7 @@ export default async function Home() {
           textClassName="tt-text-on-light"
           direction="right"
         />
-        <ProductScroller title="T-Shirts" products={tees} />
+        <ProductScroller products={products} />
       </main>
       <Footer />
     </>

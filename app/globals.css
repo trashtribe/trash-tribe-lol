@@ -122,24 +122,45 @@ body {
   }
 }
 
-/* ProductScroller (components/ProductScroller.tsx) — horizontal
-   scroll-snap strip with a hidden scrollbar and per-card hover
-   scale + slight rotation. */
-.tt-scroller {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+/* ProductScroller (components/ProductScroller.tsx) — auto-scrolling
+   product carousel. Same duplicate-track/-50% loop technique as the
+   marquee banners, but for a row of product cards. Pauses on hover so
+   people can actually interact with a card. */
+.tt-carousel {
+  position: relative;
+  overflow: hidden;
 }
 
-.tt-scroller::-webkit-scrollbar {
-  display: none;
+.tt-carousel-track {
+  display: flex;
+  width: max-content;
+  animation-name: tt-carousel-scroll;
+  animation-duration: 60s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.tt-carousel-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes tt-carousel-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-carousel-track {
+    animation: none;
+  }
 }
 
 .tt-scroller-item {
   flex: 0 0 auto;
-  scroll-snap-align: start;
 }
 
 .tt-scroller-card {
