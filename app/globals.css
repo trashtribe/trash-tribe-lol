@@ -97,6 +97,7 @@ body {
   display: flex;
   width: max-content;
   animation-name: tt-marquee;
+  animation-duration: 22s;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }

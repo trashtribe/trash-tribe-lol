@@ -24,13 +24,13 @@ export default async function Home() {
     <>
       <Header />
       <main className="flex flex-1 flex-col">
-        <Hero />
         <MarqueeBanner
           content="20% OFF EVERYTHING ★ WE'RE LIVE ★"
           bgClassName="tt-bg-dark"
           textClassName="tt-text-primary"
           direction="left"
         />
+        <Hero />
         <MarqueeBanner
           content="SHOP NOW ★ SHOP NOW ★ SHOP NOW ★"
           bgClassName="tt-bg-secondary"

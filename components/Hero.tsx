@@ -4,7 +4,7 @@ import Link from "next/link";
 export function Hero() {
   return (
     <section
-      className="relative w-full overflow-hidden border-b tt-border-light bg-background"
+      className="relative w-full overflow-hidden bg-background"
       aria-label="Featured"
     >
       <div className="relative w-full">
