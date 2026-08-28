@@ -59,6 +59,10 @@
   background-color: var(--tt-bg-dark);
 }
 
+.tt-bg-secondary {
+  background-color: var(--tt-accent-secondary);
+}
+
 .tt-border-light {
   border-color: var(--tt-border-light);
 }
@@ -85,4 +89,34 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-space-mono), ui-monospace, monospace;
+}
+
+/* Marquee banners (MarqueeBanner.tsx) — track holds two identical copies
+   of the content, translated by exactly -50% for a seamless loop. */
+.tt-marquee-track {
+  display: flex;
+  width: max-content;
+  animation-name: tt-marquee;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.tt-marquee-track[data-direction="right"] {
+  animation-direction: reverse;
+}
+
+@keyframes tt-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-marquee-track {
+    animation: none;
+    transform: translateX(0);
+  }
 }

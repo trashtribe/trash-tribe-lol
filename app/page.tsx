@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
+import { MarqueeBanner } from "@/components/MarqueeBanner";
 import { ProductGrid } from "@/components/ProductGrid";
 import { WelcomeSection } from "@/components/WelcomeSection";
 import { getProducts } from "@/lib/products";
@@ -24,6 +25,18 @@ export default async function Home() {
       <Header />
       <main className="flex flex-1 flex-col">
         <Hero />
+        <MarqueeBanner
+          content="20% OFF EVERYTHING ★ WE'RE LIVE ★"
+          bgClassName="tt-bg-dark"
+          textClassName="tt-text-primary"
+          direction="left"
+        />
+        <MarqueeBanner
+          content="SHOP NOW ★ SHOP NOW ★ SHOP NOW ★"
+          bgClassName="tt-bg-secondary"
+          textClassName="tt-text-on-light"
+          direction="right"
+        />
         <WelcomeSection />
         <ProductGrid
           id="shop"
