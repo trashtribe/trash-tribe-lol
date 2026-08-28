@@ -92,11 +92,11 @@ body {
    into the section instead of sitting on a hard rectangle. */
 .tt-sky-bg {
   background: radial-gradient(
-    120% 100% at 50% 40%,
-    #d9edf3 0%,
-    #bfe3f0 30%,
-    #3badd6 70%,
-    #1c9bc3 100%
+    130% 110% at 50% 35%,
+    #bfe3f0 0%,
+    #6cc3e2 35%,
+    #2fa0cf 70%,
+    #1c8fc0 100%
   );
 }
 
@@ -112,21 +112,21 @@ body {
   animation-name: tt-cloud-drift;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
-  will-change: translate;
+  will-change: transform;
 }
 
 @keyframes tt-cloud-drift {
   from {
-    translate: -35% 0;
+    transform: translateX(-35%);
   }
   to {
-    translate: 135% 0;
+    transform: translateX(135%);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .tt-cloud {
     animation: none;
-    translate: 20% 0;
+    transform: translateX(20%);
   }
 }

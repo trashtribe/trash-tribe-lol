@@ -34,18 +34,18 @@ export default function AboutPage() {
       <Header />
       <main className="flex flex-1 flex-col bg-background">
         <section
-          className="tt-sky-bg relative flex min-h-[min(56vh,520px)] w-full items-center justify-center overflow-hidden border-b tt-border-light px-6 py-12 sm:py-16"
+          className="tt-sky-bg relative w-full overflow-hidden border-b tt-border-light"
           aria-label="About us"
         >
           <CloudBackground />
           <h1 className="sr-only">About Us</h1>
-          <div className="relative mx-auto w-full max-w-[min(94vw,1100px)]">
+          <div className="relative mx-auto w-full max-w-[1100px] px-6 py-10 sm:py-14">
             <Image
               src="/about-us-hero.webp"
               alt="About Us — Trash Tribe"
               width={2561}
               height={900}
-              sizes="(max-width: 1100px) 94vw, 1100px"
+              sizes="(max-width: 1100px) 100vw, 1100px"
               className="h-auto w-full object-contain"
               priority
             />
