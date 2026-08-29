@@ -174,27 +174,6 @@ export function Header() {
         {openCategory && activeFlyout ? (
           <div className="absolute inset-x-0 top-full z-40 hidden border-t tt-border-light bg-background shadow-sm md:block">
             <div className="mx-auto flex max-w-[1600px] gap-12 px-6 py-8 lg:px-10">
-              <ul className="flex min-w-[140px] shrink-0 flex-col gap-3">
-                <li>
-                  <Link
-                    href={`/shop?category=${openCategory}`}
-                    className="text-[11px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
-                  >
-                    All {CATEGORY_LABEL[openCategory]}
-                  </Link>
-                </li>
-                {activeFlyout.subcategories.map((sub) => (
-                  <li key={sub.value}>
-                    <Link
-                      href={`/shop?category=${openCategory}&subcategory=${sub.value}`}
-                      className="text-[11px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
-                    >
-                      {sub.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-
               {activeFlyout.products.length > 0 ? (
                 <div className="flex flex-1 gap-6">
                   {activeFlyout.products.map((p) => (
@@ -216,6 +195,27 @@ export function Header() {
                   ))}
                 </div>
               ) : null}
+
+              <ul className="flex min-w-[140px] shrink-0 flex-col items-end gap-3 text-right">
+                <li>
+                  <Link
+                    href={`/shop?category=${openCategory}`}
+                    className="text-[11px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
+                  >
+                    All {CATEGORY_LABEL[openCategory]}
+                  </Link>
+                </li>
+                {activeFlyout.subcategories.map((sub) => (
+                  <li key={sub.value}>
+                    <Link
+                      href={`/shop?category=${openCategory}&subcategory=${sub.value}`}
+                      className="text-[11px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
+                    >
+                      {sub.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         ) : null}
