@@ -24,6 +24,10 @@ const nav: NavItem[] = [
   { href: "/shop?category=ACCESSORIES", label: "Accessories", flyoutCategory: "ACCESSORIES" },
   { href: "/shop?category=UNDERWEAR", label: "Underwear", flyoutCategory: "UNDERWEAR" },
   { href: "/shop?category=POSTERS", label: "Posters" },
+];
+
+/** Kept apart from the shop categories — sits next to the account/search icons instead. */
+const utilityNav: NavItem[] = [
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
@@ -126,6 +130,20 @@ export function Header() {
           </nav>
 
           <div className="flex items-center justify-end gap-1 sm:gap-3">
+            <nav
+              aria-label="Secondary"
+              className="mr-2 hidden items-center gap-4 border-r tt-border-light pr-3 md:flex lg:mr-3 lg:gap-5 lg:pr-5"
+            >
+              {utilityNav.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="text-[10px] font-bold tracking-[0.18em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary lg:text-[11px]"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
             <Link
               href={accountHref}
               className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
@@ -252,6 +270,16 @@ export function Header() {
               </button>
             );
           })}
+          <span className="mx-1 h-3 w-px tt-bg-dark opacity-20" aria-hidden="true" />
+          {utilityNav.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="text-[10px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary"
+            >
+              {item.label}
+            </Link>
+          ))}
         </div>
 
         {mobileOpenCategory && preview?.[mobileOpenCategory] ? (

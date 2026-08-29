@@ -18,6 +18,10 @@
   --tt-accent-primary: #b8ff06;
   --tt-accent-secondary: #ff53e3;
   --tt-soft-pink: #f088de;
+  /* Sampled from the "JOIN THE TRIBE" pill baked into the hero artwork —
+     a deeper yellow-green than --tt-accent-primary, kept as its own token
+     so the hero button and the "SHOP ALL" CTA can match it exactly. */
+  --tt-tribe-green: #96d004;
   --tt-border-light: color-mix(in srgb, var(--tt-text-on-light) 12%, transparent);
   --tt-border-dark: color-mix(in srgb, var(--tt-text-on-dark) 18%, transparent);
 }
@@ -61,6 +65,10 @@
 
 .tt-bg-secondary {
   background-color: var(--tt-accent-secondary);
+}
+
+.tt-bg-tribe-green {
+  background-color: var(--tt-tribe-green);
 }
 
 .tt-border-light {
