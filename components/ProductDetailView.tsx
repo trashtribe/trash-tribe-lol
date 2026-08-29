@@ -309,8 +309,6 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
     setSelectedImageIndex(0);
   }
 
-  const activeImage = gallery[selectedImageIndex] ?? gallery[0] ?? product.imageSrc;
-
   const showCompareAt =
     product.originalPrice.trim() !== "" && product.originalPrice.trim() !== product.price.trim();
 
@@ -330,14 +328,23 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
         <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
           <div>
             <div className="relative aspect-square overflow-hidden border tt-border-light bg-background p-5">
-              <Image
-                src={activeImage}
-                alt={product.imageAlt}
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-contain object-center"
-                priority
-              />
+              {/* All gallery shots are stacked and preloaded up front (gallery
+                  is curated down to ~2 images per color, so this is cheap),
+                  then toggled with opacity — swapping <img src> on click was
+                  forcing a fresh network fetch of the full-size image every
+                  time, which read as a slow, laggy thumbnail switch. */}
+              {gallery.map((imageSrc, idx) => (
+                <Image
+                  key={imageSrc}
+                  src={imageSrc}
+                  alt={product.imageAlt}
+                  aria-hidden={idx !== selectedImageIndex}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className={`object-contain object-center transition-opacity duration-150 ${idx === selectedImageIndex ? "opacity-100" : "opacity-0"}`}
+                  priority={idx < 2}
+                />
+              ))}
             </div>
             {gallery.length > 1 ? (
               <ul className="mt-4 grid grid-cols-4 gap-3">
