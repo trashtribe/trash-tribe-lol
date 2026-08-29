@@ -3,6 +3,7 @@ import { cache } from "react";
 import {
   fetchPrintifyProducts,
   variantRowIsSellable,
+  type PrintifyImage,
   type PrintifyProduct,
   type PrintifyVariant,
   type PrintifyVariantRow,
@@ -144,18 +145,67 @@ function inferCategory(p: PrintifyProduct): StoreCategory {
   return "ACCESSORIES";
 }
 
-function galleryFromProduct(p: PrintifyProduct): string[] {
-  const fromImages = (p.images ?? [])
-    .map((img) => img.src)
-    .filter((src): src is string => Boolean(src?.trim()));
-  const unique: string[] = [];
-  const seen = new Set<string>();
-  for (const src of fromImages) {
-    if (seen.has(src)) continue;
-    seen.add(src);
-    unique.push(src);
+/**
+ * Printify sends a whole batch of near-duplicate shots per color (front,
+ * front-2, back, back-2, folded, hanging, a dozen "person-N" lifestyle
+ * shots, sleeve/neck closeups, a size chart...) all tagged with the same
+ * `variant_ids`. Only `position: "front"` and `position: "back"` reliably
+ * identify the two canonical product shots — everything else reads as a
+ * repeat in a small thumbnail strip. Keep the first "front" and first
+ * "back" found; if a product's data doesn't carry position info at all,
+ * fall back to its first two raw images so we still show something.
+ */
+function curateColorGroupImages(images: PrintifyImage[]): PrintifyImage[] {
+  const front = images.find((img) => img.position === "front");
+  const back = images.find((img) => img.position === "back");
+  const curated = [front, back].filter((img): img is PrintifyImage => Boolean(img));
+  return curated.length > 0 ? curated : images.slice(0, 2);
+}
+
+/**
+ * Groups Printify's raw image list by the exact `variant_ids` set each
+ * image is tagged with (in practice: one group per color, shared across
+ * that color's sizes), then curates each group down to its front/back
+ * shot. Keeps each image's variant ids so the product page can still show
+ * only the shots that belong to the selected color.
+ */
+function curatedImageGroups(p: PrintifyProduct): StoreProductImage[] {
+  const groups = new Map<string, PrintifyImage[]>();
+  const groupOrder: string[] = [];
+
+  for (const img of p.images ?? []) {
+    if (!img.src?.trim()) continue;
+    const ids = Array.isArray(img.variant_ids)
+      ? [...img.variant_ids].filter((id): id is number => typeof id === "number" && Number.isFinite(id)).sort((a, b) => a - b)
+      : [];
+    const key = ids.join(",");
+    if (!groups.has(key)) {
+      groups.set(key, []);
+      groupOrder.push(key);
+    }
+    groups.get(key)!.push(img);
   }
-  return unique;
+
+  const curated: StoreProductImage[] = [];
+  const seenSrc = new Set<string>();
+  for (const key of groupOrder) {
+    const groupImages = groups.get(key)!;
+    for (const img of curateColorGroupImages(groupImages)) {
+      const src = img.src!.trim();
+      if (!src || seenSrc.has(src)) continue;
+      seenSrc.add(src);
+      const ids = Array.isArray(img.variant_ids)
+        ? img.variant_ids.filter((id): id is number => typeof id === "number" && Number.isFinite(id))
+        : [];
+      curated.push({ src, variantIds: ids });
+    }
+  }
+
+  return curated;
+}
+
+function galleryFromProduct(p: PrintifyProduct): string[] {
+  return curatedImageGroups(p).map((img) => img.src);
 }
 
 /**
@@ -164,28 +214,7 @@ function galleryFromProduct(p: PrintifyProduct): string[] {
  * belong to the selected color instead of the full mixed gallery.
  */
 function imagesFromProduct(p: PrintifyProduct): StoreProductImage[] {
-  const variantIdsBySrc = new Map<string, Set<number>>();
-  const order: string[] = [];
-
-  for (const img of p.images ?? []) {
-    const src = img.src?.trim();
-    if (!src) continue;
-    if (!variantIdsBySrc.has(src)) {
-      variantIdsBySrc.set(src, new Set());
-      order.push(src);
-    }
-    const ids = Array.isArray(img.variant_ids) ? img.variant_ids : [];
-    for (const id of ids) {
-      if (typeof id === "number" && Number.isFinite(id)) {
-        variantIdsBySrc.get(src)!.add(id);
-      }
-    }
-  }
-
-  return order.map((src) => ({
-    src,
-    variantIds: [...(variantIdsBySrc.get(src) ?? [])],
-  }));
+  return curatedImageGroups(p);
 }
 
 /**
