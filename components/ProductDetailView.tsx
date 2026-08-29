@@ -291,7 +291,26 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
     return forVariant.length > 0 ? forVariant : null;
   }, [product.images, matchingVariant]);
 
-  const gallery = (variantGallery ?? product.galleryImages).slice(0, 4);
+  const gallery = useMemo(
+    () => (variantGallery ?? product.galleryImages).slice(0, 4),
+    [variantGallery, product.galleryImages],
+  );
+
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  // When the selected color/variant swaps in a different photo set, snap
+  // back to the first shot instead of pointing at a now out-of-range (or
+  // just mismatched) thumbnail. Adjusting state during render (rather than
+  // in an effect) avoids an extra render pass — see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [renderedGallery, setRenderedGallery] = useState(gallery);
+  if (renderedGallery !== gallery) {
+    setRenderedGallery(gallery);
+    setSelectedImageIndex(0);
+  }
+
+  const activeImage = gallery[selectedImageIndex] ?? gallery[0] ?? product.imageSrc;
+
   const showCompareAt =
     product.originalPrice.trim() !== "" && product.originalPrice.trim() !== product.price.trim();
 
@@ -312,7 +331,7 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
           <div>
             <div className="relative aspect-square overflow-hidden border tt-border-light bg-background p-5">
               <Image
-                src={gallery[0] ?? product.imageSrc}
+                src={activeImage}
                 alt={product.imageAlt}
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -320,21 +339,32 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
                 priority
               />
             </div>
-            <ul className="mt-4 grid grid-cols-4 gap-3">
-              {gallery.map((imageSrc, idx) => (
-                <li key={`${product.id}-thumb-${idx}`}>
-                  <div className="relative aspect-square overflow-hidden border tt-border-light bg-background p-2">
-                    <Image
-                      src={imageSrc}
-                      alt={`${product.name} thumbnail ${idx + 1}`}
-                      fill
-                      sizes="25vw"
-                      className="object-contain object-center"
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {gallery.length > 1 ? (
+              <ul className="mt-4 grid grid-cols-4 gap-3">
+                {gallery.map((imageSrc, idx) => {
+                  const active = idx === selectedImageIndex;
+                  return (
+                    <li key={`${product.id}-thumb-${idx}`}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedImageIndex(idx)}
+                        aria-label={`View image ${idx + 1} of ${product.name}`}
+                        aria-pressed={active}
+                        className={`relative block aspect-square w-full overflow-hidden border bg-background p-2 transition-colors ${active ? "tt-border-dark" : "tt-border-light hover:tt-border-dark"}`}
+                      >
+                        <Image
+                          src={imageSrc}
+                          alt={`${product.name} thumbnail ${idx + 1}`}
+                          fill
+                          sizes="25vw"
+                          className="object-contain object-center"
+                        />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
           </div>
 
           <div className="flex flex-col">
