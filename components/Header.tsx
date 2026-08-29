@@ -2,34 +2,31 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import type { NavPreviewData, StoreCategory } from "@/lib/products";
 import { useCart } from "./CartProvider";
 import { useSearchModal } from "./SearchModalContext";
 import { useWishlist } from "./WishlistProvider";
 
-const nav = [
+type FlyoutCategory = Extract<StoreCategory, "UNDERWEAR" | "ACCESSORIES">;
+
+type NavItem = {
+  href: string;
+  label: string;
+  /** Set only for nav items that get a hover flyout / tap accordion. */
+  flyoutCategory?: FlyoutCategory;
+};
+
+const nav: NavItem[] = [
   { href: "/shop", label: "Shop All" },
   { href: "/shop?category=TSHIRTS", label: "T-Shirts" },
-  { href: "/shop?category=ACCESSORIES", label: "Accessories" },
-  { href: "/shop?category=UNDERWEAR", label: "Underwear" },
+  { href: "/shop?category=ACCESSORIES", label: "Accessories", flyoutCategory: "ACCESSORIES" },
+  { href: "/shop?category=UNDERWEAR", label: "Underwear", flyoutCategory: "UNDERWEAR" },
   { href: "/shop?category=POSTERS", label: "Posters" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
-] as const;
-
-/** Only categories with a real subcategory split get a secondary bar under the logo. */
-const SUBCATEGORY_NAV: Record<string, { value: string; label: string }[]> = {
-  UNDERWEAR: [
-    { value: "PANTIES", label: "Panties" },
-    { value: "SOCKS", label: "Socks" },
-  ],
-  ACCESSORIES: [
-    { value: "BAGS", label: "Bags" },
-    { value: "KEYCHAINS", label: "Keychains" },
-  ],
-};
+];
 
 function AccountIcon() {
   return (
@@ -68,42 +65,10 @@ function CartIcon() {
   );
 }
 
-function HeaderSubnav() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  if (pathname !== "/shop") return null;
-
-  const activeCategory = searchParams.get("category")?.toUpperCase() ?? "";
-  const activeSubcategory = searchParams.get("subcategory")?.toUpperCase() ?? null;
-  const items = SUBCATEGORY_NAV[activeCategory];
-
-  if (!items) return null;
-
-  return (
-    <nav
-      aria-label="Subcategory"
-      className="flex flex-wrap justify-center gap-x-6 gap-y-1 border-t tt-border-light px-4 py-2 sm:px-6"
-    >
-      {items.map((item) => {
-        const isActive = item.value === activeSubcategory;
-        const href = `/shop?category=${activeCategory}&subcategory=${item.value}`;
-        return (
-          <Link
-            key={item.value}
-            href={href}
-            aria-current={isActive ? "true" : undefined}
-            className={`text-[10px] font-bold tracking-[0.16em] uppercase transition-colors ${
-              isActive ? "tt-text-secondary" : "tt-text-on-light hover:tt-text-secondary"
-            }`}
-          >
-            {item.label}
-          </Link>
-        );
-      })}
-    </nav>
-  );
-}
+const CATEGORY_LABEL: Record<FlyoutCategory, string> = {
+  UNDERWEAR: "Underwear",
+  ACCESSORIES: "Accessories",
+};
 
 export function Header() {
   const { user } = useAuth();
@@ -111,94 +76,204 @@ export function Header() {
   const { openSearch } = useSearchModal();
   const { count: wishlistCount } = useWishlist();
 
+  const [preview, setPreview] = useState<NavPreviewData | null>(null);
+  const [openCategory, setOpenCategory] = useState<FlyoutCategory | null>(null);
+  const [mobileOpenCategory, setMobileOpenCategory] = useState<FlyoutCategory | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/nav-preview")
+      .then((res) => (res.ok ? (res.json() as Promise<NavPreviewData>) : null))
+      .then((data) => {
+        if (!cancelled && data) setPreview(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const accountHref = user ? "/account" : "/login";
+  const activeFlyout = openCategory ? preview?.[openCategory] : undefined;
 
   return (
     <header className="sticky top-0 z-[100] border-b tt-border-light bg-background">
-      <div className="mx-auto grid max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6 sm:py-5">
-        <Link href="/" className="block shrink-0 justify-self-start leading-none" aria-label="trashtribe">
-          <Image
-            src="/tt.png"
-            alt="trashtribe"
-            width={61}
-            height={72}
-            priority
-            style={{ width: '61px', height: 'auto' }}
-            className="block object-contain object-left"
-          />
-        </Link>
+      <div className="relative" onMouseLeave={() => setOpenCategory(null)}>
+        <div className="mx-auto grid max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6 sm:py-5">
+          <Link href="/" className="block shrink-0 justify-self-start leading-none" aria-label="trashtribe">
+            <Image
+              src="/tt.png"
+              alt="trashtribe"
+              width={61}
+              height={72}
+              priority
+              style={{ width: '61px', height: 'auto' }}
+              className="block object-contain object-left"
+            />
+          </Link>
 
-        <nav aria-label="Primary" className="hidden items-center gap-6 md:flex lg:gap-10">
-          {nav.map((item) => (
+          <nav aria-label="Primary" className="hidden items-center gap-6 md:flex lg:gap-10">
+            {nav.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                onMouseEnter={() => setOpenCategory(item.flyoutCategory ?? null)}
+                className="text-[11px] font-bold tracking-[0.2em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary lg:text-[12px]"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center justify-end gap-1 sm:gap-3">
             <Link
-              key={item.label}
-              href={item.href}
-              className="text-[11px] font-bold tracking-[0.2em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary lg:text-[12px]"
+              href={accountHref}
+              className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+              aria-label={user ? "Account" : "Sign in"}
             >
-              {item.label}
+              <AccountIcon />
             </Link>
-          ))}
-        </nav>
-
-        <div className="flex items-center justify-end gap-1 sm:gap-3">
-          <Link
-            href={accountHref}
-            className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
-            aria-label={user ? "Account" : "Sign in"}
-          >
-            <AccountIcon />
-          </Link>
-          <button
-            type="button"
-            className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
-            aria-label="Search"
-            onClick={openSearch}
-          >
-            <SearchIcon />
-          </button>
-          <Link
-            href="/wishlist"
-            className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
-            aria-label={`Wishlist, ${wishlistCount} items`}
-          >
-            <HeartIcon />
-            {wishlistCount > 0 ? (
-              <span className="absolute -right-0.5 -top-0.5 flex min-h-[18px] min-w-[18px] items-center justify-center tt-bg-primary px-1 text-[10px] font-bold leading-none tt-text-on-light">
-                {wishlistCount}
-              </span>
-            ) : null}
-          </Link>
-          <button
-            type="button"
-            className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
-            aria-label={`Shopping cart, ${itemCount} items`}
-            onClick={openCart}
-          >
-            <CartIcon />
-            {itemCount > 0 ? (
-              <span className="absolute -right-0.5 -top-0.5 flex min-h-[18px] min-w-[18px] items-center justify-center tt-bg-primary px-1 text-[10px] font-bold leading-none tt-text-on-light">
-                {itemCount}
-              </span>
-            ) : null}
-          </button>
+            <button
+              type="button"
+              className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+              aria-label="Search"
+              onClick={openSearch}
+            >
+              <SearchIcon />
+            </button>
+            <Link
+              href="/wishlist"
+              className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+              aria-label={`Wishlist, ${wishlistCount} items`}
+            >
+              <HeartIcon />
+              {wishlistCount > 0 ? (
+                <span className="absolute -right-0.5 -top-0.5 flex min-h-[18px] min-w-[18px] items-center justify-center tt-bg-primary px-1 text-[10px] font-bold leading-none tt-text-on-light">
+                  {wishlistCount}
+                </span>
+              ) : null}
+            </Link>
+            <button
+              type="button"
+              className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+              aria-label={`Shopping cart, ${itemCount} items`}
+              onClick={openCart}
+            >
+              <CartIcon />
+              {itemCount > 0 ? (
+                <span className="absolute -right-0.5 -top-0.5 flex min-h-[18px] min-w-[18px] items-center justify-center tt-bg-primary px-1 text-[10px] font-bold leading-none tt-text-on-light">
+                  {itemCount}
+                </span>
+              ) : null}
+            </button>
+          </div>
         </div>
+
+        {/* Desktop hover flyout — subcategory links + a few product shots,
+            only for nav items that actually split into subcategories. */}
+        {openCategory && activeFlyout ? (
+          <div className="absolute inset-x-0 top-full z-40 hidden border-t tt-border-light bg-background shadow-sm md:block">
+            <div className="mx-auto flex max-w-[1600px] gap-12 px-6 py-8 lg:px-10">
+              <ul className="flex min-w-[140px] shrink-0 flex-col gap-3">
+                <li>
+                  <Link
+                    href={`/shop?category=${openCategory}`}
+                    className="text-[11px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
+                  >
+                    All {CATEGORY_LABEL[openCategory]}
+                  </Link>
+                </li>
+                {activeFlyout.subcategories.map((sub) => (
+                  <li key={sub.value}>
+                    <Link
+                      href={`/shop?category=${openCategory}&subcategory=${sub.value}`}
+                      className="text-[11px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
+                    >
+                      {sub.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+
+              {activeFlyout.products.length > 0 ? (
+                <div className="flex flex-1 gap-6">
+                  {activeFlyout.products.map((p) => (
+                    <Link key={p.slug} href={`/shop/${p.slug}`} className="group w-full max-w-[180px]">
+                      <div className="relative aspect-square w-full overflow-hidden border tt-border-light bg-background">
+                        <Image
+                          src={p.imageSrc}
+                          alt={p.imageAlt}
+                          fill
+                          sizes="180px"
+                          className="object-contain p-3 transition-transform group-hover:scale-105"
+                        />
+                      </div>
+                      <p className="mt-2 truncate text-[11px] font-bold tracking-[0.05em] tt-text-on-light uppercase">
+                        {p.name}
+                      </p>
+                      <p className="text-[11px] tt-text-on-light">{p.price}</p>
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
       </div>
 
-      <nav aria-label="Primary mobile" className="flex flex-wrap justify-center gap-x-6 gap-y-2 border-t tt-border-light px-4 py-3 md:hidden">
-        {nav.map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            className="text-[10px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary"
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      <nav aria-label="Primary mobile" className="flex flex-col gap-2 border-t tt-border-light px-4 py-3 md:hidden">
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+          {nav.map((item) => {
+            if (!item.flyoutCategory) {
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="text-[10px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary"
+                >
+                  {item.label}
+                </Link>
+              );
+            }
 
-      <Suspense fallback={null}>
-        <HeaderSubnav />
-      </Suspense>
+            const category = item.flyoutCategory;
+            const isOpen = mobileOpenCategory === category;
+            return (
+              <button
+                key={item.label}
+                type="button"
+                aria-expanded={isOpen}
+                onClick={() => setMobileOpenCategory(isOpen ? null : category)}
+                className={`text-[10px] font-bold tracking-[0.2em] uppercase transition-colors hover:tt-text-secondary ${
+                  isOpen ? "tt-text-secondary" : "tt-text-on-light"
+                }`}
+              >
+                {item.label} {isOpen ? "−" : "+"}
+              </button>
+            );
+          })}
+        </div>
+
+        {mobileOpenCategory && preview?.[mobileOpenCategory] ? (
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 border-t tt-border-light pt-2">
+            <Link
+              href={`/shop?category=${mobileOpenCategory}`}
+              className="text-[10px] font-bold tracking-[0.16em] tt-text-on-light uppercase hover:tt-text-secondary"
+            >
+              All {CATEGORY_LABEL[mobileOpenCategory]}
+            </Link>
+            {preview[mobileOpenCategory]!.subcategories.map((sub) => (
+              <Link
+                key={sub.value}
+                href={`/shop?category=${mobileOpenCategory}&subcategory=${sub.value}`}
+                className="text-[10px] font-bold tracking-[0.16em] tt-text-on-light uppercase hover:tt-text-secondary"
+              >
+                {sub.label}
+              </Link>
+            ))}
+          </div>
+        ) : null}
+      </nav>
     </header>
   );
 }

@@ -471,3 +471,58 @@ export async function getProductBySlug(slug: string): Promise<StoreProduct | nul
   const products = await getProducts();
   return products.find((item) => item.slug === slug) ?? null;
 }
+
+/** Only categories that have a real subcategory split get a hover-flyout preview. */
+export const SUBCATEGORIES_BY_CATEGORY: Partial<
+  Record<StoreCategory, { value: StoreSubcategory; label: string }[]>
+> = {
+  UNDERWEAR: [
+    { value: "PANTIES", label: "Panties" },
+    { value: "SOCKS", label: "Socks" },
+  ],
+  ACCESSORIES: [
+    { value: "BAGS", label: "Bags" },
+    { value: "KEYCHAINS", label: "Keychains" },
+  ],
+};
+
+export type NavPreviewProduct = {
+  slug: string;
+  name: string;
+  price: string;
+  imageSrc: string;
+  imageAlt: string;
+};
+
+export type NavPreviewEntry = {
+  subcategories: { value: StoreSubcategory; label: string }[];
+  products: NavPreviewProduct[];
+};
+
+export type NavPreviewData = Partial<Record<StoreCategory, NavPreviewEntry>>;
+
+/**
+ * Small per-category preview (subcategory links + a few product shots) for
+ * the header's hover flyout menu. Only built for categories that actually
+ * split into subcategories — everything else is a plain nav link.
+ */
+export async function getNavPreview(): Promise<NavPreviewData> {
+  const products = await getProducts();
+  const categories = Object.keys(SUBCATEGORIES_BY_CATEGORY) as StoreCategory[];
+
+  const data: NavPreviewData = {};
+  for (const category of categories) {
+    const inCategory = products.filter((p) => p.category === category).slice(0, 3);
+    data[category] = {
+      subcategories: SUBCATEGORIES_BY_CATEGORY[category] ?? [],
+      products: inCategory.map((p) => ({
+        slug: p.slug,
+        name: p.name,
+        price: p.price,
+        imageSrc: p.imageSrc,
+        imageAlt: p.imageAlt,
+      })),
+    };
+  }
+  return data;
+}
