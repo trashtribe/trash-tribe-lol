@@ -303,9 +303,15 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
   // just mismatched) thumbnail. Adjusting state during render (rather than
   // in an effect) avoids an extra render pass — see
   // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
-  const [renderedGallery, setRenderedGallery] = useState(gallery);
-  if (renderedGallery !== gallery) {
-    setRenderedGallery(gallery);
+  // Compared by content (not array identity): if `gallery`'s useMemo ever
+  // recomputed to a new-but-equal array on an unrelated render (e.g. a
+  // thumbnail click), reference equality would treat that as "the gallery
+  // changed" and reset selectedImageIndex back to 0 on every click —
+  // exactly the "clicking does nothing" symptom reported.
+  const gallerySignature = gallery.join("|");
+  const [renderedGallerySignature, setRenderedGallerySignature] = useState(gallerySignature);
+  if (renderedGallerySignature !== gallerySignature) {
+    setRenderedGallerySignature(gallerySignature);
     setSelectedImageIndex(0);
   }
 
@@ -335,7 +341,7 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
                   time, which read as a slow, laggy thumbnail switch. */}
               {gallery.map((imageSrc, idx) => (
                 <Image
-                  key={imageSrc}
+                  key={idx}
                   src={imageSrc}
                   alt={product.imageAlt}
                   aria-hidden={idx !== selectedImageIndex}
