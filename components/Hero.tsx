@@ -17,25 +17,28 @@ export function Hero() {
           className="h-auto w-full object-contain"
           priority
         />
-        {/* Real button, sized/positioned as a % of the image so it tracks
-            at any viewport width. Its footprint fully covers the "JOIN THE
-            TRIBE" pill baked into the artwork (measured at x:867-1668,
-            y:673-783 of 2561x900) — same green, same spot, but now a real
-            element so it can move on hover/tap and point at Shop All. */}
+        {/* Same "JOIN THE TRIBE" artwork as always — nothing about how it
+            looks changes. This renders that exact crop of the source image
+            a second time as its own element (via a background-image, sized
+            and positioned with the math below to line up pixel-for-pixel
+            with the pill baked into the full hero image underneath), so it
+            can move independently on hover/tap while pointing at Shop All
+            instead of signup. Crop window: x:832-1703, y:657-801 of
+            2561x900 (left 32.5%, top 73%, width 34%, height 16%). */}
         <Link
           href="/shop"
           aria-label="Shop all — trashtribe"
-          className="tt-bg-tribe-green absolute flex items-center justify-center rounded-full border-2 border-black text-center font-bold text-white uppercase tracking-[0.12em] shadow-[0_4px_0_rgba(0,0,0,0.35)] transition-transform duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_7px_0_rgba(0,0,0,0.35)] active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.35)]"
+          className="absolute block bg-no-repeat transition-transform duration-200 ease-out hover:-translate-y-1 active:translate-y-0.5 active:scale-[0.98]"
           style={{
             left: "32.5%",
             top: "73%",
             width: "34%",
             height: "16%",
-            fontSize: "clamp(11px, 2.1vw, 26px)",
+            backgroundImage: "url(/hero-join-the-tribe.webp)",
+            backgroundSize: "294.1176% auto",
+            backgroundPosition: "49.2424% 86.9048%",
           }}
-        >
-          Shop All
-        </Link>
+        />
       </div>
     </section>
   );
