@@ -9,21 +9,31 @@ import { useCart } from "./CartProvider";
 import { useSearchModal } from "./SearchModalContext";
 import { useWishlist } from "./WishlistProvider";
 
-type FlyoutCategory = Extract<StoreCategory, "UNDERWEAR" | "ACCESSORIES">;
-
 type NavItem = {
   href: string;
   label: string;
-  /** Set only for nav items that get a hover flyout / tap accordion. */
-  flyoutCategory?: FlyoutCategory;
+  /** Set on every real shop category — triggers the desktop hover flyout (product photos). */
+  flyoutCategory?: StoreCategory;
+  /** Only Underwear/Accessories actually split into subcategories — gets the mobile tap accordion. */
+  hasSubcategories?: boolean;
 };
 
 const nav: NavItem[] = [
   { href: "/shop", label: "Shop All" },
-  { href: "/shop?category=TSHIRTS", label: "T-Shirts" },
-  { href: "/shop?category=ACCESSORIES", label: "Accessories", flyoutCategory: "ACCESSORIES" },
-  { href: "/shop?category=UNDERWEAR", label: "Underwear", flyoutCategory: "UNDERWEAR" },
-  { href: "/shop?category=POSTERS", label: "Posters" },
+  { href: "/shop?category=TSHIRTS", label: "T-Shirts", flyoutCategory: "TSHIRTS" },
+  {
+    href: "/shop?category=ACCESSORIES",
+    label: "Accessories",
+    flyoutCategory: "ACCESSORIES",
+    hasSubcategories: true,
+  },
+  {
+    href: "/shop?category=UNDERWEAR",
+    label: "Underwear",
+    flyoutCategory: "UNDERWEAR",
+    hasSubcategories: true,
+  },
+  { href: "/shop?category=POSTERS", label: "Posters", flyoutCategory: "POSTERS" },
 ];
 
 /** Kept apart from the shop categories — sits next to the account/search icons instead. */
@@ -69,9 +79,11 @@ function CartIcon() {
   );
 }
 
-const CATEGORY_LABEL: Record<FlyoutCategory, string> = {
+const CATEGORY_LABEL: Record<StoreCategory, string> = {
+  TSHIRTS: "T-Shirts",
   UNDERWEAR: "Underwear",
   ACCESSORIES: "Accessories",
+  POSTERS: "Posters",
 };
 
 export function Header() {
@@ -81,8 +93,8 @@ export function Header() {
   const { count: wishlistCount } = useWishlist();
 
   const [preview, setPreview] = useState<NavPreviewData | null>(null);
-  const [openCategory, setOpenCategory] = useState<FlyoutCategory | null>(null);
-  const [mobileOpenCategory, setMobileOpenCategory] = useState<FlyoutCategory | null>(null);
+  const [openCategory, setOpenCategory] = useState<StoreCategory | null>(null);
+  const [mobileOpenCategory, setMobileOpenCategory] = useState<StoreCategory | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -242,7 +254,7 @@ export function Header() {
       <nav aria-label="Primary mobile" className="flex flex-col gap-2 border-t tt-border-light px-4 py-3 md:hidden">
         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
           {nav.map((item) => {
-            if (!item.flyoutCategory) {
+            if (!item.hasSubcategories || !item.flyoutCategory) {
               return (
                 <Link
                   key={item.label}

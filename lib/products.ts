@@ -501,14 +501,17 @@ export type NavPreviewEntry = {
 
 export type NavPreviewData = Partial<Record<StoreCategory, NavPreviewEntry>>;
 
+const ALL_CATEGORIES: StoreCategory[] = ["TSHIRTS", "UNDERWEAR", "ACCESSORIES", "POSTERS"];
+
 /**
- * Small per-category preview (subcategory links + a few product shots) for
- * the header's hover flyout menu. Only built for categories that actually
- * split into subcategories — everything else is a plain nav link.
+ * Small per-category preview (subcategory links, where the category has
+ * any, + a few product shots) for the header's hover flyout menu. Built
+ * for every real shop category so hovering any of them (not just the ones
+ * that split into subcategories) shows product photos.
  */
 export async function getNavPreview(): Promise<NavPreviewData> {
   const products = await getProducts();
-  const categories = Object.keys(SUBCATEGORIES_BY_CATEGORY) as StoreCategory[];
+  const categories = ALL_CATEGORIES;
 
   const data: NavPreviewData = {};
   for (const category of categories) {
