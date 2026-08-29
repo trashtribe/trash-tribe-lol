@@ -152,13 +152,25 @@ function inferCategory(p: PrintifyProduct): StoreCategory {
  * `variant_ids`. Only `position: "front"` and `position: "back"` reliably
  * identify the two canonical product shots — everything else reads as a
  * repeat in a small thumbnail strip. Keep the first "front" and first
- * "back" found; if a product's data doesn't carry position info at all,
- * fall back to its first two raw images so we still show something.
+ * "back" found.
+ *
+ * Some variant groups don't tag a "front" at all — seen on Cher Guevara
+ * Tee, where one color's data jumps straight to "back", with the actual
+ * design photo mislabeled as an "other" shot (e.g. "front-2"). Since this
+ * is a gap in Printify's own data rather than something tied to one
+ * product, it can turn up on any product, including ones added later — so
+ * when there's no tagged front, fall back to any image in the group that
+ * isn't the back mockup, rather than risking a shopper's only photo being
+ * a blank shirt with the print nowhere in sight. Last resort: the group's
+ * first image, whatever it is.
  */
 function curateColorGroupImages(images: PrintifyImage[]): PrintifyImage[] {
+  if (images.length === 0) return [];
   const front = images.find((img) => img.position === "front");
   const back = images.find((img) => img.position === "back");
-  const curated = [front, back].filter((img): img is PrintifyImage => Boolean(img));
+  const primary = front ?? images.find((img) => img !== back) ?? images[0]!;
+  const secondary = back && back !== primary ? back : undefined;
+  const curated = [primary, secondary].filter((img): img is PrintifyImage => Boolean(img));
   return curated.length > 0 ? curated : images.slice(0, 2);
 }
 
