@@ -196,7 +196,7 @@ export function Header() {
               </ul>
 
               {activeFlyout.products.length > 0 ? (
-                <div className="flex flex-1 gap-6">
+                <div className="flex flex-1 justify-end gap-6">
                   {activeFlyout.products.map((p) => (
                     <Link key={p.slug} href={`/shop/${p.slug}`} className="group w-full max-w-[180px]">
                       <div className="relative aspect-square w-full overflow-hidden border tt-border-light bg-background">
