@@ -363,7 +363,7 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
                         onClick={() => setSelectedImageIndex(idx)}
                         aria-label={`View image ${idx + 1} of ${product.name}`}
                         aria-pressed={active}
-                        className={`relative block aspect-square w-full overflow-hidden border bg-background p-2 transition-colors ${active ? "tt-border-dark" : "tt-border-light hover:tt-border-dark"}`}
+                        className={`relative block aspect-square w-full overflow-hidden border-2 bg-background p-2 transition-colors ${active ? "border-[color:var(--tt-text-on-light)]" : "tt-border-light hover:border-[color:var(--tt-text-on-light)]"}`}
                       >
                         <Image
                           src={imageSrc}
