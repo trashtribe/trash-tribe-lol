@@ -100,10 +100,19 @@ body {
   animation-duration: 45s;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
+  will-change: transform;
 }
 
 .tt-marquee-track[data-direction="right"] {
   animation-direction: reverse;
+}
+
+/* Set by MarqueeBanner.tsx via IntersectionObserver once the banner has
+   scrolled well out of view — two infinite tracks animating continuously
+   regardless of scroll position add up to steady compositor work across
+   the whole page, which showed up as scroll jank further down. */
+.tt-marquee-track[data-paused="true"] {
+  animation-play-state: paused;
 }
 
 @keyframes tt-marquee {
@@ -133,6 +142,7 @@ body {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  will-change: scroll-position;
 }
 
 .tt-carousel-scroll::-webkit-scrollbar {

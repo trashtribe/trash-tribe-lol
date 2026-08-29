@@ -108,9 +108,17 @@ function ProductCard({
  * either edge, so it loops seamlessly whichever direction you move it.
  */
 export function ProductScroller({ products }: ProductScrollerProps) {
+  const sectionRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(false);
   const resumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The auto-scroll below writes track.scrollLeft on every animation frame,
+  // which forces a synchronous layout — much heavier than a compositor-only
+  // CSS transform. Doing that continuously, on top of the marquee banners'
+  // animations, showed up as scroll jank once the user scrolled past this
+  // section. Skipping the write once the section is out of view keeps the
+  // loop running (so it's instantly ready again) without the layout cost.
+  const visibleRef = useRef(true);
 
   const wrap = useCallback(() => {
     const track = trackRef.current;
@@ -133,13 +141,26 @@ export function ProductScroller({ products }: ProductScrollerProps) {
   }, [products]);
 
   useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        visibleRef.current = entry.isIntersecting;
+      },
+      { rootMargin: "200px 0px" },
+    );
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let rafId: number;
     const step = () => {
-      if (!pausedRef.current) {
+      if (!pausedRef.current && visibleRef.current) {
         track.scrollLeft += 0.6;
         wrap();
       }
@@ -170,7 +191,10 @@ export function ProductScroller({ products }: ProductScrollerProps) {
   if (products.length === 0) return null;
 
   return (
-    <section className="relative border-b tt-border-light bg-background px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16">
+    <section
+      ref={sectionRef}
+      className="relative border-b tt-border-light bg-background px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16"
+    >
       <div className="mx-auto max-w-[1600px]">
         <div className="mb-6 flex items-center justify-center gap-4 sm:mb-8 sm:gap-6">
           <span className="h-[2px] flex-1 tt-bg-dark" aria-hidden="true" />
