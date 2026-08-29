@@ -3,9 +3,10 @@ import Link from "next/link";
 import { NewsletterForm } from "./NewsletterForm";
 
 const quickLinks = [
-  { href: "/shop", label: "Shop" },
-  { href: "/shop?category=APPAREL", label: "Apparel" },
+  { href: "/shop", label: "Shop All" },
+  { href: "/shop?category=TSHIRTS", label: "T-Shirts" },
   { href: "/shop?category=ACCESSORIES", label: "Accessories" },
+  { href: "/shop?category=UNDERWEAR", label: "Underwear" },
   { href: "/about", label: "About" },
   { href: "mailto:hello@trashtribe.lol", label: "hello@trashtribe.lol" },
 ] as const;

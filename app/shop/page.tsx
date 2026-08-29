@@ -10,36 +10,53 @@ import { getProducts } from "@/lib/products";
 export const metadata: Metadata = {
   title: "Shop",
   description:
-    "Browse posters, apparel, and accessories from trashtribe. Independent print-on-demand merch with bold graphics.",
+    "Browse t-shirts, underwear, accessories, and posters from trashtribe. Independent print-on-demand merch with bold graphics.",
   alternates: { canonical: "/shop" },
 };
+
+const VALID_CATEGORIES = ["TSHIRTS", "UNDERWEAR", "ACCESSORIES", "POSTERS"] as const;
+const VALID_SUBCATEGORIES = ["PANTIES", "SOCKS", "BAGS", "KEYCHAINS"] as const;
 
 function resolveActiveFilter(categoryParam: string | undefined): ShopCategoryFilter {
   const key = categoryParam?.toUpperCase();
   if (!key || key === "ALL") return "ALL";
-  if (key === "POSTERS" || key === "APPAREL" || key === "ACCESSORIES") {
-    return key;
+  if ((VALID_CATEGORIES as readonly string[]).includes(key)) {
+    return key as ShopCategoryFilter;
   }
   return "ALL";
 }
 
-function filterProductsByCategory(
+function resolveActiveSubcategory(subcategoryParam: string | undefined): string | null {
+  const key = subcategoryParam?.toUpperCase();
+  if (!key) return null;
+  return (VALID_SUBCATEGORIES as readonly string[]).includes(key) ? key : null;
+}
+
+function filterProducts(
   list: StoreProduct[],
-  active: ShopCategoryFilter,
+  activeCategory: ShopCategoryFilter,
+  activeSubcategory: string | null,
 ): StoreProduct[] {
-  if (active === "ALL") return list;
-  return list.filter((p) => p.category === active);
+  let filtered = list;
+  if (activeCategory !== "ALL") {
+    filtered = filtered.filter((p) => p.category === activeCategory);
+  }
+  if (activeSubcategory) {
+    filtered = filtered.filter((p) => p.subcategory === activeSubcategory);
+  }
+  return filtered;
 }
 
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; subcategory?: string }>;
 }) {
-  const { category: categoryParam } = await searchParams;
+  const { category: categoryParam, subcategory: subcategoryParam } = await searchParams;
   const activeFilter = resolveActiveFilter(categoryParam);
+  const activeSubcategory = resolveActiveSubcategory(subcategoryParam);
   const products = await getProducts();
-  const visibleProducts = filterProductsByCategory(products, activeFilter);
+  const visibleProducts = filterProducts(products, activeFilter, activeSubcategory);
 
   return (
     <>
@@ -50,7 +67,7 @@ export default async function ShopPage({
             <h1 className="text-center text-4xl font-bold tracking-[0.2em] tt-text-on-light uppercase sm:text-5xl">
               SHOP
             </h1>
-            <ShopFilters activeFilter={activeFilter} />
+            <ShopFilters activeFilter={activeFilter} activeSubcategory={activeSubcategory} />
           </div>
         </section>
 

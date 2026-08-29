@@ -2,16 +2,34 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { useCart } from "./CartProvider";
 import { useSearchModal } from "./SearchModalContext";
 import { useWishlist } from "./WishlistProvider";
 
 const nav = [
-  { href: "/shop", label: "Shop" },
+  { href: "/shop", label: "Shop All" },
+  { href: "/shop?category=TSHIRTS", label: "T-Shirts" },
+  { href: "/shop?category=ACCESSORIES", label: "Accessories" },
+  { href: "/shop?category=UNDERWEAR", label: "Underwear" },
+  { href: "/shop?category=POSTERS", label: "Posters" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ] as const;
+
+/** Only categories with a real subcategory split get a secondary bar under the logo. */
+const SUBCATEGORY_NAV: Record<string, { value: string; label: string }[]> = {
+  UNDERWEAR: [
+    { value: "PANTIES", label: "Panties" },
+    { value: "SOCKS", label: "Socks" },
+  ],
+  ACCESSORIES: [
+    { value: "BAGS", label: "Bags" },
+    { value: "KEYCHAINS", label: "Keychains" },
+  ],
+};
 
 function AccountIcon() {
   return (
@@ -47,6 +65,43 @@ function CartIcon() {
       <circle cx="9" cy="20" r="1" />
       <circle cx="18" cy="20" r="1" />
     </svg>
+  );
+}
+
+function HeaderSubnav() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  if (pathname !== "/shop") return null;
+
+  const activeCategory = searchParams.get("category")?.toUpperCase() ?? "";
+  const activeSubcategory = searchParams.get("subcategory")?.toUpperCase() ?? null;
+  const items = SUBCATEGORY_NAV[activeCategory];
+
+  if (!items) return null;
+
+  return (
+    <nav
+      aria-label="Subcategory"
+      className="flex flex-wrap justify-center gap-x-6 gap-y-1 border-t tt-border-light px-4 py-2 sm:px-6"
+    >
+      {items.map((item) => {
+        const isActive = item.value === activeSubcategory;
+        const href = `/shop?category=${activeCategory}&subcategory=${item.value}`;
+        return (
+          <Link
+            key={item.value}
+            href={href}
+            aria-current={isActive ? "true" : undefined}
+            className={`text-[10px] font-bold tracking-[0.16em] uppercase transition-colors ${
+              isActive ? "tt-text-secondary" : "tt-text-on-light hover:tt-text-secondary"
+            }`}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 
@@ -140,6 +195,10 @@ export function Header() {
           </Link>
         ))}
       </nav>
+
+      <Suspense fallback={null}>
+        <HeaderSubnav />
+      </Suspense>
     </header>
   );
 }

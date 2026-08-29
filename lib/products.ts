@@ -9,7 +9,10 @@ import {
   type PrintifyVariantRow,
 } from "@/lib/printify";
 
-export type StoreCategory = "POSTERS" | "APPAREL" | "ACCESSORIES";
+export type StoreCategory = "TSHIRTS" | "UNDERWEAR" | "ACCESSORIES" | "POSTERS";
+
+/** Only categories that have real subcategories carry one — see inferSubcategory(). */
+export type StoreSubcategory = "PANTIES" | "SOCKS" | "BAGS" | "KEYCHAINS";
 
 export type StoreProductVariant = {
   id: number;
@@ -40,6 +43,8 @@ export type StoreProduct = {
    * so the product page can show the right shots when a color is selected. */
   images: StoreProductImage[];
   category: StoreCategory;
+  /** Set only for categories that have a real subcategory split (Underwear, Accessories). */
+  subcategory?: StoreSubcategory;
   variants: StoreProductVariant[];
   /** Optional merchandising label (seed catalog / future providers). */
   saleTag?: string;
@@ -115,18 +120,28 @@ function normalizePrintifyVariant(row: PrintifyVariantRow): PrintifyVariant | nu
   };
 }
 
-function inferCategory(p: PrintifyProduct): StoreCategory {
+function productBlob(p: PrintifyProduct): string {
   const tags = (p.tags ?? []).map((t) => t.toLowerCase()).join(" ");
   const title = (p.title ?? "").toLowerCase();
-  const blob = `${tags} ${title}`;
+  return `${tags} ${title}`;
+}
 
-  const looksApparel =
-    /\b(tee|t-?shirt|shirt|hoodie|sweatshirt|tank|cap|hat|beanie|joggers|shorts|socks|crewneck|sweater)\b/.test(
-      blob,
-    );
+/**
+ * Four shopper-facing buckets (Shop All aside): T-Shirts, Underwear,
+ * Accessories, Posters. Checked in this order because a couple of words
+ * could otherwise land in more than one bucket (e.g. a product tagged both
+ * "tee" and "socks" in its tags — socks should win since that's the more
+ * specific match).
+ */
+function inferCategory(p: PrintifyProduct): StoreCategory {
+  const blob = productBlob(p);
 
-  if (looksApparel) {
-    return "APPAREL";
+  if (/\b(socks?|briefs?|pant(?:y|ies)|underwear|lingerie)\b/.test(blob)) {
+    return "UNDERWEAR";
+  }
+
+  if (/\b(keychain|bag|tote|pouch|mug|pin|phone case|sticker|pillow|mousepad|coaster)\b/.test(blob)) {
+    return "ACCESSORIES";
   }
 
   if (
@@ -137,12 +152,35 @@ function inferCategory(p: PrintifyProduct): StoreCategory {
   }
 
   if (
-    /\b(mug|keychain|tote|pin|phone case|sticker|pillow|mousepad|coaster|accessory)\b/.test(blob)
+    /\b(tee|t-?shirt|shirt|hoodie|sweatshirt|tank|cap|hat|beanie|joggers|shorts|crewneck|sweater)\b/.test(
+      blob,
+    )
   ) {
-    return "ACCESSORIES";
+    return "TSHIRTS";
   }
 
+  // Catch-all for anything that doesn't match a known pattern yet — safer
+  // as a generic accessory than silently mis-bucketed as apparel.
   return "ACCESSORIES";
+}
+
+/** Only Underwear and Accessories currently split into subcategories. */
+function inferSubcategory(p: PrintifyProduct, category: StoreCategory): StoreSubcategory | undefined {
+  const blob = productBlob(p);
+
+  if (category === "UNDERWEAR") {
+    if (/\bsocks?\b/.test(blob)) return "SOCKS";
+    if (/\b(briefs?|pant(?:y|ies)|underwear|lingerie)\b/.test(blob)) return "PANTIES";
+    return undefined;
+  }
+
+  if (category === "ACCESSORIES") {
+    if (/\bkeychain\b/.test(blob)) return "KEYCHAINS";
+    if (/\b(bag|tote|pouch)\b/.test(blob)) return "BAGS";
+    return undefined;
+  }
+
+  return undefined;
 }
 
 /**
@@ -390,6 +428,7 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
   const galleryImages = galleryFromProduct(p);
   const imageSrc = galleryImages[0] ?? "/globe.svg";
   const images = imagesFromProduct(p);
+  const category = inferCategory(p);
 
   return {
     id,
@@ -402,7 +441,8 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
     imageAlt,
     galleryImages: galleryImages.length > 0 ? galleryImages : [imageSrc],
     images: images.length > 0 ? images : [{ src: imageSrc, variantIds: [] }],
-    category: inferCategory(p),
+    category,
+    subcategory: inferSubcategory(p, category),
     variants,
   };
 }
