@@ -178,3 +178,29 @@ body {
     transform: none;
   }
 }
+
+/* SHOP ALL button (components/ProductScroller.tsx) — bobs on its own so
+   it reads as clickable even before anyone hovers it. Lives on a wrapper
+   around the link so the idle bounce (this animation) and the hover
+   reaction (a plain Tailwind `transform` on the link itself) each own
+   their own element's `transform` property instead of fighting over one. */
+@keyframes tt-shop-all-bounce {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-2deg);
+  }
+}
+
+.tt-shop-all-bounce {
+  animation: tt-shop-all-bounce 1.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-shop-all-bounce {
+    animation: none;
+  }
+}

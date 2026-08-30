@@ -11,13 +11,6 @@ type ProductScrollerProps = {
   products: StoreProduct[];
 };
 
-const CATEGORY_LINKS = [
-  { href: "/shop?category=TSHIRTS", label: "T-Shirts" },
-  { href: "/shop?category=ACCESSORIES", label: "Accessories" },
-  { href: "/shop?category=UNDERWEAR", label: "Underwear" },
-  { href: "/shop?category=POSTERS", label: "Posters" },
-] as const;
-
 function ChevronLeftIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -205,20 +198,14 @@ export function ProductScroller({ products }: ProductScrollerProps) {
       <div className="mx-auto max-w-[1600px]">
         <div className="mb-6 flex items-center justify-center gap-4 sm:mb-8 sm:gap-6">
           <span className="h-[2px] flex-1 tt-bg-dark" aria-hidden="true" />
-          <nav
-            aria-label="Shop by category"
-            className="flex shrink-0 flex-wrap items-center justify-center gap-x-6 gap-y-2 px-2 sm:gap-x-10"
-          >
-            {CATEGORY_LINKS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-[13px] font-bold tracking-[0.18em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary sm:text-base"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <span className="tt-shop-all-bounce inline-block shrink-0">
+            <Link
+              href="/shop"
+              className="tt-bg-tribe-green inline-flex min-w-[280px] items-center justify-center px-20 py-7 text-lg font-bold tracking-[0.3em] tt-text-on-light uppercase transition-transform duration-200 hover:scale-110 hover:rotate-2 sm:min-w-[340px] sm:px-24 sm:py-8 sm:text-xl"
+            >
+              ★ SHOP ALL ★
+            </Link>
+          </span>
           <span className="h-[2px] flex-1 tt-bg-dark" aria-hidden="true" />
         </div>
 

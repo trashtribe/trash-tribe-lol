@@ -4,8 +4,8 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { MarqueeBanner } from "@/components/MarqueeBanner";
+import { CategoryLinksCta } from "@/components/CategoryLinksCta";
 import { ProductScroller } from "@/components/ProductScroller";
-import { ShopAllCta } from "@/components/ShopAllCta";
 import { getProducts } from "@/lib/products";
 
 export const metadata: Metadata = {
@@ -38,7 +38,7 @@ export default async function Home() {
           direction="right"
         />
         <ProductScroller products={products} />
-        <ShopAllCta />
+        <CategoryLinksCta />
       </main>
       <Footer />
     </>
