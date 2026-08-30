@@ -14,8 +14,16 @@ export const metadata: Metadata = {
   alternates: { canonical: "/shop" },
 };
 
-const VALID_CATEGORIES = ["TSHIRTS", "UNDERWEAR", "ACCESSORIES", "POSTERS"] as const;
-const VALID_SUBCATEGORIES = ["PANTIES", "SOCKS", "BAGS", "KEYCHAINS"] as const;
+const VALID_CATEGORIES = ["TOPS", "UNDERWEAR", "ACCESSORIES", "POSTERS"] as const;
+const VALID_SUBCATEGORIES = [
+  "TSHIRT",
+  "CROP",
+  "TANKS",
+  "PANTIES",
+  "SOCKS",
+  "BAGS",
+  "KEYCHAINS",
+] as const;
 
 function resolveActiveFilter(categoryParam: string | undefined): ShopCategoryFilter {
   const key = categoryParam?.toUpperCase();

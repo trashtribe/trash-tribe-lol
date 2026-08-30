@@ -20,7 +20,12 @@ type NavItem = {
 
 const nav: NavItem[] = [
   { href: "/shop", label: "Shop All" },
-  { href: "/shop?category=TSHIRTS", label: "T-Shirts", flyoutCategory: "TSHIRTS" },
+  {
+    href: "/shop?category=TOPS",
+    label: "Tops",
+    flyoutCategory: "TOPS",
+    hasSubcategories: true,
+  },
   {
     href: "/shop?category=ACCESSORIES",
     label: "Accessories",
@@ -92,7 +97,7 @@ function MenuIcon({ open }: { open: boolean }) {
 }
 
 const CATEGORY_LABEL: Record<StoreCategory, string> = {
-  TSHIRTS: "T-Shirts",
+  TOPS: "Tops",
   UNDERWEAR: "Underwear",
   ACCESSORIES: "Accessories",
   POSTERS: "Posters",

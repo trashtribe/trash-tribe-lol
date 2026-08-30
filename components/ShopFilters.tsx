@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 const CATEGORY_FILTERS = [
   { value: "ALL", label: "ALL" },
-  { value: "TSHIRTS", label: "T-SHIRTS" },
+  { value: "TOPS", label: "TOPS" },
   { value: "ACCESSORIES", label: "ACCESSORIES" },
   { value: "UNDERWEAR", label: "UNDERWEAR" },
   { value: "POSTERS", label: "POSTERS" },
@@ -14,6 +14,11 @@ export type ShopCategoryFilter = (typeof CATEGORY_FILTERS)[number]["value"];
 
 /** Only categories with a real subcategory split get a second row of pills. */
 const SUBCATEGORY_FILTERS: Partial<Record<ShopCategoryFilter, { value: string; label: string }[]>> = {
+  TOPS: [
+    { value: "TSHIRT", label: "T-Shirts" },
+    { value: "CROP", label: "Crop Tops" },
+    { value: "TANKS", label: "Tanks" },
+  ],
   UNDERWEAR: [
     { value: "PANTIES", label: "Panties" },
     { value: "SOCKS", label: "Socks" },

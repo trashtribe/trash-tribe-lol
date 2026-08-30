@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const CATEGORY_LINKS = [
-  { href: "/shop?category=TSHIRTS", label: "T-Shirts" },
+  { href: "/shop?category=TOPS", label: "Tops" },
   { href: "/shop?category=ACCESSORIES", label: "Accessories" },
   { href: "/shop?category=UNDERWEAR", label: "Underwear" },
   { href: "/shop?category=POSTERS", label: "Posters" },

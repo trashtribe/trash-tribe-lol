@@ -59,7 +59,7 @@ export function WishlistProductCard({ product }: WishlistProductCardProps) {
         type="button"
         onClick={() => {
           const pick =
-            product.category === "TSHIRTS" || product.category === "UNDERWEAR"
+            product.category === "TOPS" || product.category === "UNDERWEAR"
               ? product.variants.find((x) => {
                   const { size } = parseVariantTitleSegments(x.title);
                   return size !== null && size.toUpperCase() === "M";

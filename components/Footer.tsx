@@ -4,7 +4,7 @@ import { NewsletterForm } from "./NewsletterForm";
 
 const quickLinks = [
   { href: "/shop", label: "Shop All" },
-  { href: "/shop?category=TSHIRTS", label: "T-Shirts" },
+  { href: "/shop?category=TOPS", label: "Tops" },
   { href: "/shop?category=ACCESSORIES", label: "Accessories" },
   { href: "/shop?category=UNDERWEAR", label: "Underwear" },
   { href: "/about", label: "About" },

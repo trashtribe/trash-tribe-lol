@@ -9,10 +9,17 @@ import {
   type PrintifyVariantRow,
 } from "@/lib/printify";
 
-export type StoreCategory = "TSHIRTS" | "UNDERWEAR" | "ACCESSORIES" | "POSTERS";
+export type StoreCategory = "TOPS" | "UNDERWEAR" | "ACCESSORIES" | "POSTERS";
 
 /** Only categories that have real subcategories carry one — see inferSubcategory(). */
-export type StoreSubcategory = "PANTIES" | "SOCKS" | "BAGS" | "KEYCHAINS";
+export type StoreSubcategory =
+  | "TSHIRT"
+  | "CROP"
+  | "TANKS"
+  | "PANTIES"
+  | "SOCKS"
+  | "BAGS"
+  | "KEYCHAINS";
 
 export type StoreProductVariant = {
   id: number;
@@ -127,7 +134,7 @@ function productBlob(p: PrintifyProduct): string {
 }
 
 /**
- * Four shopper-facing buckets (Shop All aside): T-Shirts, Underwear,
+ * Four shopper-facing buckets (Shop All aside): Tops, Underwear,
  * Accessories, Posters. Checked in this order because a couple of words
  * could otherwise land in more than one bucket (e.g. a product tagged both
  * "tee" and "socks" in its tags — socks should win since that's the more
@@ -146,17 +153,17 @@ function inferCategory(p: PrintifyProduct): StoreCategory {
 
   if (
     /\b(poster|wall art|art print|gicl[eé]e|canvas print)\b/.test(blob) ||
-    (/\bprint\b/.test(blob) && !/\b(tee|t-?shirt|shirt)\b/.test(blob))
+    (/\bprint\b/.test(blob) && !/\b(tee|t-?shirt|shirt|crop|tank)\b/.test(blob))
   ) {
     return "POSTERS";
   }
 
   if (
-    /\b(tee|t-?shirt|shirt|hoodie|sweatshirt|tank|cap|hat|beanie|joggers|shorts|crewneck|sweater)\b/.test(
+    /\b(tee|t-?shirt|shirt|crop|tank|hoodie|sweatshirt|cap|hat|beanie|joggers|shorts|crewneck|sweater)\b/.test(
       blob,
     )
   ) {
-    return "TSHIRTS";
+    return "TOPS";
   }
 
   // Catch-all for anything that doesn't match a known pattern yet — safer
@@ -164,7 +171,7 @@ function inferCategory(p: PrintifyProduct): StoreCategory {
   return "ACCESSORIES";
 }
 
-/** Only Underwear and Accessories currently split into subcategories. */
+/** Only Underwear, Accessories, and Tops currently split into subcategories. */
 function inferSubcategory(p: PrintifyProduct, category: StoreCategory): StoreSubcategory | undefined {
   const blob = productBlob(p);
 
@@ -177,6 +184,18 @@ function inferSubcategory(p: PrintifyProduct, category: StoreCategory): StoreSub
   if (category === "ACCESSORIES") {
     if (/\bkeychain\b/.test(blob)) return "KEYCHAINS";
     if (/\b(bag|tote|pouch)\b/.test(blob)) return "BAGS";
+    return undefined;
+  }
+
+  if (category === "TOPS") {
+    // Crop and tank checked first: a "crop tank" or "cropped tank top"
+    // should read as its own thing rather than falling through to the
+    // plain-tee bucket just because it also contains "tee"-adjacent words.
+    if (/\bcrop/.test(blob)) return "CROP";
+    if (/\btanks?\b/.test(blob)) return "TANKS";
+    if (/\b(tee|t-?shirt|shirt)\b/.test(blob)) return "TSHIRT";
+    // Hoodies, sweatshirts, caps, etc. stay in Tops without a subcategory —
+    // same as other apparel that doesn't split further.
     return undefined;
   }
 
@@ -476,6 +495,11 @@ export async function getProductBySlug(slug: string): Promise<StoreProduct | nul
 export const SUBCATEGORIES_BY_CATEGORY: Partial<
   Record<StoreCategory, { value: StoreSubcategory; label: string }[]>
 > = {
+  TOPS: [
+    { value: "TSHIRT", label: "T-Shirts" },
+    { value: "CROP", label: "Crop Tops" },
+    { value: "TANKS", label: "Tanks" },
+  ],
   UNDERWEAR: [
     { value: "PANTIES", label: "Panties" },
     { value: "SOCKS", label: "Socks" },
@@ -501,7 +525,7 @@ export type NavPreviewEntry = {
 
 export type NavPreviewData = Partial<Record<StoreCategory, NavPreviewEntry>>;
 
-const ALL_CATEGORIES: StoreCategory[] = ["TSHIRTS", "UNDERWEAR", "ACCESSORIES", "POSTERS"];
+const ALL_CATEGORIES: StoreCategory[] = ["TOPS", "UNDERWEAR", "ACCESSORIES", "POSTERS"];
 
 /**
  * Small per-category preview (subcategory links, where the category has
