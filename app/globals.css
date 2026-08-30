@@ -204,3 +204,29 @@ body {
     animation: none;
   }
 }
+
+/* Arrows scattered around JoinTribeCta (components/JoinTribeCta.tsx) —
+   each arrow SVG points right by default; its wrapper is rotated to aim
+   it at the button, then THIS animation nudges it back and forth along
+   its own (already-rotated) x-axis, so every arrow visually pulses
+   toward the button regardless of which way it's pointing. */
+@keyframes tt-arrow-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-7px);
+  }
+}
+
+.tt-arrow-nudge {
+  display: inline-block;
+  animation: tt-arrow-nudge 1.1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-arrow-nudge {
+    animation: none;
+  }
+}
