@@ -7,7 +7,15 @@ export function Hero() {
       className="relative w-full overflow-hidden bg-background"
       aria-label="Featured"
     >
-      <div className="relative w-full">
+      {/* The source art is a very wide 2561x900 banner — at mobile widths
+          that makes it a short, squat strip next to everything else on the
+          page. Rendering this wrapper (image + button together, so the
+          button's % position stays perfectly aligned) 34% wider than the
+          viewport and re-centering it makes the hero noticeably taller on
+          phones; the section's own overflow-hidden clips the left/right
+          overflow instead of cropping top/bottom. Back to full width from
+          sm: up, where the banner shape already reads fine. */}
+      <div className="relative -ml-[17%] w-[134%] sm:ml-0 sm:w-full">
         <Image
           src="/hero-join-the-tribe.webp"
           alt="trashtribe — Join the tribe"

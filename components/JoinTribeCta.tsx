@@ -11,7 +11,7 @@ export function JoinTribeCta() {
       <span className="tt-join-bounce inline-block">
         <Link
           href="/shop"
-          className="tt-bg-secondary inline-flex min-w-[280px] items-center justify-center gap-4 px-20 py-7 text-lg font-bold tracking-[0.3em] tt-text-on-light uppercase transition-transform duration-200 hover:scale-110 hover:rotate-2 sm:min-w-[340px] sm:gap-6 sm:px-24 sm:py-8 sm:text-xl"
+          className="tt-bg-secondary inline-flex min-w-[220px] items-center justify-center gap-2 px-8 py-4 text-sm font-bold tracking-[0.2em] tt-text-on-light uppercase transition-transform duration-200 hover:scale-110 hover:rotate-2 sm:min-w-[340px] sm:gap-6 sm:px-24 sm:py-8 sm:text-xl sm:tracking-[0.3em]"
         >
           <span aria-hidden="true">→</span>
           Join our queer tribe
