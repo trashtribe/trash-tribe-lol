@@ -13,7 +13,7 @@ const CATEGORY_LINKS = [
  */
 export function CategoryLinksCta() {
   return (
-    <div className="bg-background px-4 py-14 sm:px-6 sm:py-20">
+    <div className="bg-background px-4 py-10 sm:px-6 sm:py-14">
       <div className="mx-auto flex max-w-[1600px] flex-col items-center gap-8 sm:gap-10">
         <span className="h-[2px] w-full tt-bg-dark" aria-hidden="true" />
         <nav

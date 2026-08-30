@@ -193,7 +193,7 @@ export function ProductScroller({ products }: ProductScrollerProps) {
   return (
     <section
       ref={sectionRef}
-      className="relative bg-background px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16"
+      className="relative bg-background px-4 pt-6 pb-6 sm:px-6 sm:pt-8 sm:pb-8"
     >
       <div className="mx-auto max-w-[1600px]">
         <div className="mb-6 flex items-center justify-center gap-4 sm:mb-8 sm:gap-6">
