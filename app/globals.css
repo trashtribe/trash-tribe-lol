@@ -10,12 +10,9 @@
  */
 :root {
   --tt-soft-pink: #f088de;
-  /* Site-wide base — was flat white, now the same light pink tint that
-     was tried on /contact and the JoinTribeCta section, rolled out
-     everywhere (body bg + every component using bg-background). */
-  --background: color-mix(in srgb, var(--tt-soft-pink) 12%, white);
+  --background: #ffffff;
   --foreground: #000000;
-  --tt-bg-light: color-mix(in srgb, var(--tt-soft-pink) 12%, white);
+  --tt-bg-light: #ffffff;
   --tt-bg-dark: #000000;
   --tt-text-on-light: #000000;
   --tt-text-on-dark: #ffffff;
