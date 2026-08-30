@@ -35,11 +35,17 @@ export function Hero() {
           className="group absolute block"
           style={{ left: "32.5%", top: "73%", width: "34%", height: "16%" }}
         >
+          {/* unoptimized: this is a tiny (871x144) high-contrast cutout —
+              black outline, flat green fill, bold white text. Next's image
+              optimizer re-encodes it to WebP, and that recompression was
+              introducing visible blur/pixelation around the edges. Serving
+              the source PNG as-is keeps it crisp; the file's small enough
+              that skipping optimization costs nothing. */}
           <Image
             src="/hero-shop-all-pill.png"
             alt=""
             fill
-            sizes="(max-width: 640px) 40vw, 20vw"
+            unoptimized
             className="object-contain transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95"
           />
         </Link>

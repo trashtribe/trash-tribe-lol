@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { MarqueeBanner } from "@/components/MarqueeBanner";
 import { CategoryLinksCta } from "@/components/CategoryLinksCta";
+import { JoinTribeCta } from "@/components/JoinTribeCta";
 import { ProductScroller } from "@/components/ProductScroller";
 import { getProducts } from "@/lib/products";
 
@@ -38,6 +39,7 @@ export default async function Home() {
           direction="right"
         />
         <ProductScroller products={products} />
+        <JoinTribeCta />
         <CategoryLinksCta />
       </main>
       <Footer />
