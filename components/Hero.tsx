@@ -4,27 +4,35 @@ import Link from "next/link";
 export function Hero() {
   return (
     <section
-      className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center overflow-hidden bg-background sm:block sm:min-h-0"
+      className="relative min-h-[100dvh] w-full overflow-hidden bg-background sm:min-h-0"
       aria-label="Featured"
     >
       {/* The source art is a very wide 2561x900 banner — at mobile widths
           that makes it a short, squat strip next to everything else on the
-          page. The section itself is locked to min-h-[100dvh] and centers
-          its content, so the hero always fills the whole first screen on
-          phones (everything else — the rest of the page — only shows up on
-          scroll), with the leftover height above/below the art filled by
-          the page background instead of stretching or cropping the art.
+          page. The section itself is locked to min-h-[100dvh], so the hero
+          always fills the whole first screen on phones (everything else —
+          the rest of the page — only shows up on scroll), with the
+          leftover height above/below the art filled by the page background
+          instead of stretching or cropping the art.
+
           Within that, the wrapper (image + button together, so the
           button's % position stays perfectly aligned) is rendered 2.6x
-          wider than the viewport and re-centered; the section's
-          overflow-hidden clips the left/right overflow. 2.6x is the
-          measured ceiling: checked the actual opaque pixels of the "JOIN
-          THE TRIBE" pill cutout and it spans ~33.6%-65.4% of the source
-          image width, so cropping in any further would start cutting into
-          the button itself — this keeps a comfortable margin on both
-          sides. Back to full width from sm: up, where the banner shape
-          already reads fine and the section shouldn't be forced full-height. */}
-      <div className="relative -ml-[80%] w-[260%] sm:ml-0 sm:w-full">
+          wider than the viewport and centered with position:absolute +
+          translate(-50%, -50%) on BOTH axes — not flex/grid alignment.
+          A flex `items-center` here fights with the wrapper's own
+          horizontal centering math and double-shifts it (that's what
+          produced the earlier cropped/off-center button); an absolute
+          top:50%/left:50% + translate is unaffected by the parent's
+          layout mode, so it centers correctly no matter what.
+
+          2.6x is the measured ceiling: checked the actual opaque pixels of
+          the "JOIN THE TRIBE" pill cutout and it spans ~33.6%-65.4% of the
+          source image width, so cropping in any further would start
+          cutting into the button itself — this keeps a comfortable margin
+          on both sides. Back to full width/static position from sm: up,
+          where the banner shape already reads fine and the section
+          shouldn't be forced full-height. */}
+      <div className="absolute left-1/2 top-1/2 w-[260%] -translate-x-1/2 -translate-y-1/2 sm:static sm:left-auto sm:top-auto sm:w-full sm:translate-x-0 sm:translate-y-0">
         <Image
           src="/hero-join-the-tribe.webp"
           alt="trashtribe — Join the tribe"
