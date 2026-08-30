@@ -9,15 +9,18 @@
  * - Dark base: #000000 / text #ffffff
  */
 :root {
-  --background: #ffffff;
+  --tt-soft-pink: #f088de;
+  /* Site-wide base — was flat white, now the same light pink tint that
+     was tried on /contact and the JoinTribeCta section, rolled out
+     everywhere (body bg + every component using bg-background). */
+  --background: color-mix(in srgb, var(--tt-soft-pink) 12%, white);
   --foreground: #000000;
-  --tt-bg-light: #ffffff;
+  --tt-bg-light: color-mix(in srgb, var(--tt-soft-pink) 12%, white);
   --tt-bg-dark: #000000;
   --tt-text-on-light: #000000;
   --tt-text-on-dark: #ffffff;
   --tt-accent-primary: #b8ff06;
   --tt-accent-secondary: #ff53e3;
-  --tt-soft-pink: #f088de;
   /* Sampled from the "JOIN THE TRIBE" pill baked into the hero artwork —
      a deeper yellow-green than --tt-accent-primary, kept as its own token
      so the hero button and the "SHOP ALL" CTA can match it exactly. */
@@ -205,28 +208,25 @@ body {
   }
 }
 
-/* Arrows scattered around JoinTribeCta (components/JoinTribeCta.tsx) —
-   each arrow SVG points right by default; its wrapper is rotated to aim
-   it at the button, then THIS animation nudges it back and forth along
-   its own (already-rotated) x-axis, so every arrow visually pulses
-   toward the button regardless of which way it's pointing. */
-@keyframes tt-arrow-nudge {
+/* JOIN OUR QUEER TRIBE button (components/JoinTribeCta.tsx) — its own,
+   bigger/faster bounce than SHOP ALL's so it doesn't feel like a copy. */
+@keyframes tt-join-bounce {
   0%,
   100% {
-    transform: translateX(0);
+    transform: translateY(0) rotate(-2deg);
   }
   50% {
-    transform: translateX(-7px);
+    transform: translateY(-14px) rotate(-2deg);
   }
 }
 
-.tt-arrow-nudge {
-  display: inline-block;
-  animation: tt-arrow-nudge 1.1s ease-in-out infinite;
+.tt-join-bounce {
+  animation: tt-join-bounce 1.1s ease-in-out infinite;
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tt-arrow-nudge {
+  .tt-join-bounce {
     animation: none;
   }
 }

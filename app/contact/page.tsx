@@ -73,7 +73,7 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className="border tt-border-light bg-[color:color-mix(in_srgb,var(--tt-soft-pink)_12%,var(--tt-bg-light))] p-6 sm:p-8 lg:p-10">
+            <div className="border tt-border-light bg-white p-6 sm:p-8 lg:p-10">
               <ContactForm />
             </div>
           </div>
