@@ -10,12 +10,15 @@ export function Hero() {
       {/* The source art is a very wide 2561x900 banner — at mobile widths
           that makes it a short, squat strip next to everything else on the
           page. Rendering this wrapper (image + button together, so the
-          button's % position stays perfectly aligned) 34% wider than the
-          viewport and re-centering it makes the hero noticeably taller on
-          phones; the section's own overflow-hidden clips the left/right
-          overflow instead of cropping top/bottom. Back to full width from
-          sm: up, where the banner shape already reads fine. */}
-      <div className="relative -ml-[17%] w-[134%] sm:ml-0 sm:w-full">
+          button's % position stays perfectly aligned) 2x wider than the
+          viewport and re-centering it makes the hero fill roughly a third
+          of the screen height on phones instead of a sliver; the section's
+          own overflow-hidden clips the left/right overflow instead of
+          cropping top/bottom. Checked against the source art: this crops
+          in right up to the edge of the star and the corner mascot without
+          cutting into either. Back to full width from sm: up, where the
+          banner shape already reads fine. */}
+      <div className="relative -ml-[50%] w-[200%] sm:ml-0 sm:w-full">
         <Image
           src="/hero-join-the-tribe.webp"
           alt="trashtribe — Join the tribe"
