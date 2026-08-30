@@ -4,61 +4,66 @@ import Link from "next/link";
 export function Hero() {
   return (
     <>
-      {/* Mobile: a purpose-built vertical composition — the wordmark+star
-          logo and the "JOIN THE TRIBE" button as separate, already-
-          transparent brand assets, stacked and centered — instead of
-          cropping/zooming the wide desktop banner into a phone-shaped
-          window. The banner is a 2561x900 landscape strip; no amount of
-          CSS crop makes that read well on a portrait screen without
-          either cutting into the artwork or leaving big gaps (confirmed
-          after a few rounds of trying). Composing fresh from the clean
-          assets sidesteps that entirely. min-h-[100dvh] means the hero
-          always fills the whole first screen on phones — the rest of the
-          page only appears on scroll. Background is the same soft-pink
-          tint used on Contact/JoinTribeCta (not plain white, not a bold
-          saturated color) — tried a fully saturated pink and lime green
-          full-bleed first, but both hurt contrast (the wordmark's pink
-          nearly disappeared on pink; the star and the button's green fill
-          nearly disappeared on green). This tint keeps the pink/green
-          artwork popping the same way it does everywhere else on the
-          site. Hidden from sm: up, where the original banner below is
-          used instead. */}
+      {/* Mobile: the real illustration (sky, both mascots, the wordmark,
+          the button) — not the flat standalone logo I tried first, which
+          lost the illustrated richness. hero-mobile.webp is a one-time
+          static crop of the source banner (x 24%-76%, y 4%-92%) that trims
+          the mostly-empty sky on the sides while keeping the full
+          illustration; that alone takes it from a 2561x900 (2.85:1) strip
+          down to 1331x792 (1.68:1), a much more phone-friendly shape.
+
+          On top of that static crop, the wrapper below is zoomed to 145%
+          width and centered (position:absolute + translate(-50%,-50%), so
+          it centers correctly regardless of the parent's layout — see the
+          note further down about why not flex). That zoom is the ceiling
+          for keeping "TRASH TRIBE" and the button fully safe: the button
+          sits at 16.3%-81.7% of hero-mobile.webp's width, so anything
+          past ~150% starts cutting into it. The two mascots and the star,
+          which already sit close to the crop's edges, are the first
+          things to get trimmed by that zoom — which is the point: cut the
+          decorative sides, not the wordmark or the CTA.
+
+          min-h-[100dvh] on the section means the hero still fills the
+          whole first screen on phones (rest of the page on scroll).
+          Hidden from sm: up, where the original banner below is used. */}
       <section
-        className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center gap-14 overflow-hidden bg-[color:color-mix(in_srgb,var(--tt-soft-pink)_12%,var(--tt-bg-light))] px-6 py-12 sm:hidden"
+        className="relative min-h-[100dvh] w-full overflow-hidden bg-[color:color-mix(in_srgb,var(--tt-soft-pink)_12%,var(--tt-bg-light))] sm:hidden"
         aria-label="Featured"
       >
-        <Image
-          src="/hero-wordmark.png"
-          alt="trashtribe"
-          width={4983}
-          height={2266}
-          sizes="90vw"
-          className="h-auto w-[90vw] max-w-[520px] object-contain"
-          priority
-        />
-        {/* Same "JOIN THE TRIBE" cutout as the desktop button, but here it's
-            the only copy of the art (not an overlay sitting on top of a
-            duplicate baked into a banner), so there's nothing underneath
-            it that a scale/rotate could ever uncover — safe to animate the
-            same way JoinTribeCta's button does. unoptimized: skips Next's
-            re-encode, which introduced blur on this small, high-contrast
-            PNG (black outline, flat fill, bold text) in earlier testing. */}
-        <span className="tt-join-bounce inline-block w-[78vw] max-w-[420px]">
+        <div className="absolute left-1/2 top-1/2 w-[145%] -translate-x-1/2 -translate-y-1/2">
+          <Image
+            src="/hero-mobile.webp"
+            alt="trashtribe — Join the tribe"
+            width={1331}
+            height={792}
+            sizes="145vw"
+            className="h-auto w-full object-contain"
+            priority
+          />
+          {/* Same overlay technique as the desktop button below: a
+              transparent-cutout copy of the pill sitting pixel-for-pixel
+              on top of the same pill baked into hero-mobile.webp, so at
+              rest it's indistinguishable from the static art, and the
+              pure-scale hover/tap animation can only ever grow beyond its
+              own footprint (never uncovers the static pill underneath).
+              Box is the button's original crop box (32.5%, 73%, 34%, 16%
+              of the 2561x900 source) remapped into hero-mobile.webp's own
+              24%-76% / 4%-92% crop window. */}
           <Link
             href="/shop"
             aria-label="Shop all — trashtribe"
-            className="block transition-transform duration-200 hover:scale-110 hover:rotate-2"
+            className="group absolute block"
+            style={{ left: "16.35%", top: "78.41%", width: "65.38%", height: "18.18%" }}
           >
             <Image
               src="/hero-shop-all-pill.png"
-              alt="Join the tribe"
-              width={871}
-              height={144}
+              alt=""
+              fill
               unoptimized
-              className="h-auto w-full object-contain"
+              className="object-contain transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95"
             />
           </Link>
-        </span>
+        </div>
       </section>
 
       {/* Desktop / tablet: the original wide banner, with the button
