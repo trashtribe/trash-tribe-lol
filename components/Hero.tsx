@@ -17,20 +17,32 @@ export function Hero() {
           className="h-auto w-full object-contain"
           priority
         />
-        {/* Back to a fully transparent hit area over the "JOIN THE TRIBE"
-            pill baked into the artwork — nothing is drawn here, so there's
-            no risk of it ever looking misaligned with the actual image.
-            The "movement" comes from a soft glow ring + a small scale pop
-            on the (still invisible) box itself, not from redrawing any
-            part of the artwork. Positioned as a % of the image so it
-            tracks the button at any viewport width (pill spans roughly
-            x:867-1668, y:673-783 of the 2561x900 source). */}
+        {/* hero-shop-all-pill.png is a cutout of just the "JOIN THE TRIBE"
+            pill (flood-filled to transparent outside its black outline —
+            no rectangle, no halo, just the pill shape itself), positioned
+            to sit pixel-for-pixel on top of the same pill baked into the
+            full hero image below. At rest it's indistinguishable from the
+            static artwork. The animation is a pure scale (transform-origin
+            center, no translate), so it only ever GROWS beyond its resting
+            footprint — it can never uncover anything, so there's no way for
+            the static pill underneath to peek out during the transition,
+            and the "TRIBE" text right above stays clear no matter how far
+            it grows. Box matches the crop used to make the PNG: left
+            32.5%, top 73%, width 34%, height 16% of the 2561x900 source. */}
         <Link
           href="/shop"
           aria-label="Shop all — trashtribe"
-          className="absolute rounded-full transition-all duration-200 ease-out hover:scale-[1.04] hover:shadow-[0_0_0_6px_rgba(0,0,0,0.15)] active:scale-[0.97]"
+          className="group absolute block"
           style={{ left: "32.5%", top: "73%", width: "34%", height: "16%" }}
-        />
+        >
+          <Image
+            src="/hero-shop-all-pill.png"
+            alt=""
+            fill
+            sizes="(max-width: 640px) 40vw, 20vw"
+            className="object-contain transition-transform duration-200 ease-out group-hover:scale-105 group-active:scale-95"
+          />
+        </Link>
       </div>
     </section>
   );
