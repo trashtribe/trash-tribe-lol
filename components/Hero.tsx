@@ -4,21 +4,27 @@ import Link from "next/link";
 export function Hero() {
   return (
     <section
-      className="relative w-full overflow-hidden bg-background"
+      className="relative flex min-h-[100dvh] w-full flex-col items-center justify-center overflow-hidden bg-background sm:block sm:min-h-0"
       aria-label="Featured"
     >
       {/* The source art is a very wide 2561x900 banner — at mobile widths
           that makes it a short, squat strip next to everything else on the
-          page. Rendering this wrapper (image + button together, so the
-          button's % position stays perfectly aligned) 2x wider than the
-          viewport and re-centering it makes the hero fill roughly a third
-          of the screen height on phones instead of a sliver; the section's
-          own overflow-hidden clips the left/right overflow instead of
-          cropping top/bottom. Checked against the source art: this crops
-          in right up to the edge of the star and the corner mascot without
-          cutting into either. Back to full width from sm: up, where the
-          banner shape already reads fine. */}
-      <div className="relative -ml-[50%] w-[200%] sm:ml-0 sm:w-full">
+          page. The section itself is locked to min-h-[100dvh] and centers
+          its content, so the hero always fills the whole first screen on
+          phones (everything else — the rest of the page — only shows up on
+          scroll), with the leftover height above/below the art filled by
+          the page background instead of stretching or cropping the art.
+          Within that, the wrapper (image + button together, so the
+          button's % position stays perfectly aligned) is rendered 2.6x
+          wider than the viewport and re-centered; the section's
+          overflow-hidden clips the left/right overflow. 2.6x is the
+          measured ceiling: checked the actual opaque pixels of the "JOIN
+          THE TRIBE" pill cutout and it spans ~33.6%-65.4% of the source
+          image width, so cropping in any further would start cutting into
+          the button itself — this keeps a comfortable margin on both
+          sides. Back to full width from sm: up, where the banner shape
+          already reads fine and the section shouldn't be forced full-height. */}
+      <div className="relative -ml-[80%] w-[260%] sm:ml-0 sm:w-full">
         <Image
           src="/hero-join-the-tribe.webp"
           alt="trashtribe — Join the tribe"
