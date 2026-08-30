@@ -79,6 +79,18 @@ function CartIcon() {
   );
 }
 
+function MenuIcon({ open }: { open: boolean }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      {open ? (
+        <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+      ) : (
+        <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
+      )}
+    </svg>
+  );
+}
+
 const CATEGORY_LABEL: Record<StoreCategory, string> = {
   TSHIRTS: "T-Shirts",
   UNDERWEAR: "Underwear",
@@ -95,6 +107,7 @@ export function Header() {
   const [preview, setPreview] = useState<NavPreviewData | null>(null);
   const [openCategory, setOpenCategory] = useState<StoreCategory | null>(null);
   const [mobileOpenCategory, setMobileOpenCategory] = useState<StoreCategory | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -156,6 +169,18 @@ export function Header() {
                 </Link>
               ))}
             </nav>
+            <button
+              type="button"
+              className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary md:hidden"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
+              onClick={() => {
+                setMobileMenuOpen((v) => !v);
+                setMobileOpenCategory(null);
+              }}
+            >
+              <MenuIcon open={mobileMenuOpen} />
+            </button>
             <Link
               href={accountHref}
               className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
@@ -251,15 +276,19 @@ export function Header() {
         ) : null}
       </div>
 
-      <nav aria-label="Primary mobile" className="flex flex-col gap-2 border-t tt-border-light px-4 py-3 md:hidden">
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+      {/* Mobile nav — collapsed behind the hamburger button by default so
+          the sticky header stays a single compact row on phones instead of
+          permanently eating a chunk of the screen with a wrapped list. */}
+      {mobileMenuOpen ? (
+        <nav aria-label="Primary mobile" className="flex flex-col border-t tt-border-light px-4 py-3 md:hidden">
           {nav.map((item) => {
             if (!item.hasSubcategories || !item.flyoutCategory) {
               return (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="text-[10px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="py-2.5 text-[12px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary"
                 >
                   {item.label}
                 </Link>
@@ -269,51 +298,57 @@ export function Header() {
             const category = item.flyoutCategory;
             const isOpen = mobileOpenCategory === category;
             return (
-              <button
-                key={item.label}
-                type="button"
-                aria-expanded={isOpen}
-                onClick={() => setMobileOpenCategory(isOpen ? null : category)}
-                className={`text-[10px] font-bold tracking-[0.2em] uppercase transition-colors hover:tt-text-secondary ${
-                  isOpen ? "tt-text-secondary" : "tt-text-on-light"
-                }`}
-              >
-                {item.label} {isOpen ? "−" : "+"}
-              </button>
+              <div key={item.label}>
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  onClick={() => setMobileOpenCategory(isOpen ? null : category)}
+                  className={`flex w-full items-center justify-between py-2.5 text-[12px] font-bold tracking-[0.2em] uppercase transition-colors hover:tt-text-secondary ${
+                    isOpen ? "tt-text-secondary" : "tt-text-on-light"
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  <span aria-hidden="true">{isOpen ? "−" : "+"}</span>
+                </button>
+                {isOpen && preview?.[category] ? (
+                  <div className="flex flex-col gap-0.5 pb-2 pl-4">
+                    <Link
+                      href={`/shop?category=${category}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="py-1.5 text-[11px] font-bold tracking-[0.16em] tt-text-on-light uppercase hover:tt-text-secondary"
+                    >
+                      All {CATEGORY_LABEL[category]}
+                    </Link>
+                    {preview[category]!.subcategories.map((sub) => (
+                      <Link
+                        key={sub.value}
+                        href={`/shop?category=${category}&subcategory=${sub.value}`}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="py-1.5 text-[11px] font-bold tracking-[0.16em] tt-text-on-light uppercase hover:tt-text-secondary"
+                      >
+                        {sub.label}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             );
           })}
-          <span className="mx-1 h-3 w-px tt-bg-dark opacity-20" aria-hidden="true" />
+
+          <span className="my-2 h-px w-full tt-bg-dark opacity-10" aria-hidden="true" />
+
           {utilityNav.map((item) => (
             <Link
               key={item.label}
               href={item.href}
-              className="text-[10px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-2.5 text-[12px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary"
             >
               {item.label}
             </Link>
           ))}
-        </div>
-
-        {mobileOpenCategory && preview?.[mobileOpenCategory] ? (
-          <div className="flex flex-wrap justify-center gap-x-5 gap-y-1 border-t tt-border-light pt-2">
-            <Link
-              href={`/shop?category=${mobileOpenCategory}`}
-              className="text-[10px] font-bold tracking-[0.16em] tt-text-on-light uppercase hover:tt-text-secondary"
-            >
-              All {CATEGORY_LABEL[mobileOpenCategory]}
-            </Link>
-            {preview[mobileOpenCategory]!.subcategories.map((sub) => (
-              <Link
-                key={sub.value}
-                href={`/shop?category=${mobileOpenCategory}&subcategory=${sub.value}`}
-                className="text-[10px] font-bold tracking-[0.16em] tt-text-on-light uppercase hover:tt-text-secondary"
-              >
-                {sub.label}
-              </Link>
-            ))}
-          </div>
-        ) : null}
-      </nav>
+        </nav>
+      ) : null}
     </header>
   );
 }
