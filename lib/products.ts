@@ -485,7 +485,7 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
  * product should pull it within seconds rather than waiting on the
  * 5-minute fallback cache.
  */
-const HIDE_TAG = "hide-on-site";
+export const HIDE_TAG = "hide-on-site";
 
 function isHiddenByTag(p: PrintifyProduct): boolean {
   return (p.tags ?? []).some((t) => t.trim().toLowerCase() === HIDE_TAG);
@@ -514,6 +514,36 @@ export const getProducts = cache(loadProducts);
 export async function getProductBySlug(slug: string): Promise<StoreProduct | null> {
   const products = await getProducts();
   return products.find((item) => item.slug === slug) ?? null;
+}
+
+export type AdminProductSummary = {
+  id: string;
+  name: string;
+  imageSrc: string;
+  category: StoreCategory;
+  hidden: boolean;
+};
+
+/**
+ * Unlike getProducts(), this does NOT filter out hide-on-site products —
+ * the whole point of the admin list is to show every product, including
+ * currently-hidden ones, so they can be un-hidden again.
+ */
+export async function getAdminProductList(): Promise<AdminProductSummary[]> {
+  const raw = await fetchPrintifyProducts();
+  const active = raw.filter((item) => item.visible !== false);
+  return active
+    .map((p) => {
+      const mapped = mapPrintifyProduct(p);
+      return {
+        id: mapped.id,
+        name: mapped.name,
+        imageSrc: mapped.imageSrc,
+        category: mapped.category,
+        hidden: isHiddenByTag(p),
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /** Only categories that have a real subcategory split get a hover-flyout preview. */
