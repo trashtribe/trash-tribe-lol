@@ -466,9 +466,34 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
   };
 }
 
+/**
+ * Add this exact tag to a product in Printify to pull it off trashtribe.lol
+ * without deleting it.
+ *
+ * Printify's own "Unpublish"/"Hide" action (My Products → ⋯ → Hide on
+ * [sales channel]) is built for shops connected to a real sales channel —
+ * Shopify, Etsy, etc. This shop talks to Printify's REST API directly
+ * (there's no connected channel to hide it "on"), so that action doesn't
+ * reliably flip the `visible` field this code already filters on — it's
+ * scoped to a channel this shop doesn't have. Deleting the product works
+ * because that's channel-independent, but that's permanent, which isn't
+ * what "just take it off the site for now" needs.
+ *
+ * A tag is something already fully within this shop's normal workflow
+ * (tags already drive category inference above), and it reuses the
+ * `product:updated` webhook topic that's already registered, so tagging a
+ * product should pull it within seconds rather than waiting on the
+ * 5-minute fallback cache.
+ */
+const HIDE_TAG = "hide-on-site";
+
+function isHiddenByTag(p: PrintifyProduct): boolean {
+  return (p.tags ?? []).some((t) => t.trim().toLowerCase() === HIDE_TAG);
+}
+
 async function loadProducts(): Promise<StoreProduct[]> {
   const raw = await fetchPrintifyProducts();
-  const visible = raw.filter((item) => item.visible !== false);
+  const visible = raw.filter((item) => item.visible !== false && !isHiddenByTag(item));
   const mapped = visible.map(mapPrintifyProduct);
 
   const slugCounts = new Map<string, number>();
