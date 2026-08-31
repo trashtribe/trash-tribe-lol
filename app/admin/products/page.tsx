@@ -5,7 +5,7 @@ import { AdminHideToggleButton } from "@/components/AdminHideToggleButton";
 import { getAdminProductList } from "@/lib/products";
 
 export const metadata: Metadata = {
-  title: "Admin — Productos",
+  title: "Admin — Products",
   robots: { index: false, follow: false },
 };
 
@@ -21,11 +21,12 @@ export default async function AdminProductsPage() {
   return (
     <main className="mx-auto max-w-[1000px] px-4 py-10 sm:px-6 sm:py-14">
       <h1 className="text-xl font-bold tracking-[0.2em] tt-text-on-light uppercase sm:text-2xl">
-        Productos
+        Products
       </h1>
       <p className="mt-2 text-[12px] tracking-[0.04em] text-gray-500">
-        {products.length} productos · {hiddenCount} ocultos ahora mismo. Ocultar aquí no borra
-        nada en Printify — solo le pone el tag &quot;hide-on-site&quot; y lo saca de la web.
+        {products.length} products · {hiddenCount} hidden right now. Hiding here doesn&apos;t
+        delete anything in Printify — it just adds the &quot;hide-on-site&quot; tag and pulls it
+        off the site.
       </p>
 
       <ul className="mt-8 flex flex-col divide-y tt-border-light border-y tt-border-light">

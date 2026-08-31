@@ -25,7 +25,7 @@ export function AdminHideToggleButton({ productId, hidden }: AdminHideToggleButt
       setLocalHidden((v) => !v);
       router.refresh();
     } catch {
-      window.alert("No se pudo actualizar el producto. Intenta de nuevo.");
+      window.alert("Couldn't update the product. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -42,7 +42,7 @@ export function AdminHideToggleButton({ productId, hidden }: AdminHideToggleButt
           : "bg-background tt-border-light tt-text-on-light hover:tt-text-secondary"
       }`}
     >
-      {loading ? "..." : localHidden ? "Mostrar" : "Ocultar"}
+      {loading ? "..." : localHidden ? "Show" : "Hide"}
     </button>
   );
 }
