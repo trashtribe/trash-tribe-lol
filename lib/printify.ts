@@ -177,6 +177,11 @@ export async function updatePrintifyProductTags(id: string, tags: string[]): Pro
   });
 
   if (!res.ok) {
-    throw new Error(`Printify update product tags failed: ${res.status} ${res.statusText}`);
+    const details = await res.text().catch(() => "");
+    throw new Error(
+      `Printify update product tags failed: ${res.status} ${res.statusText}${
+        details ? ` — ${details.slice(0, 500)}` : ""
+      }`,
+    );
   }
 }
