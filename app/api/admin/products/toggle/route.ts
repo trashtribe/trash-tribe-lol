@@ -25,24 +25,32 @@ export async function POST(request: Request) {
     );
   }
 
-  const product = await fetchPrintifyProductById(productId);
-  if (!product) {
-    return NextResponse.json({ error: "Product not found." }, { status: 404 });
+  try {
+    const product = await fetchPrintifyProductById(productId);
+    if (!product) {
+      return NextResponse.json({ error: "Product not found." }, { status: 404 });
+    }
+
+    // Only ever touch `tags` — Printify's product update endpoint supports
+    // partial updates, but explicitly warns that sending `variants` requires
+    // ALL variants to be present, so this deliberately never sends that field
+    // (or anything else) to avoid any risk of wiping design/variant data.
+    const currentTags = product.tags ?? [];
+    const withoutTag = currentTags.filter((t) => t.trim().toLowerCase() !== tag);
+    const nextTags = on ? [...withoutTag, tag] : withoutTag;
+
+    await updatePrintifyProductTags(productId, nextTags);
+
+    // Instant refresh on trashtribe.lol instead of waiting on the 5-minute
+    // fallback cache — same tag the printify-webhook route invalidates.
+    revalidateTag(PRINTIFY_PRODUCTS_TAG, { expire: 0 });
+
+    return NextResponse.json({ ok: true, tag, on });
+  } catch (e) {
+    console.error("[admin toggle] failed:", e);
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Unknown error talking to Printify." },
+      { status: 502 },
+    );
   }
-
-  // Only ever touch `tags` — Printify's product update endpoint supports
-  // partial updates, but explicitly warns that sending `variants` requires
-  // ALL variants to be present, so this deliberately never sends that field
-  // (or anything else) to avoid any risk of wiping design/variant data.
-  const currentTags = product.tags ?? [];
-  const withoutTag = currentTags.filter((t) => t.trim().toLowerCase() !== tag);
-  const nextTags = on ? [...withoutTag, tag] : withoutTag;
-
-  await updatePrintifyProductTags(productId, nextTags);
-
-  // Instant refresh on trashtribe.lol instead of waiting on the 5-minute
-  // fallback cache — same tag the printify-webhook route invalidates.
-  revalidateTag(PRINTIFY_PRODUCTS_TAG, { expire: 0 });
-
-  return NextResponse.json({ ok: true, tag, on });
 }

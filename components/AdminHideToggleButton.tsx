@@ -21,11 +21,18 @@ export function AdminHideToggleButton({ productId, hidden }: AdminHideToggleButt
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId, tag: "hide-on-site", on: !localHidden }),
       });
-      if (!res.ok) throw new Error("request failed");
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(
+          `${res.status} ${res.statusText}${body?.error ? ` — ${body.error}` : ""}`,
+        );
+      }
       setLocalHidden((v) => !v);
       router.refresh();
-    } catch {
-      window.alert("Couldn't update the product. Please try again.");
+    } catch (e) {
+      window.alert(
+        `Couldn't update the product: ${e instanceof Error ? e.message : String(e)}`,
+      );
     } finally {
       setLoading(false);
     }
