@@ -2,19 +2,29 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { fetchPrintifyProductById, PRINTIFY_PRODUCTS_TAG, updatePrintifyProductTags } from "@/lib/printify";
-import { HIDE_TAG } from "@/lib/products";
+import { HIDE_TAG, TWO_SIDED_PRINT_TAG } from "@/lib/products";
+
+// Printify doesn't expose a Tags field in its UI for API-connected shops
+// like this one (confirmed by the user), so this admin panel is the only
+// place these tags can be set — hence a generic tag toggle rather than one
+// route per tag. Allowlisted so this endpoint can never be used to write an
+// arbitrary tag.
+const TOGGLEABLE_TAGS = new Set<string>([HIDE_TAG, TWO_SIDED_PRINT_TAG]);
 
 export async function POST(request: Request) {
-  let body: { productId?: string; hide?: boolean };
+  let body: { productId?: string; tag?: string; on?: boolean };
   try {
-    body = (await request.json()) as { productId?: string; hide?: boolean };
+    body = (await request.json()) as { productId?: string; tag?: string; on?: boolean };
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { productId, hide } = body;
-  if (!productId || typeof hide !== "boolean") {
-    return NextResponse.json({ error: "productId and hide are required." }, { status: 400 });
+  const { productId, tag, on } = body;
+  if (!productId || typeof on !== "boolean" || !tag || !TOGGLEABLE_TAGS.has(tag)) {
+    return NextResponse.json(
+      { error: "productId, a valid tag, and on are required." },
+      { status: 400 },
+    );
   }
 
   const product = await fetchPrintifyProductById(productId);
@@ -27,8 +37,8 @@ export async function POST(request: Request) {
   // ALL variants to be present, so this deliberately never sends that field
   // (or anything else) to avoid any risk of wiping design/variant data.
   const currentTags = product.tags ?? [];
-  const withoutHideTag = currentTags.filter((t) => t.trim().toLowerCase() !== HIDE_TAG);
-  const nextTags = hide ? [...withoutHideTag, HIDE_TAG] : withoutHideTag;
+  const withoutTag = currentTags.filter((t) => t.trim().toLowerCase() !== tag);
+  const nextTags = on ? [...withoutTag, tag] : withoutTag;
 
   await updatePrintifyProductTags(productId, nextTags);
 
@@ -36,5 +46,5 @@ export async function POST(request: Request) {
   // fallback cache — same tag the printify-webhook route invalidates.
   revalidateTag(PRINTIFY_PRODUCTS_TAG, { expire: 0 });
 
-  return NextResponse.json({ ok: true, hidden: hide });
+  return NextResponse.json({ ok: true, tag, on });
 }

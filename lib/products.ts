@@ -520,6 +520,10 @@ function isHiddenByTag(p: PrintifyProduct): boolean {
   return (p.tags ?? []).some((t) => t.trim().toLowerCase() === HIDE_TAG);
 }
 
+function isTwoSidedByTag(p: PrintifyProduct): boolean {
+  return (p.tags ?? []).some((t) => t.trim().toLowerCase() === TWO_SIDED_PRINT_TAG);
+}
+
 async function loadProducts(): Promise<StoreProduct[]> {
   const raw = await fetchPrintifyProducts();
   const visible = raw.filter((item) => item.visible !== false && !isHiddenByTag(item));
@@ -551,6 +555,7 @@ export type AdminProductSummary = {
   imageSrc: string;
   category: StoreCategory;
   hidden: boolean;
+  twoSidedPrint: boolean;
 };
 
 /**
@@ -570,6 +575,7 @@ export async function getAdminProductList(): Promise<AdminProductSummary[]> {
         imageSrc: mapped.imageSrc,
         category: mapped.category,
         hidden: isHiddenByTag(p),
+        twoSidedPrint: isTwoSidedByTag(p),
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));

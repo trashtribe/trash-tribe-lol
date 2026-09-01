@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import { AdminHideToggleButton } from "@/components/AdminHideToggleButton";
+import { AdminTwoSidedToggleButton } from "@/components/AdminTwoSidedToggleButton";
 import { getAdminProductList } from "@/lib/products";
 
 export const metadata: Metadata = {
@@ -26,7 +27,9 @@ export default async function AdminProductsPage() {
       <p className="mt-2 text-[12px] tracking-[0.04em] text-gray-500">
         {products.length} products · {hiddenCount} hidden right now. Hiding here doesn&apos;t
         delete anything in Printify — it just adds the &quot;hide-on-site&quot; tag and pulls it
-        off the site.
+        off the site. For Tops (tees, tanks, hoodies...), &quot;Mark two-sided&quot; flags a
+        product that has a real design on both front and back, so its card swaps photos on hover
+        instead of showing the plain mockup back.
       </p>
 
       <ul className="mt-8 flex flex-col divide-y tt-border-light border-y tt-border-light">
@@ -41,6 +44,9 @@ export default async function AdminProductsPage() {
               </p>
               <p className="text-[11px] tracking-[0.1em] text-gray-500 uppercase">{p.category}</p>
             </div>
+            {p.category === "TOPS" ? (
+              <AdminTwoSidedToggleButton productId={p.id} twoSidedPrint={p.twoSidedPrint} />
+            ) : null}
             <AdminHideToggleButton productId={p.id} hidden={p.hidden} />
           </li>
         ))}
