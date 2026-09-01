@@ -205,26 +205,41 @@ function inferSubcategory(p: PrintifyProduct, category: StoreCategory): StoreSub
 }
 
 /**
- * Printify sends a whole batch of near-duplicate shots per color (front,
- * front-2, back, back-2, folded, hanging, a dozen "person-N" lifestyle
- * shots, sleeve/neck closeups, a size chart...) all tagged with the same
- * `variant_ids`. Only `position: "front"` and `position: "back"` reliably
- * identify the two canonical product shots — everything else reads as a
- * repeat in a small thumbnail strip. Keep the first "front" and first
- * "back" found.
+ * Some Printify products send a whole batch of near-duplicate shots per
+ * color (front, front-2, back, back-2, folded, hanging, a dozen "person-N"
+ * lifestyle shots, sleeve/neck closeups, a size chart...) all tagged with
+ * the same `variant_ids` — that's genuine noise, and only `position:
+ * "front"` / `position: "back"` reliably identify the two canonical shots
+ * worth keeping out of it.
  *
- * Some variant groups don't tag a "front" at all — seen on Cher Guevara
- * Tee, where one color's data jumps straight to "back", with the actual
- * design photo mislabeled as an "other" shot (e.g. "front-2"). Since this
- * is a gap in Printify's own data rather than something tied to one
- * product, it can turn up on any product, including ones added later — so
- * when there's no tagged front, fall back to any image in the group that
- * isn't the back mockup, rather than risking a shopper's only photo being
- * a blank shirt with the print nowhere in sight. Last resort: the group's
- * first image, whatever it is.
+ * But a *small* group (a handful of images) is almost never that kind of
+ * batch — it's just every real photo the product has (e.g. socks with 4
+ * distinct angle shots, none of them lifestyle noise). Curating those down
+ * to 2 was silently dropping real photos — confirmed by the user on
+ * "Nobody Knows I'm A Lesbian Socks", which has 4 photos in Printify but
+ * only showed 1-2 on the site. So only apply the aggressive front/back-only
+ * curation once a group is large enough to actually be the noisy case;
+ * below that, keep every image (front first, if tagged, so it's used as
+ * the card's primary photo).
  */
+const NOISY_IMAGE_GROUP_THRESHOLD = 5;
+
 function curateColorGroupImages(images: PrintifyImage[]): PrintifyImage[] {
   if (images.length === 0) return [];
+
+  if (images.length < NOISY_IMAGE_GROUP_THRESHOLD) {
+    const front = images.find((img) => img.position === "front");
+    return front ? [front, ...images.filter((img) => img !== front)] : images;
+  }
+
+  // Some variant groups don't tag a "front" at all — seen on Cher Guevara
+  // Tee, where one color's data jumps straight to "back", with the actual
+  // design photo mislabeled as an "other" shot (e.g. "front-2"). Since this
+  // is a gap in Printify's own data rather than something tied to one
+  // product, it can turn up on any product — so when there's no tagged
+  // front, fall back to any image in the group that isn't the back
+  // mockup, rather than risking a shopper's only photo being a blank shirt
+  // with the print nowhere in sight. Last resort: the group's first image.
   const front = images.find((img) => img.position === "front");
   const back = images.find((img) => img.position === "back");
   const primary = front ?? images.find((img) => img !== back) ?? images[0]!;
