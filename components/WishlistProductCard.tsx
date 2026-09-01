@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { formatEuro } from "@/lib/format-currency";
-import { parseVariantTitleSegments } from "@/lib/products";
+import { parseVariantTitleSegments, shouldSwapImageOnHover } from "@/lib/products";
 
 import { useCart } from "./CartProvider";
 import type { Product } from "./product-data";
@@ -17,9 +17,11 @@ type WishlistProductCardProps = {
 export function WishlistProductCard({ product }: WishlistProductCardProps) {
   const { addToCart } = useCart();
   const { removeFromWishlist } = useWishlist();
+  const altImage = product.galleryImages[1];
+  const useImageSwap = shouldSwapImageOnHover(product);
 
   return (
-    <article className="flex flex-col gap-2">
+    <article className="group flex flex-col gap-2">
       <div className="relative h-32 overflow-hidden border tt-border-light bg-background p-3 sm:h-36 md:h-40">
         <Link
           href={`/shop/${product.slug}`}
@@ -30,9 +32,19 @@ export function WishlistProductCard({ product }: WishlistProductCardProps) {
               src={product.imageSrc}
               alt={product.imageAlt}
               fill
-              className="object-contain object-center"
+              className={`object-contain object-center transition-opacity duration-300 ${useImageSwap ? "group-hover:opacity-0" : ""}`}
               sizes="(max-width: 640px) 50vw, 25vw"
             />
+            {useImageSwap ? (
+              <Image
+                src={altImage!}
+                alt={product.imageAlt}
+                fill
+                aria-hidden="true"
+                className="object-contain object-center opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                sizes="(max-width: 640px) 50vw, 25vw"
+              />
+            ) : null}
           </div>
         </Link>
         <button
