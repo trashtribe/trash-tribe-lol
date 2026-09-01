@@ -177,28 +177,3 @@ export async function updatePrintifyProductTags(id: string, tags: string[]): Pro
     throw new Error(`Printify update product tags failed: ${res.status} ${res.statusText}`);
   }
 }
-
-/**
- * Same safe partial-update shape as updatePrintifyProductTags(), for the
- * admin edit page — title/description only, `variants` is never touched.
- */
-export async function updatePrintifyProductDetails(
-  id: string,
-  fields: { title: string; description: string },
-): Promise<void> {
-  const { shopId, apiKey } = requirePrintifyConfig();
-  const url = `${PRINTIFY_API_BASE}/shops/${shopId}/products/${encodeURIComponent(id)}.json`;
-  const res = await fetch(url, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(fields),
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    throw new Error(`Printify update product details failed: ${res.status} ${res.statusText}`);
-  }
-}

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 
 import { AdminHideToggleButton } from "@/components/AdminHideToggleButton";
 import { getAdminProductList } from "@/lib/products";
@@ -42,12 +41,6 @@ export default async function AdminProductsPage() {
               </p>
               <p className="text-[11px] tracking-[0.1em] text-gray-500 uppercase">{p.category}</p>
             </div>
-            <Link
-              href={`/admin/products/${p.id}`}
-              className="shrink-0 border tt-border-light bg-background px-4 py-2 text-[11px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
-            >
-              Edit
-            </Link>
             <AdminHideToggleButton productId={p.id} hidden={p.hidden} />
           </li>
         ))}
