@@ -55,8 +55,6 @@ export type StoreProduct = {
   variants: StoreProductVariant[];
   /** Optional merchandising label (seed catalog / future providers). */
   saleTag?: string;
-  /** Tagged `two-sided-print` in Printify — see TWO_SIDED_PRINT_TAG. */
-  twoSidedPrint?: boolean;
 };
 
 const DISPLAY_CURRENCY = process.env.PRINTIFY_DISPLAY_CURRENCY?.trim() || "EUR";
@@ -208,44 +206,37 @@ function inferSubcategory(p: PrintifyProduct, category: StoreCategory): StoreSub
  * Some Printify products send a whole batch of near-duplicate shots per
  * color (front, front-2, back, back-2, folded, hanging, a dozen "person-N"
  * lifestyle shots, sleeve/neck closeups, a size chart...) all tagged with
- * the same `variant_ids` — that's genuine noise, and only `position:
- * "front"` / `position: "back"` reliably identify the two canonical shots
- * worth keeping out of it.
+ * the same `variant_ids`. Capped here so that noise doesn't flood a small
+ * thumbnail strip or the card hover-swap.
  *
- * But a *small* group (a handful of images) is almost never that kind of
- * batch — it's just every real photo the product has (e.g. socks with 4
- * distinct angle shots, none of them lifestyle noise). Curating those down
- * to 2 was silently dropping real photos — confirmed by the user on
- * "Nobody Knows I'm A Lesbian Socks", which has 4 photos in Printify but
- * only showed 1-2 on the site. So only apply the aggressive front/back-only
- * curation once a group is large enough to actually be the noisy case;
- * below that, keep every image (front first, if tagged, so it's used as
- * the card's primary photo).
+ * But per the user, ANY product with more than one real photo should show
+ * it and swap to it on hover — no category or size-of-batch exception. So
+ * this always keeps at least 2 images when the group has 2+ to begin with
+ * (previously, a large "noisy" group with no explicit `position: "back"`
+ * tag could collapse to just 1 image, which is what broke
+ * butch-bait-crew-socks even after the first fix here).
  */
-const NOISY_IMAGE_GROUP_THRESHOLD = 5;
+const MAX_IMAGES_PER_COLOR_GROUP = 4;
 
 function curateColorGroupImages(images: PrintifyImage[]): PrintifyImage[] {
   if (images.length === 0) return [];
-
-  if (images.length < NOISY_IMAGE_GROUP_THRESHOLD) {
+  if (images.length <= MAX_IMAGES_PER_COLOR_GROUP) {
     const front = images.find((img) => img.position === "front");
     return front ? [front, ...images.filter((img) => img !== front)] : images;
   }
 
-  // Some variant groups don't tag a "front" at all — seen on Cher Guevara
-  // Tee, where one color's data jumps straight to "back", with the actual
-  // design photo mislabeled as an "other" shot (e.g. "front-2"). Since this
-  // is a gap in Printify's own data rather than something tied to one
-  // product, it can turn up on any product — so when there's no tagged
-  // front, fall back to any image in the group that isn't the back
-  // mockup, rather than risking a shopper's only photo being a blank shirt
-  // with the print nowhere in sight. Last resort: the group's first image.
+  // Large/noisy group: keep the front shot first (falling back to any shot
+  // that isn't the back mockup if nothing is explicitly tagged "front" —
+  // seen on Cher Guevara Tee, where the real design photo was mislabeled
+  // "front-2"), the back shot next if tagged, then pad out with whatever's
+  // left up to the cap so a real second (or third/fourth) photo is never
+  // dropped just because Printify didn't tag it.
   const front = images.find((img) => img.position === "front");
   const back = images.find((img) => img.position === "back");
   const primary = front ?? images.find((img) => img !== back) ?? images[0]!;
-  const secondary = back && back !== primary ? back : undefined;
-  const curated = [primary, secondary].filter((img): img is PrintifyImage => Boolean(img));
-  return curated.length > 0 ? curated : images.slice(0, 2);
+  const rest = images.filter((img) => img !== primary);
+  const ordered = back && back !== primary ? [back, ...rest.filter((img) => img !== back)] : rest;
+  return [primary, ...ordered].slice(0, MAX_IMAGES_PER_COLOR_GROUP);
 }
 
 /**
@@ -465,9 +456,6 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
   const imageSrc = galleryImages[0] ?? "/globe.svg";
   const images = imagesFromProduct(p);
   const category = inferCategory(p);
-  const twoSidedPrint = (p.tags ?? []).some(
-    (t) => t.trim().toLowerCase() === TWO_SIDED_PRINT_TAG,
-  );
 
   return {
     id,
@@ -483,31 +471,18 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
     category,
     subcategory: inferSubcategory(p, category),
     variants,
-    twoSidedPrint,
   };
 }
 
 /**
- * Add this exact tag to a product in Printify to mark it as printed on both
- * sides (front and back are both real artwork, not a blank mockup back) —
- * see shouldSwapImageOnHover() below.
- */
-export const TWO_SIDED_PRINT_TAG = "two-sided-print";
-
-/**
  * Whether a product card should swap to its second gallery photo on hover.
- *
- * Most Tops (tees, tanks, crops, hoodies, caps...) only have one real design
- * shot — the second gallery image is Printify's blank-back mockup, which
- * isn't worth swapping to. Every other category (socks, underwear, bags,
- * keychains, posters...) genuinely has a second distinct photo worth
- * showing. A Tops product tagged TWO_SIDED_PRINT_TAG in Printify (a real
- * front-and-back design) opts back in.
+ * Any product with a real second photo gets the swap — no category
+ * exception. (Previously Tops were excluded unless tagged, on the
+ * assumption their second photo was usually a blank mockup back; per the
+ * user, every product with more than one real photo should swap.)
  */
 export function shouldSwapImageOnHover(product: StoreProduct): boolean {
-  if (!product.galleryImages[1]) return false;
-  if (product.category === "TOPS") return Boolean(product.twoSidedPrint);
-  return true;
+  return Boolean(product.galleryImages[1]);
 }
 
 /**
@@ -533,10 +508,6 @@ export const HIDE_TAG = "hide-on-site";
 
 function isHiddenByTag(p: PrintifyProduct): boolean {
   return (p.tags ?? []).some((t) => t.trim().toLowerCase() === HIDE_TAG);
-}
-
-function isTwoSidedByTag(p: PrintifyProduct): boolean {
-  return (p.tags ?? []).some((t) => t.trim().toLowerCase() === TWO_SIDED_PRINT_TAG);
 }
 
 async function loadProducts(): Promise<StoreProduct[]> {
@@ -570,7 +541,6 @@ export type AdminProductSummary = {
   imageSrc: string;
   category: StoreCategory;
   hidden: boolean;
-  twoSidedPrint: boolean;
 };
 
 /**
@@ -590,7 +560,6 @@ export async function getAdminProductList(): Promise<AdminProductSummary[]> {
         imageSrc: mapped.imageSrc,
         category: mapped.category,
         hidden: isHiddenByTag(p),
-        twoSidedPrint: isTwoSidedByTag(p),
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));

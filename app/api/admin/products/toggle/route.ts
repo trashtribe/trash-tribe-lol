@@ -2,14 +2,12 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { fetchPrintifyProductById, PRINTIFY_PRODUCTS_TAG, updatePrintifyProductTags } from "@/lib/printify";
-import { HIDE_TAG, TWO_SIDED_PRINT_TAG } from "@/lib/products";
+import { HIDE_TAG } from "@/lib/products";
 
 // Printify doesn't expose a Tags field in its UI for API-connected shops
 // like this one (confirmed by the user), so this admin panel is the only
-// place these tags can be set — hence a generic tag toggle rather than one
-// route per tag. Allowlisted so this endpoint can never be used to write an
-// arbitrary tag.
-const TOGGLEABLE_TAGS = new Set<string>([HIDE_TAG, TWO_SIDED_PRINT_TAG]);
+// place this tag can be set.
+const TOGGLEABLE_TAGS = new Set<string>([HIDE_TAG]);
 
 export async function POST(request: Request) {
   let body: { productId?: string; tag?: string; on?: boolean };
