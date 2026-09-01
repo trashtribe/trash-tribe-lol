@@ -58,6 +58,9 @@ export type PrintifyProduct = {
   images?: PrintifyImage[];
   variants?: PrintifyVariantRow[];
   visible?: boolean;
+  created_at?: string;
+  /** Sic — Printify's own field name has no "d" (not "updated_at"). */
+  update_at?: string;
 };
 
 type PrintifyListResponse = {

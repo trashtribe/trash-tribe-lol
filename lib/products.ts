@@ -510,9 +510,43 @@ function isHiddenByTag(p: PrintifyProduct): boolean {
   return (p.tags ?? []).some((t) => t.trim().toLowerCase() === HIDE_TAG);
 }
 
+/**
+ * Printify's `visible` field defaults to `true` from the moment a product
+ * is created — confirmed in their own API docs ("Used for publishing...
+ * defaults to true"). There's no separate "draft" state exposed: a product
+ * you just started designing, before saving or publishing anything, is
+ * already `visible: true` and would show up on the site within seconds via
+ * the webhook. Rather than requiring you to remember to hide new products
+ * by hand every time, brand-new products (created within the last
+ * NEW_PRODUCT_WINDOW_HOURS) are held back until they've gone
+ * STABILITY_MINUTES without an edit — i.e. once you've actually stopped
+ * touching it, not the instant you start. Already-established products
+ * (older than the window) are exempt from this, so a routine tweak (fixing
+ * a typo, adjusting a price) on something already live never makes it
+ * disappear for a while.
+ */
+const NEW_PRODUCT_WINDOW_HOURS = 48;
+const STABILITY_MINUTES = 20;
+
+function isUnstableDraft(p: PrintifyProduct): boolean {
+  const createdAt = p.created_at ? new Date(p.created_at) : null;
+  const updatedAt = p.update_at ? new Date(p.update_at) : null;
+  if (!createdAt || Number.isNaN(createdAt.getTime())) return false;
+  if (!updatedAt || Number.isNaN(updatedAt.getTime())) return false;
+
+  const now = Date.now();
+  const isNewProduct = now - createdAt.getTime() < NEW_PRODUCT_WINDOW_HOURS * 60 * 60 * 1000;
+  if (!isNewProduct) return false;
+
+  const minutesSinceEdit = (now - updatedAt.getTime()) / (60 * 1000);
+  return minutesSinceEdit < STABILITY_MINUTES;
+}
+
 async function loadProducts(): Promise<StoreProduct[]> {
   const raw = await fetchPrintifyProducts();
-  const visible = raw.filter((item) => item.visible !== false && !isHiddenByTag(item));
+  const visible = raw.filter(
+    (item) => item.visible !== false && !isHiddenByTag(item) && !isUnstableDraft(item),
+  );
   const mapped = visible.map(mapPrintifyProduct);
 
   const slugCounts = new Map<string, number>();
