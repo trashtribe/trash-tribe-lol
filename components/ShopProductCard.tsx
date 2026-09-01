@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import type { StoreProduct } from "@/lib/products";
+import { shouldSwapImageOnHover, type StoreProduct } from "@/lib/products";
 import { formatEuro } from "@/lib/format-currency";
 
 import { useCart } from "./CartProvider";
@@ -50,6 +50,8 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const saved = isInWishlist(product.id);
+  const altImage = product.galleryImages[1];
+  const useImageSwap = shouldSwapImageOnHover(product);
 
   return (
     <article className="group flex flex-col">
@@ -68,9 +70,19 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
               src={product.imageSrc}
               alt={product.imageAlt}
               fill
-              className="object-contain object-center transition-transform duration-300 group-hover:scale-[1.02]"
+              className={`object-contain object-center transition duration-300 group-hover:scale-[1.02] ${useImageSwap ? "group-hover:opacity-0" : ""}`}
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
+            {useImageSwap ? (
+              <Image
+                src={altImage!}
+                alt={product.imageAlt}
+                fill
+                aria-hidden="true"
+                className="object-contain object-center opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              />
+            ) : null}
           </div>
           <button
             type="button"

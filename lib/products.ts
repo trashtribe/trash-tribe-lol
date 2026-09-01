@@ -55,6 +55,8 @@ export type StoreProduct = {
   variants: StoreProductVariant[];
   /** Optional merchandising label (seed catalog / future providers). */
   saleTag?: string;
+  /** Tagged `two-sided-print` in Printify — see TWO_SIDED_PRINT_TAG. */
+  twoSidedPrint?: boolean;
 };
 
 const DISPLAY_CURRENCY = process.env.PRINTIFY_DISPLAY_CURRENCY?.trim() || "EUR";
@@ -448,6 +450,9 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
   const imageSrc = galleryImages[0] ?? "/globe.svg";
   const images = imagesFromProduct(p);
   const category = inferCategory(p);
+  const twoSidedPrint = (p.tags ?? []).some(
+    (t) => t.trim().toLowerCase() === TWO_SIDED_PRINT_TAG,
+  );
 
   return {
     id,
@@ -463,7 +468,31 @@ export function mapPrintifyProduct(p: PrintifyProduct): StoreProduct {
     category,
     subcategory: inferSubcategory(p, category),
     variants,
+    twoSidedPrint,
   };
+}
+
+/**
+ * Add this exact tag to a product in Printify to mark it as printed on both
+ * sides (front and back are both real artwork, not a blank mockup back) —
+ * see shouldSwapImageOnHover() below.
+ */
+export const TWO_SIDED_PRINT_TAG = "two-sided-print";
+
+/**
+ * Whether a product card should swap to its second gallery photo on hover.
+ *
+ * Most Tops (tees, tanks, crops, hoodies, caps...) only have one real design
+ * shot — the second gallery image is Printify's blank-back mockup, which
+ * isn't worth swapping to. Every other category (socks, underwear, bags,
+ * keychains, posters...) genuinely has a second distinct photo worth
+ * showing. A Tops product tagged TWO_SIDED_PRINT_TAG in Printify (a real
+ * front-and-back design) opts back in.
+ */
+export function shouldSwapImageOnHover(product: StoreProduct): boolean {
+  if (!product.galleryImages[1]) return false;
+  if (product.category === "TOPS") return Boolean(product.twoSidedPrint);
+  return true;
 }
 
 /**
