@@ -8,6 +8,12 @@ type AdminHideToggleButtonProps = {
   hidden: boolean;
 };
 
+// Was temporarily true while diagnosing Printify's account-wide "Product is
+// disabled for editing" (error 8252) lock — root cause found and fixed (see
+// acknowledgePrintifyPublishSucceeded in lib/printify.ts + the webhook
+// route), confirmed via a real PUT request that products are editable again.
+const WRITES_DISABLED = false;
+
 export function AdminHideToggleButton({ productId, hidden }: AdminHideToggleButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -42,14 +48,15 @@ export function AdminHideToggleButton({ productId, hidden }: AdminHideToggleButt
     <button
       type="button"
       onClick={toggle}
-      disabled={loading}
+      disabled={loading || WRITES_DISABLED}
+      title={WRITES_DISABLED ? "Paused while we investigate a Printify account issue." : undefined}
       className={`shrink-0 border px-4 py-2 text-[11px] font-bold tracking-[0.14em] uppercase transition-colors disabled:opacity-50 ${
         localHidden
           ? "tt-bg-primary tt-border-light tt-text-on-light"
           : "bg-background tt-border-light tt-text-on-light hover:tt-text-secondary"
       }`}
     >
-      {loading ? "..." : localHidden ? "Show" : "Hide"}
+      {loading ? "..." : WRITES_DISABLED ? "Paused" : localHidden ? "Show" : "Hide"}
     </button>
   );
 }

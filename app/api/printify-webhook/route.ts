@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
-import { PRINTIFY_PRODUCTS_TAG } from "@/lib/printify";
+import { acknowledgePrintifyPublishSucceeded, PRINTIFY_PRODUCTS_TAG } from "@/lib/printify";
 
 /**
  * Printify webhook receiver.
@@ -72,9 +72,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature." }, { status: 401 });
   }
 
-  let payload: { topic?: string; type?: string };
+  type WebhookPayload = {
+    topic?: string;
+    type?: string;
+    id?: string;
+    resource?: { id?: string; data?: { id?: string } };
+    data?: { id?: string };
+  };
+
+  let payload: WebhookPayload;
   try {
-    payload = JSON.parse(rawBody) as { topic?: string; type?: string };
+    payload = JSON.parse(rawBody) as WebhookPayload;
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
@@ -86,6 +94,26 @@ export async function POST(request: Request) {
     // the data should expire immediately rather than use stale-while-
     // revalidate semantics (see Next.js revalidateTag docs).
     revalidateTag(PRINTIFY_PRODUCTS_TAG, { expire: 0 });
+  }
+
+  // Printify's exact webhook envelope shape isn't fully documented, so this
+  // tries every field a product id has plausibly shown up under across their
+  // docs/examples. If none match, the error log below captures the raw body
+  // so the shape can be fixed from real data instead of guessing again.
+  if (topic === "product:publish:started") {
+    const productId = payload.resource?.id ?? payload.resource?.data?.id ?? payload.data?.id ?? payload.id;
+    if (productId) {
+      try {
+        await acknowledgePrintifyPublishSucceeded(productId, "https://www.trashtribe.lol/shop");
+      } catch (e) {
+        console.error("[printify webhook] failed to ack publish for", productId, e);
+      }
+    } else {
+      console.error(
+        "[printify webhook] product:publish:started received but no product id found in payload:",
+        rawBody.slice(0, 1000),
+      );
+    }
   }
 
   return NextResponse.json({ received: true, topic });

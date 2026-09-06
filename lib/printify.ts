@@ -163,6 +163,45 @@ export async function fetchPrintifyProductById(id: string): Promise<PrintifyProd
  * keeps this safe to call from the admin hide/show toggle without any risk
  * of wiping out the rest of the product.
  */
+/**
+ * Printify locks a product while it's "publishing" — confirmed in their own
+ * docs: `is_locked` ("A product is locked during publishing. Locked products
+ * can't be updated until unlocked.") only clears once the store acks with
+ * this endpoint ("Using this endpoint removes the product from the locked
+ * status on the Printify app.").
+ *
+ * For a custom/API-only store like this one there's no real "publish to
+ * channel" step to perform — the storefront already reads products directly
+ * — so the printify-webhook route calls this immediately on
+ * `product:publish:started` to ack success right away. Before this existed,
+ * that event fired (e.g. whenever a product was saved/published from the
+ * Printify app) and nothing ever acked it, which is why products were
+ * getting stuck in "Publishing" with all edits blocked (error 8252,
+ * "Product is disabled for editing").
+ */
+export async function acknowledgePrintifyPublishSucceeded(id: string, handle: string): Promise<void> {
+  const { shopId, apiKey } = requirePrintifyConfig();
+  const url = `${PRINTIFY_API_BASE}/shops/${shopId}/products/${encodeURIComponent(id)}/publishing_succeeded.json`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ external: { id, handle } }),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const details = await res.text().catch(() => "");
+    throw new Error(
+      `Printify publishing_succeeded failed: ${res.status} ${res.statusText}${
+        details ? ` — ${details.slice(0, 500)}` : ""
+      }`,
+    );
+  }
+}
+
 export async function updatePrintifyProductTags(id: string, tags: string[]): Promise<void> {
   const { shopId, apiKey } = requirePrintifyConfig();
   const url = `${PRINTIFY_API_BASE}/shops/${shopId}/products/${encodeURIComponent(id)}.json`;

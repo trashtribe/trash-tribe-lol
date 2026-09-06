@@ -9,7 +9,23 @@ import { HIDE_TAG } from "@/lib/products";
 // place this tag can be set.
 const TOGGLEABLE_TAGS = new Set<string>([HIDE_TAG]);
 
+// Was temporarily true while diagnosing Printify's account-wide "Product is
+// disabled for editing" (error 8252) lock — root cause found and fixed (see
+// acknowledgePrintifyPublishSucceeded in lib/printify.ts + the webhook
+// route), confirmed via a real PUT request that products are editable again.
+const WRITES_DISABLED = false;
+
 export async function POST(request: Request) {
+  if (WRITES_DISABLED) {
+    return NextResponse.json(
+      {
+        error:
+          "Admin editing is temporarily paused while we investigate a Printify account issue. No request was sent to Printify.",
+      },
+      { status: 503 },
+    );
+  }
+
   let body: { productId?: string; tag?: string; on?: boolean };
   try {
     body = (await request.json()) as { productId?: string; tag?: string; on?: boolean };

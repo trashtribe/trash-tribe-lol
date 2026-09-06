@@ -28,7 +28,6 @@ export default async function AdminProductsPage() {
         delete anything in Printify — it just adds the &quot;hide-on-site&quot; tag and pulls it
         off the site.
       </p>
-
       <ul className="mt-8 flex flex-col divide-y tt-border-light border-y tt-border-light">
         {products.map((p) => (
           <li key={p.id} className="flex items-center gap-4 py-4">
