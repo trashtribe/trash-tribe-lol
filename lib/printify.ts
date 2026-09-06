@@ -65,6 +65,8 @@ export type PrintifyProduct = {
 
 type PrintifyListResponse = {
   data?: PrintifyProduct[];
+  current_page?: number;
+  last_page?: number;
 };
 
 function requirePrintifyConfig(): { shopId: string; apiKey: string } {
@@ -81,26 +83,45 @@ const PRINTIFY_API_BASE = "https://api.printify.com/v1";
 /** Tag used to invalidate the product list on demand — see /api/printify-webhook. */
 export const PRINTIFY_PRODUCTS_TAG = "printify-products";
 
+// Printify's products.json endpoint is paginated (Laravel-style: data +
+// current_page/last_page). This used to hardcode `?limit=24` and only ever
+// fetch page 1 — harmless while the catalog stayed under 24 products, but
+// once it grew past that, everything after the 24th product (alphabetically
+// by creation order) silently vanished from the site with no error anywhere.
+// Paginating through every page here means the site always reflects the
+// full catalog regardless of how large it grows.
+const PRODUCTS_PAGE_SIZE = 50;
+
 export async function fetchPrintifyProducts(): Promise<PrintifyProduct[]> {
   const { shopId, apiKey } = requirePrintifyConfig();
-  const url = `${PRINTIFY_API_BASE}/shops/${shopId}/products.json?limit=24`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${apiKey}` },
-    // Falls back to this time-based refresh even if the webhook below never
-    // fires (e.g. not yet registered, or Printify retries exhausted).
-    next: { revalidate: 300, tags: [PRINTIFY_PRODUCTS_TAG] },
-  });
+  const all: PrintifyProduct[] = [];
+  let page = 1;
+  let lastPage = 1;
 
-  if (!res.ok) {
-    throw new Error(`Printify list products failed: ${res.status} ${res.statusText}`);
-  }
+  do {
+    const url = `${PRINTIFY_API_BASE}/shops/${shopId}/products.json?limit=${PRODUCTS_PAGE_SIZE}&page=${page}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      // Falls back to this time-based refresh even if the webhook below never
+      // fires (e.g. not yet registered, or Printify retries exhausted).
+      next: { revalidate: 300, tags: [PRINTIFY_PRODUCTS_TAG] },
+    });
 
-  const body = (await res.json()) as PrintifyListResponse;
-  if (!Array.isArray(body.data)) {
-    throw new Error("Printify list products: missing or invalid data array");
-  }
+    if (!res.ok) {
+      throw new Error(`Printify list products failed: ${res.status} ${res.statusText}`);
+    }
 
-  return body.data;
+    const body = (await res.json()) as PrintifyListResponse;
+    if (!Array.isArray(body.data)) {
+      throw new Error("Printify list products: missing or invalid data array");
+    }
+
+    all.push(...body.data);
+    lastPage = body.last_page ?? 1;
+    page += 1;
+  } while (page <= lastPage);
+
+  return all;
 }
 
 export type PrintifyShipment = {
