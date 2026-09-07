@@ -486,29 +486,15 @@ export function shouldSwapImageOnHover(product: StoreProduct): boolean {
 }
 
 /**
- * Add this exact tag to a product in Printify to pull it off trashtribe.lol
- * without deleting it.
- *
- * Printify's own "Unpublish"/"Hide" action (My Products → ⋯ → Hide on
- * [sales channel]) is built for shops connected to a real sales channel —
- * Shopify, Etsy, etc. This shop talks to Printify's REST API directly
- * (there's no connected channel to hide it "on"), so that action doesn't
- * reliably flip the `visible` field this code already filters on — it's
- * scoped to a channel this shop doesn't have. Deleting the product works
- * because that's channel-independent, but that's permanent, which isn't
- * what "just take it off the site for now" needs.
- *
- * A tag is something already fully within this shop's normal workflow
- * (tags already drive category inference above), and it reuses the
- * `product:updated` webhook topic that's already registered, so tagging a
- * product should pull it within seconds rather than waiting on the
- * 5-minute fallback cache.
+ * Hiding a product from the site is done directly in Printify: open the
+ * product → Publishing settings → "Hide in store". Confirmed (by testing
+ * against the live API) that this actually flips `visible` to `false` on
+ * the product, which is exactly what the filter below checks — no separate
+ * admin panel or custom tag needed. (An earlier version of this code
+ * couldn't confirm that the native checkbox affected `visible` reliably and
+ * built a custom `hide-on-site` tag + admin UI as a workaround; once
+ * verified that the checkbox does work, that extra layer was removed.)
  */
-export const HIDE_TAG = "hide-on-site";
-
-function isHiddenByTag(p: PrintifyProduct): boolean {
-  return (p.tags ?? []).some((t) => t.trim().toLowerCase() === HIDE_TAG);
-}
 
 /**
  * Printify's `visible` field defaults to `true` from the moment a product
@@ -544,9 +530,7 @@ function isUnstableDraft(p: PrintifyProduct): boolean {
 
 async function loadProducts(): Promise<StoreProduct[]> {
   const raw = await fetchPrintifyProducts();
-  const visible = raw.filter(
-    (item) => item.visible !== false && !isHiddenByTag(item) && !isUnstableDraft(item),
-  );
+  const visible = raw.filter((item) => item.visible !== false && !isUnstableDraft(item));
   const mapped = visible.map(mapPrintifyProduct);
 
   const slugCounts = new Map<string, number>();
@@ -567,36 +551,6 @@ export const getProducts = cache(loadProducts);
 export async function getProductBySlug(slug: string): Promise<StoreProduct | null> {
   const products = await getProducts();
   return products.find((item) => item.slug === slug) ?? null;
-}
-
-export type AdminProductSummary = {
-  id: string;
-  name: string;
-  imageSrc: string;
-  category: StoreCategory;
-  hidden: boolean;
-};
-
-/**
- * Unlike getProducts(), this does NOT filter out hide-on-site products —
- * the whole point of the admin list is to show every product, including
- * currently-hidden ones, so they can be un-hidden again.
- */
-export async function getAdminProductList(): Promise<AdminProductSummary[]> {
-  const raw = await fetchPrintifyProducts();
-  const active = raw.filter((item) => item.visible !== false);
-  return active
-    .map((p) => {
-      const mapped = mapPrintifyProduct(p);
-      return {
-        id: mapped.id,
-        name: mapped.name,
-        imageSrc: mapped.imageSrc,
-        category: mapped.category,
-        hidden: isHiddenByTag(p),
-      };
-    })
-    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /** Only categories that have a real subcategory split get a hover-flyout preview. */

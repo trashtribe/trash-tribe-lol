@@ -61,6 +61,8 @@ export type PrintifyProduct = {
   created_at?: string;
   /** Sic — Printify's own field name has no "d" (not "updated_at"). */
   update_at?: string;
+  /** True while Printify is mid-"publish" — blocks all edits (error 8252) until acked. */
+  is_locked?: boolean;
 };
 
 type PrintifyListResponse = {
