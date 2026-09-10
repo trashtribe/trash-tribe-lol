@@ -12,6 +12,7 @@ import {
   computeInitialSelections,
   deriveVariantAxes,
   findMatchingVariant,
+  imageForVariant,
   nextColorAfterSizeChange,
   normalizeLabel as norm,
   sizeHasAvailableStock,
@@ -101,7 +102,7 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
       const v = findMatchingVariant(variants, mode, effectiveSize, effectiveColor);
       if (!v) return;
       addToCart({
-        product: { ...product, price: formatEuro(v.price / 100) },
+        product: { ...product, price: formatEuro(v.price / 100), imageSrc: imageForVariant(product, v.id) },
         quantity: 1,
         size: v.title,
         variantId: v.id,
@@ -114,7 +115,11 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
   const confirmAdd = () => {
     if (!matchingVariant) return;
     addToCart({
-      product: { ...product, price: formatEuro(matchingVariant.price / 100) },
+      product: {
+        ...product,
+        price: formatEuro(matchingVariant.price / 100),
+        imageSrc: imageForVariant(product, matchingVariant.id),
+      },
       quantity: 1,
       size: matchingVariant.title,
       variantId: matchingVariant.id,

@@ -11,6 +11,7 @@ import {
   computeInitialSelections,
   deriveVariantAxes,
   findMatchingVariant,
+  imageForVariant,
   nextColorAfterSizeChange,
   normalizeLabel as norm,
   sizeHasAvailableStock,
@@ -300,6 +301,7 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
                   const lineProduct: StoreProduct = {
                     ...product,
                     price: formatEuro(matchingVariant.price / 100),
+                    imageSrc: imageForVariant(product, matchingVariant.id),
                   };
                   addToCart({
                     product: lineProduct,

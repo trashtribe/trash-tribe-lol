@@ -8,6 +8,19 @@ import { parseVariantTitleSegments, type StoreProduct } from "@/lib/products";
  * duplicated between the two.
  */
 
+/**
+ * The photo that actually depicts the variant a customer is adding to the
+ * cart — e.g. the white product shot when White was the color picked, not
+ * whatever color happens to be first in Printify's raw image order. Falls
+ * back to the product's default photo for variants with no dedicated shots
+ * (or single-color products, where every image already applies to every
+ * variant).
+ */
+export function imageForVariant(product: StoreProduct, variantId: number): string {
+  const match = product.images.find((img) => img.variantIds.includes(variantId));
+  return match?.src ?? product.imageSrc;
+}
+
 export function sortSizes(a: string, b: string): number {
   const order = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL", "2XL", "3XL", "4XL"];
   const ia = order.indexOf(a.toUpperCase());
