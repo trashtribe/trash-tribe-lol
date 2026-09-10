@@ -11,7 +11,7 @@ import {
   computeInitialSelections,
   deriveVariantAxes,
   findMatchingVariant,
-  firstAvailableColorForSize,
+  nextColorAfterSizeChange,
   normalizeLabel as norm,
   sizeHasAvailableStock,
 } from "@/lib/variant-selection";
@@ -37,10 +37,6 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
   const [selections, setSelections] = useState(() => computeInitialSelections(variants));
   const { selectedSize, selectedColor } = selections;
 
-  const setSelectedSize = useCallback((size: string | null) => {
-    setSelections((prev) => ({ ...prev, selectedSize: size }));
-  }, []);
-
   const setSelectedColor = useCallback((color: string | null) => {
     setSelections((prev) => ({ ...prev, selectedColor: color }));
   }, []);
@@ -57,11 +53,10 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
   );
 
   const handleSelectSize = (size: string) => {
-    setSelectedSize(size);
-    if (mode === "both" && colors.length > 0) {
-      const nextColor = firstAvailableColorForSize(variants, mode, colors, size);
-      setSelectedColor(nextColor ?? null);
-    }
+    setSelections((prev) => ({
+      selectedSize: size,
+      selectedColor: nextColorAfterSizeChange(variants, mode, colors, prev.selectedColor, size),
+    }));
   };
 
   const handleSelectColor = (color: string) => {
@@ -121,10 +116,14 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
 
   const canAdd = Boolean(matchingVariant?.isAvailable);
 
+  // > 1, not > 0: a product with exactly one size/color isn't a choice —
+  // it's already the only option (picked automatically via effectiveSize/
+  // effectiveColor above), so showing a single, permanently-selected button
+  // just for that one option is confusing UI, not a real "pick one" control.
   const showSizeRow =
-    (mode === "size-only" || mode === "both") && sizes.length > 0;
+    (mode === "size-only" || mode === "both") && sizes.length > 1;
   const showColorRow =
-    (mode === "color-only" || mode === "both") && colors.length > 0;
+    (mode === "color-only" || mode === "both") && colors.length > 1;
 
   return (
     <main className="flex flex-1 flex-col bg-background">

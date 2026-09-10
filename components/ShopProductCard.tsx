@@ -12,7 +12,7 @@ import {
   computeInitialSelections,
   deriveVariantAxes,
   findMatchingVariant,
-  firstAvailableColorForSize,
+  nextColorAfterSizeChange,
   normalizeLabel as norm,
   sizeHasAvailableStock,
 } from "@/lib/variant-selection";
@@ -65,13 +65,10 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
   );
 
   const handleSelectSize = (size: string) => {
-    setSelections((prev) => {
-      const next = { ...prev, selectedSize: size };
-      if (mode === "both" && colors.length > 0) {
-        next.selectedColor = firstAvailableColorForSize(variants, mode, colors, size);
-      }
-      return next;
-    });
+    setSelections((prev) => ({
+      selectedSize: size,
+      selectedColor: nextColorAfterSizeChange(variants, mode, colors, prev.selectedColor, size),
+    }));
   };
 
   const handleSelectColor = (color: string) => {
@@ -91,11 +88,17 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [quickBuyOpen]);
 
+  // Only actually open the picker when there's more than one size AND/OR
+  // more than one color to choose between — a product with a single size
+  // or single color has nothing to pick (it's already resolved via
+  // effectiveSize/effectiveColor below), so popping open a panel with
+  // nothing useful in it would be its own confusing dead end.
+  const hasRealChoice = sizes.length > 1 || colors.length > 1;
+
   const handleQuickBuyClick = (event: React.MouseEvent) => {
     event.preventDefault();
-    if (mode === "none") {
-      // Nothing to pick (single default variant) — same one-click add as before.
-      const v = findMatchingVariant(variants, "none", null, null);
+    if (!hasRealChoice) {
+      const v = findMatchingVariant(variants, mode, effectiveSize, effectiveColor);
       if (!v) return;
       addToCart({
         product: { ...product, price: formatEuro(v.price / 100) },
@@ -120,11 +123,13 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
   };
 
   const canAdd = Boolean(matchingVariant?.isAvailable);
-  const showSizeRow = (mode === "size-only" || mode === "both") && sizes.length > 0;
-  const showColorRow = (mode === "color-only" || mode === "both") && colors.length > 0;
+  // > 1, not > 0: one size/color isn't a real choice, it's already picked
+  // automatically (see effectiveSize/effectiveColor above).
+  const showSizeRow = (mode === "size-only" || mode === "both") && sizes.length > 1;
+  const showColorRow = (mode === "color-only" || mode === "both") && colors.length > 1;
 
   return (
-    <article className="group flex flex-col">
+    <article className="group relative flex flex-col">
       <div className="relative h-32 overflow-hidden border tt-border-light bg-background sm:h-36 md:h-40">
         <Link
           href={`/shop/${product.slug}`}
@@ -177,13 +182,21 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
         >
           <HeartIcon filled={saved} />
         </button>
+      </div>
 
-        {quickBuyOpen ? (
-          <div
-            ref={panelRef}
-            onClick={(e) => e.stopPropagation()}
-            className="absolute inset-x-0 bottom-0 z-30 translate-y-full border tt-border-light bg-background p-3 shadow-lg"
-          >
+      {/* Rendered as a sibling of the (overflow-hidden) image box above,
+          not inside it — this panel needs to extend below that box, and
+          anything positioned inside an overflow-hidden ancestor gets
+          clipped there even when pushed out via a transform. That clipping
+          is exactly why this silently failed to appear at all the first
+          time round (the "Quick buy" button disappeared and nothing
+          replaced it). */}
+      {quickBuyOpen ? (
+        <div
+          ref={panelRef}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute inset-x-0 top-32 z-30 border tt-border-light bg-background p-3 shadow-lg sm:top-36 md:top-40"
+        >
             <div className="mb-2 flex items-center justify-between">
               <p className="text-[9px] font-bold tracking-[0.14em] tt-text-on-light uppercase">
                 Choose options
@@ -264,9 +277,8 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
             >
               {canAdd ? "Add to cart" : "Unavailable"}
             </button>
-          </div>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
       <div className="mt-2.5 flex flex-col gap-1">
         <Link href={`/shop/${product.slug}`} className="block transition-colors hover:tt-text-secondary">
           <h3 className="text-[11px] font-bold tracking-[0.06em] tt-text-on-light uppercase leading-snug sm:text-[12px]">

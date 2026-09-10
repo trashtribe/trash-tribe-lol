@@ -163,6 +163,33 @@ export function firstAvailableColorForSize(
   return any ?? colors[0] ?? null;
 }
 
+/**
+ * What color should be selected after the customer picks a new size.
+ *
+ * Bug this fixes: both ProductDetailView and the Quick Buy popover used to
+ * call firstAvailableColorForSize() unconditionally on every size click —
+ * so re-picking White / L (a real, in-stock combo) would silently bounce
+ * the color over to Gray, because that's whatever color happens to come
+ * first for L, with no regard for whether the color already selected was
+ * still valid. Now the current color is kept whenever it's still an
+ * in-stock combo for the new size, and only falls back to "first available
+ * color for this size" when it genuinely isn't (e.g. that color doesn't
+ * come in the newly picked size at all).
+ */
+export function nextColorAfterSizeChange(
+  variants: Variant[],
+  mode: VariantAxesMode,
+  colors: string[],
+  currentColor: string | null,
+  newSize: string,
+): string | null {
+  if (mode !== "both") return currentColor;
+  if (currentColor && colorAvailableForSelection(variants, currentColor, mode, newSize)) {
+    return currentColor;
+  }
+  return firstAvailableColorForSize(variants, mode, colors, newSize);
+}
+
 export function sizeHasAvailableStock(
   variants: Variant[],
   sizeLabel: string,
