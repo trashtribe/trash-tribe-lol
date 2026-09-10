@@ -71,7 +71,11 @@ export function CartSidebar() {
                 {items.map((item) => (
                   <li key={item.key} className="border-b tt-border-light pb-4">
                     <div className="flex gap-3">
-                      <div className="relative h-16 w-16 shrink-0 overflow-hidden border tt-border-light bg-background p-1">
+                      <Link
+                        href={`/shop/${item.slug}`}
+                        onClick={closeCart}
+                        className="relative h-16 w-16 shrink-0 overflow-hidden border tt-border-light bg-background p-1 transition-opacity hover:opacity-80"
+                      >
                         <Image
                           src={item.imageSrc}
                           alt={item.name}
@@ -79,11 +83,15 @@ export function CartSidebar() {
                           sizes="64px"
                           className="object-contain object-center"
                         />
-                      </div>
+                      </Link>
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <div>
+                          <Link
+                            href={`/shop/${item.slug}`}
+                            onClick={closeCart}
+                            className="transition-colors hover:tt-text-secondary"
+                          >
                             <p className="text-xs font-bold tracking-[0.1em] tt-text-on-light uppercase">
                               {item.name}
                             </p>
@@ -93,7 +101,7 @@ export function CartSidebar() {
                             <p className="mt-1 text-sm font-bold tt-text-on-light">
                               {item.price}
                             </p>
-                          </div>
+                          </Link>
                           <button
                             type="button"
                             onClick={() => removeItem(item.key)}

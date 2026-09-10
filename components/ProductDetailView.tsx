@@ -4,129 +4,21 @@ import Image from "next/image";
 import { useCallback, useMemo, useState } from "react";
 
 import { formatEuro } from "@/lib/format-currency";
-import { parseVariantTitleSegments, type StoreProduct } from "@/lib/products";
+import type { StoreProduct } from "@/lib/products";
+import {
+  approximateSwatchColor,
+  colorAvailableForSelection,
+  computeInitialSelections,
+  deriveVariantAxes,
+  findMatchingVariant,
+  firstAvailableColorForSize,
+  normalizeLabel as norm,
+  sizeHasAvailableStock,
+} from "@/lib/variant-selection";
 
 import { ShopProductCard } from "./ShopProductCard";
 import { useCart } from "./CartProvider";
 import { useWishlist } from "./WishlistProvider";
-
-function sortSizes(a: string, b: string): number {
-  const order = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL", "2XL", "3XL", "4XL"];
-  const ia = order.indexOf(a.toUpperCase());
-  const ib = order.indexOf(b.toUpperCase());
-  if (ia >= 0 && ib >= 0) return ia - ib;
-  if (ia >= 0) return -1;
-  if (ib >= 0) return 1;
-  return a.localeCompare(b);
-}
-
-function norm(s: string) {
-  return s.trim().toLowerCase();
-}
-
-type VariantAxesMode = "size-only" | "color-only" | "both" | "none";
-
-function deriveVariantAxes(variants: StoreProduct["variants"]): {
-  sizes: string[];
-  colors: string[];
-  mode: VariantAxesMode;
-} {
-  const sizesSet = new Set<string>();
-  const colorsSet = new Set<string>();
-
-  for (const v of variants) {
-    const { size, color } = parseVariantTitleSegments(v.title);
-    if (size) sizesSet.add(size);
-    if (color) colorsSet.add(color);
-  }
-
-  const sizes = [...sizesSet].sort(sortSizes);
-  const colors = [...colorsSet].sort((a, b) => norm(a).localeCompare(norm(b)));
-
-  const hasSizes = sizes.length > 0;
-  const hasColors = colors.length > 0;
-
-  let mode: VariantAxesMode;
-  if (hasSizes && hasColors) mode = "both";
-  else if (hasSizes) mode = "size-only";
-  else if (hasColors) mode = "color-only";
-  else mode = "none";
-
-  return { sizes, colors, mode };
-}
-
-function computeInitialSelections(variants: StoreProduct["variants"]): {
-  selectedSize: string | null;
-  selectedColor: string | null;
-} {
-  const { sizes, colors, mode } = deriveVariantAxes(variants);
-  const firstAvail = variants.find((v) => v.isAvailable) ?? variants[0];
-  const parsed = firstAvail ? parseVariantTitleSegments(firstAvail.title) : { size: null, color: null };
-
-  if (mode === "size-only") {
-    return {
-      selectedSize: parsed.size ?? sizes[0] ?? null,
-      selectedColor: null,
-    };
-  }
-  if (mode === "color-only") {
-    return {
-      selectedSize: null,
-      selectedColor: parsed.color ?? colors[0] ?? null,
-    };
-  }
-  if (mode === "both") {
-    return {
-      selectedSize: parsed.size ?? sizes[0] ?? null,
-      selectedColor: parsed.color ?? colors[0] ?? null,
-    };
-  }
-  return { selectedSize: null, selectedColor: null };
-}
-
-function variantMatchesChoice(
-  v: StoreProduct["variants"][number],
-  selSize: string | null,
-  selColor: string | null,
-  mode: VariantAxesMode,
-): boolean {
-  const { size, color } = parseVariantTitleSegments(v.title);
-
-  if (mode === "size-only") {
-    if (!selSize || !size) return false;
-    return norm(size) === norm(selSize);
-  }
-
-  if (mode === "color-only") {
-    if (!selColor || !color) return false;
-    return norm(color) === norm(selColor);
-  }
-
-  if (mode === "both") {
-    if (!selSize || !size || norm(size) !== norm(selSize)) return false;
-    if (!selColor || !color || norm(color) !== norm(selColor)) return false;
-    return true;
-  }
-
-  return false;
-}
-
-function approximateSwatchTailwind(colorLabel: string): string {
-  const k = norm(colorLabel).replace(/\s+/g, "");
-  if (k.includes("black")) return "#111111";
-  if (k.includes("white")) return "#f5f5f5";
-  if (k.includes("navy")) return "#1a2744";
-  if (k.includes("grey") || k.includes("gray")) return "#8a8a8a";
-  if (k.includes("pink")) return "#ffb6d9";
-  if (k.includes("red")) return "#cc2222";
-  if (k.includes("blue")) return "#2860d8";
-  if (k.includes("green")) return "#226644";
-  if (k.includes("yellow")) return "#e6d400";
-  if (k.includes("orange")) return "#e07020";
-  if (k.includes("purple")) return "#6844aa";
-  if (k.includes("brown")) return "#6b4423";
-  return "#dcdcdc";
-}
 
 type ProductDetailViewProps = {
   product: StoreProduct;
@@ -159,75 +51,15 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
   const effectiveColor =
     selectedColor ?? (colors.length === 1 ? colors[0] ?? null : null);
 
-  const matchingVariant = useMemo(() => {
-    if (variants.length === 0) return null;
-
-    if (mode === "none") {
-      return variants.find((v) => v.isAvailable) ?? variants[0] ?? null;
-    }
-
-    if (mode === "size-only") {
-      const eff = effectiveSize;
-      if (!eff) return null;
-      return (
-        variants.find((v) => variantMatchesChoice(v, eff, null, "size-only")) ?? null
-      );
-    }
-
-    if (mode === "color-only") {
-      const eff = effectiveColor;
-      if (!eff) return null;
-      return (
-        variants.find((v) => variantMatchesChoice(v, null, eff, "color-only")) ??
-        null
-      );
-    }
-
-    const sz = effectiveSize;
-    const col = effectiveColor;
-    if (!sz || !col) return null;
-    return (
-      variants.find((v) => variantMatchesChoice(v, sz, col, "both")) ?? null
-    );
-  }, [variants, mode, effectiveSize, effectiveColor]);
-
-  const firstAvailableColorForSize = useCallback(
-    (size: string): string | null => {
-      if (mode !== "both") return null;
-      const cand = variants
-        .filter((v) => {
-          const p = parseVariantTitleSegments(v.title);
-          return (
-            p.size !== null &&
-            norm(p.size) === norm(size) &&
-            p.color !== null &&
-            v.isAvailable
-          );
-        })
-        .map((v) => parseVariantTitleSegments(v.title).color!)
-        .find(Boolean);
-      if (cand) return cand;
-
-      const any = variants
-        .filter((v) => {
-          const p = parseVariantTitleSegments(v.title);
-          return (
-            p.size !== null &&
-            norm(p.size) === norm(size) &&
-            p.color !== null
-          );
-        })
-        .map((v) => parseVariantTitleSegments(v.title).color!)
-        .find(Boolean);
-      return any ?? colors[0] ?? null;
-    },
-    [colors, mode, variants],
+  const matchingVariant = useMemo(
+    () => findMatchingVariant(variants, mode, effectiveSize, effectiveColor),
+    [variants, mode, effectiveSize, effectiveColor],
   );
 
   const handleSelectSize = (size: string) => {
     setSelectedSize(size);
     if (mode === "both" && colors.length > 0) {
-      const nextColor = firstAvailableColorForSize(size);
+      const nextColor = firstAvailableColorForSize(variants, mode, colors, size);
       setSelectedColor(nextColor ?? null);
     }
   };
@@ -236,47 +68,13 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
     setSelectedColor(color);
   };
 
-  const sizeHasAvailableStock = useCallback(
-    (sizeLabel: string) =>
-      variants.some((v) => {
-        const p = parseVariantTitleSegments(v.title);
-        if (!p.size || norm(p.size) !== norm(sizeLabel)) return false;
-        if (!v.isAvailable) return false;
-        if (
-          mode === "both" &&
-          effectiveColor !== null &&
-          p.color !== null &&
-          norm(p.color) !== norm(effectiveColor)
-        ) {
-          return false;
-        }
-        return true;
-      }),
+  const sizeHasStock = useCallback(
+    (sizeLabel: string) => sizeHasAvailableStock(variants, sizeLabel, mode, effectiveColor),
     [effectiveColor, mode, variants],
   );
 
-  const colorAvailableForSelection = useCallback(
-    (colorLabel: string) => {
-      if (mode === "color-only") {
-        return variants.some((v) => {
-          const p = parseVariantTitleSegments(v.title);
-          return (
-            p.color !== null &&
-            norm(p.color) === norm(colorLabel) &&
-            v.isAvailable
-          );
-        });
-      }
-      if (mode === "both") {
-        const sz = effectiveSize;
-        if (!sz) return false;
-        return variants.some(
-          (v) =>
-            variantMatchesChoice(v, sz, colorLabel, "both") && v.isAvailable,
-        );
-      }
-      return false;
-    },
+  const colorHasStock = useCallback(
+    (colorLabel: string) => colorAvailableForSelection(variants, colorLabel, mode, effectiveSize),
     [effectiveSize, mode, variants],
   );
 
@@ -403,7 +201,7 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {sizes.map((sizeLabel) => {
-                    const unavailable = !sizeHasAvailableStock(sizeLabel);
+                    const unavailable = !sizeHasStock(sizeLabel);
                     const active =
                       effectiveSize !== null && norm(effectiveSize) === norm(sizeLabel);
                     return (
@@ -430,11 +228,11 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
                 </p>
                 <div className="flex flex-wrap gap-3">
                   {colors.map((colorLabel) => {
-                    const unavailable = !colorAvailableForSelection(colorLabel);
+                    const unavailable = !colorHasStock(colorLabel);
                     const active =
                       effectiveColor !== null &&
                       norm(effectiveColor) === norm(colorLabel);
-                    const hex = approximateSwatchTailwind(colorLabel);
+                    const hex = approximateSwatchColor(colorLabel);
                     const needsSizeBeforeColor =
                       mode === "both" && effectiveSize === null;
                     return (

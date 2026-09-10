@@ -2,9 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { shouldSwapImageOnHover, type StoreProduct } from "@/lib/products";
 import { formatEuro } from "@/lib/format-currency";
+import {
+  approximateSwatchColor,
+  colorAvailableForSelection,
+  computeInitialSelections,
+  deriveVariantAxes,
+  findMatchingVariant,
+  firstAvailableColorForSize,
+  normalizeLabel as norm,
+  sizeHasAvailableStock,
+} from "@/lib/variant-selection";
 
 import { useCart } from "./CartProvider";
 import { useWishlist } from "./WishlistProvider";
@@ -30,28 +41,87 @@ type ShopProductCardProps = {
   product: StoreProduct;
 };
 
-function quickBuyPayload(product: StoreProduct): {
-  product: StoreProduct;
-  size?: string;
-  variantId?: number;
-} {
-  const avail = product.variants.filter((v) => v.isAvailable);
-  const pool = avail.length > 0 ? avail : product.variants;
-  const v = pool[0];
-  if (!v) return { product };
-  return {
-    product: { ...product, price: formatEuro(v.price / 100) },
-    size: v.title,
-    variantId: v.id,
-  };
-}
-
 export function ShopProductCard({ product }: ShopProductCardProps) {
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
   const saved = isInWishlist(product.id);
   const altImage = product.galleryImages[1];
   const useImageSwap = shouldSwapImageOnHover(product);
+
+  const variants = product.variants;
+  const { sizes, colors, mode } = useMemo(() => deriveVariantAxes(variants), [variants]);
+
+  const [quickBuyOpen, setQuickBuyOpen] = useState(false);
+  const [selections, setSelections] = useState(() => computeInitialSelections(variants));
+  const { selectedSize, selectedColor } = selections;
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const effectiveSize = selectedSize ?? (sizes.length === 1 ? sizes[0] ?? null : null);
+  const effectiveColor = selectedColor ?? (colors.length === 1 ? colors[0] ?? null : null);
+
+  const matchingVariant = useMemo(
+    () => findMatchingVariant(variants, mode, effectiveSize, effectiveColor),
+    [variants, mode, effectiveSize, effectiveColor],
+  );
+
+  const handleSelectSize = (size: string) => {
+    setSelections((prev) => {
+      const next = { ...prev, selectedSize: size };
+      if (mode === "both" && colors.length > 0) {
+        next.selectedColor = firstAvailableColorForSize(variants, mode, colors, size);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectColor = (color: string) => {
+    setSelections((prev) => ({ ...prev, selectedColor: color }));
+  };
+
+  // Close the popover on an outside click — it's a sibling of the card's
+  // link/heart button, not a modal, so nothing else does this for us.
+  useEffect(() => {
+    if (!quickBuyOpen) return;
+    function handlePointerDown(event: PointerEvent) {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+        setQuickBuyOpen(false);
+      }
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [quickBuyOpen]);
+
+  const handleQuickBuyClick = (event: React.MouseEvent) => {
+    event.preventDefault();
+    if (mode === "none") {
+      // Nothing to pick (single default variant) — same one-click add as before.
+      const v = findMatchingVariant(variants, "none", null, null);
+      if (!v) return;
+      addToCart({
+        product: { ...product, price: formatEuro(v.price / 100) },
+        quantity: 1,
+        size: v.title,
+        variantId: v.id,
+      });
+      return;
+    }
+    setQuickBuyOpen((open) => !open);
+  };
+
+  const confirmAdd = () => {
+    if (!matchingVariant) return;
+    addToCart({
+      product: { ...product, price: formatEuro(matchingVariant.price / 100) },
+      quantity: 1,
+      size: matchingVariant.title,
+      variantId: matchingVariant.id,
+    });
+    setQuickBuyOpen(false);
+  };
+
+  const canAdd = Boolean(matchingVariant?.isAvailable);
+  const showSizeRow = (mode === "size-only" || mode === "both") && sizes.length > 0;
+  const showColorRow = (mode === "color-only" || mode === "both") && colors.length > 0;
 
   return (
     <article className="group flex flex-col">
@@ -84,18 +154,15 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
               />
             ) : null}
           </div>
-          <button
-            type="button"
-            onClick={(event) => {
-              event.preventDefault();
-              const { product: cartProduct, size, variantId } =
-                quickBuyPayload(product);
-              addToCart({ product: cartProduct, quantity: 1, size, variantId });
-            }}
-            className="absolute bottom-0 left-0 right-0 z-10 translate-y-full tt-bg-primary px-2 py-2 text-center text-[9px] font-bold tracking-[0.18em] tt-text-on-light uppercase transition-transform duration-200 group-hover:translate-y-0"
-          >
-            Quick buy
-          </button>
+          {!quickBuyOpen ? (
+            <button
+              type="button"
+              onClick={handleQuickBuyClick}
+              className="absolute bottom-0 left-0 right-0 z-10 translate-y-full tt-bg-primary px-2 py-2 text-center text-[9px] font-bold tracking-[0.18em] tt-text-on-light uppercase transition-transform duration-200 group-hover:translate-y-0"
+            >
+              Quick buy
+            </button>
+          ) : null}
         </Link>
         <button
           type="button"
@@ -110,6 +177,95 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
         >
           <HeartIcon filled={saved} />
         </button>
+
+        {quickBuyOpen ? (
+          <div
+            ref={panelRef}
+            onClick={(e) => e.stopPropagation()}
+            className="absolute inset-x-0 bottom-0 z-30 translate-y-full border tt-border-light bg-background p-3 shadow-lg"
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-[9px] font-bold tracking-[0.14em] tt-text-on-light uppercase">
+                Choose options
+              </p>
+              <button
+                type="button"
+                onClick={() => setQuickBuyOpen(false)}
+                aria-label="Close"
+                className="text-sm leading-none tt-text-on-light transition-colors hover:tt-text-secondary"
+              >
+                ×
+              </button>
+            </div>
+
+            {showSizeRow ? (
+              <div className="mb-2">
+                <p className="mb-1 text-[8px] font-bold tracking-[0.12em] text-gray-500 uppercase">
+                  Size
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {sizes.map((sizeLabel) => {
+                    const unavailable = !sizeHasAvailableStock(variants, sizeLabel, mode, effectiveColor);
+                    const active = effectiveSize !== null && norm(effectiveSize) === norm(sizeLabel);
+                    return (
+                      <button
+                        key={sizeLabel}
+                        type="button"
+                        disabled={unavailable}
+                        onClick={() => handleSelectSize(sizeLabel)}
+                        className={`min-w-7 border px-1.5 py-1 text-[10px] font-bold uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${active ? "tt-bg-primary tt-border-light tt-text-on-light" : "tt-border-light tt-text-on-light hover:tt-text-secondary"}`}
+                        aria-pressed={active}
+                      >
+                        {sizeLabel}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {showColorRow ? (
+              <div className="mb-3">
+                <p className="mb-1 text-[8px] font-bold tracking-[0.12em] text-gray-500 uppercase">
+                  Color
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {colors.map((colorLabel) => {
+                    const unavailable = !colorAvailableForSelection(variants, colorLabel, mode, effectiveSize);
+                    const active = effectiveColor !== null && norm(effectiveColor) === norm(colorLabel);
+                    const hex = approximateSwatchColor(colorLabel);
+                    const needsSizeFirst = mode === "both" && effectiveSize === null;
+                    return (
+                      <button
+                        key={colorLabel}
+                        type="button"
+                        title={colorLabel}
+                        disabled={unavailable || needsSizeFirst}
+                        onClick={() => handleSelectColor(colorLabel)}
+                        className={`h-6 w-6 rounded-full border-2 transition-[box-shadow] disabled:cursor-not-allowed disabled:opacity-35 ${active ? "ring-2 ring-[color:var(--tt-accent-secondary)] ring-offset-1 ring-offset-background" : "tt-border-light hover:opacity-95"}`}
+                        style={{
+                          backgroundColor: hex,
+                          boxShadow: hex.toLowerCase() === "#f5f5f5" ? "inset 0 0 0 1px rgba(0,0,0,.12)" : undefined,
+                        }}
+                        aria-label={colorLabel}
+                        aria-pressed={active}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              disabled={!canAdd}
+              onClick={confirmAdd}
+              className="w-full tt-bg-primary py-2 text-[10px] font-bold tracking-[0.16em] tt-text-on-light uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {canAdd ? "Add to cart" : "Unavailable"}
+            </button>
+          </div>
+        ) : null}
       </div>
       <div className="mt-2.5 flex flex-col gap-1">
         <Link href={`/shop/${product.slug}`} className="block transition-colors hover:tt-text-secondary">
