@@ -181,7 +181,13 @@ export async function submitPaidOrderToPrintify(
       label: `Order ${orderId}`,
       line_items,
       shipping_method: 1,
-      shipping_address: {
+      // Printify's field is `address_to`, not `shipping_address` — sending the
+      // wrong key means Printify silently ignores it (no error), creating the
+      // order with valid line items but "Not completed" customer/shipping
+      // details, stuck on-hold until someone fills them in by hand in the
+      // Printify dashboard. This is what caused the very first live order
+      // test to get stuck.
+      address_to: {
         first_name,
         last_name,
         address1: order.shipping_address1.trim(),
