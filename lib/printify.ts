@@ -179,14 +179,6 @@ export async function fetchPrintifyProductById(id: string): Promise<PrintifyProd
 }
 
 /**
- * Printify's product update endpoint accepts a partial document — per their
- * docs: "A product can be updated partially or as a whole document. When
- * updating variants, all variants must be present in the request." Sending
- * only `tags` here (never touching `variants`, `print_areas`, etc.) is what
- * keeps this safe to call from the admin hide/show toggle without any risk
- * of wiping out the rest of the product.
- */
-/**
  * Printify locks a product while it's "publishing" — confirmed in their own
  * docs: `is_locked` ("A product is locked during publishing. Locked products
  * can't be updated until unlocked.") only clears once the store acks with
@@ -219,29 +211,6 @@ export async function acknowledgePrintifyPublishSucceeded(id: string, handle: st
     const details = await res.text().catch(() => "");
     throw new Error(
       `Printify publishing_succeeded failed: ${res.status} ${res.statusText}${
-        details ? ` — ${details.slice(0, 500)}` : ""
-      }`,
-    );
-  }
-}
-
-export async function updatePrintifyProductTags(id: string, tags: string[]): Promise<void> {
-  const { shopId, apiKey } = requirePrintifyConfig();
-  const url = `${PRINTIFY_API_BASE}/shops/${shopId}/products/${encodeURIComponent(id)}.json`;
-  const res = await fetch(url, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ tags }),
-    cache: "no-store",
-  });
-
-  if (!res.ok) {
-    const details = await res.text().catch(() => "");
-    throw new Error(
-      `Printify update product tags failed: ${res.status} ${res.statusText}${
         details ? ` — ${details.slice(0, 500)}` : ""
       }`,
     );

@@ -51,7 +51,20 @@ type OrderShippingRow = {
   shipping_postal_code: string | null;
   shipping_country: string | null;
   shipping_phone: string | null;
+  shipping_method: string | null;
+  printify_order_id: string | null;
 };
+
+/**
+ * Printify's shipping_method is a numeric code (1 = standard, 2 = express/
+ * priority), unrelated to our own "standard" | "express" strings stored on
+ * the order. Defaults to standard for any unrecognized value rather than
+ * failing the whole push — an express customer getting standard shipping is
+ * a lesser problem than the order not reaching Printify at all.
+ */
+function shippingMethodToPrintifyCode(method: string | null): number {
+  return method === "express" ? 2 : 1;
+}
 
 type OrderLineRow = {
   product_id: string;
@@ -91,7 +104,9 @@ export async function submitPaidOrderToPrintify(
         shipping_city,
         shipping_postal_code,
         shipping_country,
-        shipping_phone
+        shipping_phone,
+        shipping_method,
+        printify_order_id
       `,
       )
       .eq("id", orderId)
@@ -103,6 +118,21 @@ export async function submitPaidOrderToPrintify(
     }
 
     const order = orderRow as OrderShippingRow;
+
+    // Stripe can (and does) redeliver payment_intent.succeeded — network
+    // timeouts, retries after a slow response, etc. Without this guard a
+    // redelivered webhook would call this function again and create a
+    // second, real Printify order (and a second production charge) for the
+    // same purchase. Once an order already has a printify_order_id, treat
+    // fulfillment as done.
+    if (order.printify_order_id?.trim()) {
+      console.log(
+        "[printify fulfillment] Order already pushed to Printify; skipping duplicate.",
+        orderId,
+        order.printify_order_id,
+      );
+      return;
+    }
 
     if (
       !order.shipping_name?.trim() ||
@@ -180,7 +210,7 @@ export async function submitPaidOrderToPrintify(
       external_id: orderId,
       label: `Order ${orderId}`,
       line_items,
-      shipping_method: 1,
+      shipping_method: shippingMethodToPrintifyCode(order.shipping_method),
       // Printify's field is `address_to`, not `shipping_address` — sending the
       // wrong key means Printify silently ignores it (no error), creating the
       // order with valid line items but "Not completed" customer/shipping
