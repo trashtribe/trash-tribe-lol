@@ -23,8 +23,13 @@ type Body = {
   shippingCity?: string;
   shippingPostalCode?: string;
   shippingCountry?: string;
+  /** State/province — only required for countries where Printify's carriers need it (US, Canada, Australia). */
+  shippingRegion?: string;
   shippingPhone?: string;
 };
+
+/** Kept in sync with COUNTRIES_REQUIRING_REGION in components/CheckoutPageClient.tsx. */
+const COUNTRIES_REQUIRING_REGION = new Set(["United States", "Canada", "Australia"]);
 
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0;
@@ -50,6 +55,7 @@ export async function POST(request: Request) {
       shippingCity,
       shippingPostalCode,
       shippingCountry,
+      shippingRegion,
       shippingPhone,
     } = body;
 
@@ -95,6 +101,18 @@ export async function POST(request: Request) {
         {
           error:
             "Invalid request: shipping name, address, city, postal code, country, and phone are required.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (
+      COUNTRIES_REQUIRING_REGION.has(shippingCountry) &&
+      !isNonEmptyString(shippingRegion)
+    ) {
+      return NextResponse.json(
+        {
+          error: "Invalid request: state/province is required for this country.",
         },
         { status: 400 },
       );
@@ -201,6 +219,10 @@ export async function POST(request: Request) {
         shipping_city: shippingCity.trim(),
         shipping_postal_code: shippingPostalCode.trim(),
         shipping_country: shippingCountry.trim(),
+        shipping_region:
+          typeof shippingRegion === "string" && shippingRegion.trim()
+            ? shippingRegion.trim()
+            : null,
         shipping_phone: shippingPhone.trim(),
         shipping_method: shippingMethod,
       })

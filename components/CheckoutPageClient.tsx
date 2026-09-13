@@ -44,6 +44,12 @@ const COUNTRIES = [
   "Other",
 ] as const;
 
+// Printify's carriers need a state/province for these countries specifically
+// — without it, an order can end up "stuck on-hold, incomplete address" the
+// same way the address_to bug affected every order. Everywhere else the
+// field is optional (Printify's own examples send an empty string for it).
+const COUNTRIES_REQUIRING_REGION = new Set(["United States", "Canada", "Australia"]);
+
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
@@ -88,6 +94,7 @@ export function CheckoutPageClient({
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("");
+  const [region, setRegion] = useState("");
   const [phone, setPhone] = useState("");
   const [shippingMethod, setShippingMethod] = useState<"standard" | "express">(
     "standard",
@@ -140,7 +147,7 @@ export function CheckoutPageClient({
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "shipping_name, shipping_address1, shipping_address2, shipping_city, shipping_postal_code, shipping_country, shipping_phone",
+          "shipping_name, shipping_address1, shipping_address2, shipping_city, shipping_postal_code, shipping_country, shipping_region, shipping_phone",
         )
         .eq("id", user.id)
         .maybeSingle();
@@ -169,6 +176,9 @@ export function CheckoutPageClient({
         }
         if (data.shipping_country) {
           setCountry((prev) => (prev ? prev : data.shipping_country));
+        }
+        if (data.shipping_region) {
+          setRegion((prev) => (prev.trim() ? prev : data.shipping_region));
         }
         if (data.shipping_phone) {
           setPhone((prev) => (prev.trim() ? prev : data.shipping_phone));
@@ -218,6 +228,9 @@ export function CheckoutPageClient({
     if (show("country") && !country) {
       e.country = "Select a country.";
     }
+    if (show("region") && COUNTRIES_REQUIRING_REGION.has(country) && !region.trim()) {
+      e.region = "State/province is required for this country.";
+    }
     if (show("phone")) {
       if (!phone.trim()) e.phone = "Phone number is required.";
       else if (digitCount(phone) < 8) {
@@ -233,6 +246,7 @@ export function CheckoutPageClient({
     city,
     postalCode,
     country,
+    region,
     phone,
     touched,
     submitAttempted,
@@ -247,6 +261,7 @@ export function CheckoutPageClient({
       city.trim().length > 0 &&
       postalCode.trim().length > 0 &&
       country.length > 0 &&
+      (!COUNTRIES_REQUIRING_REGION.has(country) || region.trim().length > 0) &&
       phone.trim().length > 0 &&
       digitCount(phone) >= 8 &&
       (shippingMethod === "standard" || shippingMethod === "express")
@@ -259,6 +274,7 @@ export function CheckoutPageClient({
     city,
     postalCode,
     country,
+    region,
     phone,
     shippingMethod,
   ]);
@@ -275,6 +291,7 @@ export function CheckoutPageClient({
       city: true,
       postalCode: true,
       country: true,
+      region: true,
       phone: true,
       shippingMethod: true,
     });
@@ -286,6 +303,7 @@ export function CheckoutPageClient({
       city.trim() &&
       postalCode.trim() &&
       country &&
+      (!COUNTRIES_REQUIRING_REGION.has(country) || region.trim()) &&
       phone.trim() &&
       digitCount(phone) >= 8
     );
@@ -297,6 +315,7 @@ export function CheckoutPageClient({
     city,
     postalCode,
     country,
+    region,
     phone,
   ]);
 
@@ -324,6 +343,7 @@ export function CheckoutPageClient({
         shippingCity: city.trim(),
         shippingPostalCode: postalCode.trim(),
         shippingCountry: country,
+        shippingRegion: region.trim() || undefined,
         shippingPhone: phone.trim(),
       };
 
@@ -369,6 +389,7 @@ export function CheckoutPageClient({
     city,
     postalCode,
     country,
+    region,
     phone,
     email,
     onStripeElementsActiveChange,
@@ -408,6 +429,7 @@ export function CheckoutPageClient({
               shipping_city: city.trim() || null,
               shipping_postal_code: postalCode.trim() || null,
               shipping_country: country || null,
+              shipping_region: region.trim() || null,
               shipping_phone: phone.trim() || null,
             })
             .eq("id", user.id)
@@ -436,6 +458,7 @@ export function CheckoutPageClient({
       city,
       postalCode,
       country,
+      region,
       phone,
     ],
   );
@@ -657,6 +680,26 @@ export function CheckoutPageClient({
                   <p className={errorClass}>{errors.country}</p>
                 ) : null}
               </div>
+              {COUNTRIES_REQUIRING_REGION.has(country) ? (
+                <div className="sm:col-span-2">
+                  <label htmlFor="checkout-region" className={labelClass}>
+                    State / Province
+                  </label>
+                  <input
+                    id="checkout-region"
+                    name="region"
+                    autoComplete="address-level1"
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value)}
+                    onBlur={blur("region")}
+                    className={inputClass}
+                    aria-invalid={!!errors.region}
+                  />
+                  {errors.region ? (
+                    <p className={errorClass}>{errors.region}</p>
+                  ) : null}
+                </div>
+              ) : null}
               <div className="sm:col-span-2">
                 <label htmlFor="checkout-phone" className={labelClass}>
                   Phone number

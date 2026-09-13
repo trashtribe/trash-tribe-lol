@@ -50,6 +50,7 @@ type OrderShippingRow = {
   shipping_city: string | null;
   shipping_postal_code: string | null;
   shipping_country: string | null;
+  shipping_region: string | null;
   shipping_phone: string | null;
   shipping_method: string | null;
   printify_order_id: string | null;
@@ -104,6 +105,7 @@ export async function submitPaidOrderToPrintify(
         shipping_city,
         shipping_postal_code,
         shipping_country,
+        shipping_region,
         shipping_phone,
         shipping_method,
         printify_order_id
@@ -223,6 +225,7 @@ export async function submitPaidOrderToPrintify(
         address1: order.shipping_address1.trim(),
         address2: (order.shipping_address2 ?? "").trim(),
         city: order.shipping_city.trim(),
+        region: (order.shipping_region ?? "").trim(),
         zip: order.shipping_postal_code.trim(),
         country: countryIso,
         phone: order.shipping_phone.trim(),
