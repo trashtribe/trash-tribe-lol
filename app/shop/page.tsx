@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { ShopFilters, type ShopCategoryFilter } from "@/components/ShopFilters";
 import { ShopProductCard } from "@/components/ShopProductCard";
+import { SignupPopup } from "@/components/SignupPopup";
 import type { StoreProduct } from "@/lib/products";
 import { getProducts } from "@/lib/products";
 
@@ -90,6 +91,7 @@ export default async function ShopPage({
         </section>
       </main>
       <Footer />
+      <SignupPopup />
     </>
   );
 }

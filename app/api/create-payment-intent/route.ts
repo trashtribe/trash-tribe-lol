@@ -246,7 +246,7 @@ export async function POST(request: Request) {
         ? null
         : String(line.printifyVariantId).trim();
 
-    const orderItemRows = (includeProductName: boolean) =>
+    const orderItemRows = (includeExtras: boolean) =>
       items.map((line) => {
         const row: Record<string, unknown> = {
           order_id: orderId,
@@ -255,10 +255,14 @@ export async function POST(request: Request) {
           price: line.unitPrice,
           printify_variant_id: printifyCol(line),
         };
-        if (includeProductName) {
+        if (includeExtras) {
           row.product_name =
             typeof line.productName === "string" && line.productName.trim()
               ? line.productName.trim().slice(0, 500)
+              : null;
+          row.product_image_url =
+            typeof line.productImageUrl === "string" && line.productImageUrl.trim()
+              ? line.productImageUrl.trim().slice(0, 2000)
               : null;
         }
         return row;
@@ -268,14 +272,15 @@ export async function POST(request: Request) {
       await admin.from("order_items").insert(orderItemRows(true))
     ).error;
 
-    // Older DBs without migration 005 (`product_name`) fail the insert; retry without it.
+    // Older DBs missing migration 005 (`product_name`) or 013 (`product_image_url`)
+    // fail the insert; retry without those two extra columns.
     const msg = itemsError?.message ?? "";
     if (
       itemsError &&
-      /product_name|schema cache|does not exist|Could not find/i.test(msg)
+      /product_name|product_image_url|schema cache|does not exist|Could not find/i.test(msg)
     ) {
       console.warn(
-        "[create-payment-intent] order_items with product_name failed; retrying without column:",
+        "[create-payment-intent] order_items with product_name/product_image_url failed; retrying without them:",
         msg,
       );
       itemsError = (

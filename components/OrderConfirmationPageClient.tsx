@@ -4,11 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { useAuth } from "@/components/AuthProvider";
 import type { StoredCompletedOrder } from "@/lib/checkout-order-storage";
 import { loadCompletedOrder } from "@/lib/checkout-order-storage";
 import { formatEuro } from "@/lib/format-currency";
 
 export function OrderConfirmationPageClient() {
+  const { user, loading: authLoading } = useAuth();
   const [order, setOrder] = useState<StoredCompletedOrder | null | undefined>(
     undefined,
   );
@@ -110,6 +112,28 @@ export function OrderConfirmationPageClient() {
             : "Standard shipping (5–7 days)"}
         </p>
       </div>
+
+      {/* Guest checkout has no account behind it, so this is the best moment
+          to offer one — right after they've seen the order works and while
+          the benefit (order history, favourites) is obvious. Skipped
+          entirely for a signed-in customer, who already has all of this. */}
+      {!authLoading && !user ? (
+        <div className="mt-10 border border-black/10 bg-white p-6 text-center sm:p-8">
+          <p className="text-sm font-bold tracking-[0.14em] tt-text-on-light uppercase">
+            Create an account
+          </p>
+          <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed tt-text-on-light">
+            See this order (and future ones) anytime, save favourites, and get first access to
+            new drops and subscriber-only offers.
+          </p>
+          <Link
+            href="/login?tab=signup"
+            className="mt-5 inline-block border border-black bg-black px-10 py-3 text-[11px] font-bold tracking-[0.2em] text-[#b8ff06] uppercase transition-opacity hover:opacity-90"
+          >
+            Sign up
+          </Link>
+        </div>
+      ) : null}
 
       <div className="mt-10 flex justify-center">
         <Link

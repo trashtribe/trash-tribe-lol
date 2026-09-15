@@ -4,6 +4,8 @@ export type CheckoutLineInput = {
   unitPrice: number;
   /** Display name from cart; stored on order_items for emails. */
   productName?: string;
+  /** Product image from cart at checkout time; stored on order_items for the confirmation email. */
+  productImageUrl?: string;
   /** Printify variant id when known (numeric from Printify catalog). */
   printifyVariantId?: number | string;
 };

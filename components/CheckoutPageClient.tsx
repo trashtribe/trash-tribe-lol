@@ -70,6 +70,7 @@ function cartLinesForApi(items: CartItem[]) {
     quantity: i.quantity,
     unitPrice: i.unitPrice,
     productName: i.size?.trim() ? `${i.name} (${i.size.trim()})` : i.name,
+    productImageUrl: i.imageSrc,
     ...(i.variantId !== undefined ? { printifyVariantId: i.variantId } : {}),
   }));
 }

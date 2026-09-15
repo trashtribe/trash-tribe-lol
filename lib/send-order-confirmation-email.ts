@@ -23,6 +23,7 @@ type OrderRow = {
 type ItemRow = {
   product_id: string;
   product_name: string | null;
+  product_image_url: string | null;
   quantity: number;
   price: number | string;
 };
@@ -68,18 +69,38 @@ function formatAddressInnerHtml(order: OrderRow): string {
 
 function buildOrderConfirmationHtml(opts: {
   orderIdShort: string;
-  itemsLines: Array<{ title: string; lineTotal: string }>;
+  itemsLines: Array<{ title: string; imageUrl: string | null; lineTotal: string }>;
   orderTotalFormatted: string;
   addressInnerHtml: string;
   estimatedDelivery: string;
   ordersUrl: string;
+  /** Guest orders have no account to sign into for order details, so this
+   * email is their only record of what they paid — show pricing here.
+   * Logged-in customers can always see it again on the account page, so we
+   * use the space for the signup pitch instead. */
+  isGuestOrder: boolean;
+  signupUrl: string;
 }): string {
   const itemRowsHtml = opts.itemsLines
-    .map(
-      (row) =>
-        `<tr><td style="padding:8px 0;border-bottom:1px solid #eee;">${escapeHtml(row.title)}</td><td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;">${escapeHtml(row.lineTotal)}</td></tr>`,
-    )
+    .map((row) => {
+      const img = row.imageUrl
+        ? `<img src="${escapeHtml(row.imageUrl)}" alt="" width="56" height="56" style="display:block;width:56px;height:56px;object-fit:contain;border:1px solid #eee;background:#fafafa;"/>`
+        : `<div style="width:56px;height:56px;border:1px solid #eee;background:#fafafa;"></div>`;
+      return `<tr>
+        <td style="padding:10px 0;border-bottom:1px solid #eee;width:56px;">${img}</td>
+        <td style="padding:10px 0 10px 14px;border-bottom:1px solid #eee;">${escapeHtml(row.title)}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #eee;text-align:right;white-space:nowrap;">${escapeHtml(row.lineTotal)}</td>
+      </tr>`;
+    })
     .join("");
+
+  const signupBlockHtml = opts.isGuestOrder
+    ? `<div style="margin:32px 0 0;padding:20px;background:#f6f6f6;border:1px solid #eaeaea;">
+<p style="margin:0 0 10px;text-transform:uppercase;letter-spacing:0.14em;font-size:11px;font-weight:bold;color:#555;">Create an account</p>
+<p style="margin:0 0 16px;line-height:1.6;color:#444;">See full order details anytime, save favourites, and get first access to new drops and subscriber-only offers.</p>
+<table role="presentation" cellspacing="0" cellpadding="0"><tr><td bgcolor="#000000" style="background-color:#000000;padding:11px 26px;text-align:center"><a href="${escapeHtml(opts.signupUrl)}" style="display:inline-block;font-family:inherit;font-size:11px;font-weight:bold;color:#b8ff06;text-decoration:none;text-transform:uppercase;letter-spacing:0.2em;">SIGN UP</a></td></tr></table>
+</div>`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -102,7 +123,7 @@ function buildOrderConfirmationHtml(opts: {
 <p style="margin:24px 0 10px;text-transform:uppercase;letter-spacing:0.16em;font-size:11px;font-weight:bold;color:#555;">Items</p>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">
 ${itemRowsHtml}
-<tr><td style="padding:14px 0 0;color:#555;">Total</td><td style="padding:14px 0 0;text-align:right;font-weight:bold;color:#111;">${escapeHtml(opts.orderTotalFormatted)}</td></tr>
+<tr><td colspan="2" style="padding:14px 0 0;color:#555;">Total</td><td style="padding:14px 0 0;text-align:right;font-weight:bold;color:#111;">${escapeHtml(opts.orderTotalFormatted)}</td></tr>
 </table>
 
 <p style="margin:32px 0 10px;text-transform:uppercase;letter-spacing:0.16em;font-size:11px;font-weight:bold;color:#555;">Ship to</p>
@@ -111,6 +132,8 @@ ${itemRowsHtml}
 <p style="margin:0 0 28px;line-height:1.6;color:#444;">${escapeHtml(opts.estimatedDelivery)}</p>
 
 <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 auto;"><tr><td bgcolor="#000000" style="background-color:#000000;padding:13px 32px;text-align:center"><a href="${escapeHtml(opts.ordersUrl)}" style="display:inline-block;font-family:inherit;font-size:11px;font-weight:bold;color:#b8ff06;text-decoration:none;text-transform:uppercase;letter-spacing:0.2em;">VIEW ORDERS</a></td></tr></table>
+
+${signupBlockHtml}
 
 <p style="margin:36px 0 0;color:#777;font-size:11px;line-height:1.5;text-align:center;">trashtribe • Independent merch</p>
 </td></tr></table>
@@ -232,7 +255,7 @@ export async function sendOrderConfirmationEmail(
 
   const { data: itemRows, error: itemsErr } = await admin
     .from("order_items")
-    .select("product_id, product_name, quantity, price")
+    .select("product_id, product_name, product_image_url, quantity, price")
     .eq("order_id", orderId);
 
   trace.lineItemsOk = Boolean(!itemsErr && itemRows && itemRows.length > 0);
@@ -248,17 +271,20 @@ export async function sendOrderConfirmationEmail(
 
   const items = itemRows as ItemRow[];
   const itemsLines = items.map((row) => {
-    const unit = Number(row.price);
     const qty = Number(row.quantity);
-    const safeUnit = Number.isFinite(unit) ? unit : 0;
+    const unit = Number(row.price);
     const safeQty = Number.isFinite(qty) && qty > 0 ? qty : 0;
-    const lineTotalFmt = formatEuro(safeUnit * safeQty);
+    const safeUnit = Number.isFinite(unit) ? unit : 0;
     const displayName =
       typeof row.product_name === "string" && row.product_name.trim()
         ? row.product_name.trim()
         : row.product_id;
-    const title = `${displayName} × ${safeQty}`;
-    return { title, lineTotal: lineTotalFmt };
+    const title = safeQty > 1 ? `${displayName} × ${safeQty}` : displayName;
+    return {
+      title,
+      imageUrl: row.product_image_url?.trim() || null,
+      lineTotal: formatEuro(safeUnit * safeQty),
+    };
   });
 
   const totalNum = Number(o.total);
@@ -269,6 +295,7 @@ export async function sendOrderConfirmationEmail(
 
   const base = siteOrigin();
   const ordersUrl = `${base}/account`;
+  const signupUrl = `${base}/login?tab=signup`;
 
   const html = buildOrderConfirmationHtml({
     orderIdShort,
@@ -277,6 +304,8 @@ export async function sendOrderConfirmationEmail(
     addressInnerHtml,
     estimatedDelivery,
     ordersUrl,
+    isGuestOrder: !o.user_id,
+    signupUrl,
   });
 
   const res = await fetch("https://api.resend.com/emails", {

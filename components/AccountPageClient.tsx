@@ -44,6 +44,13 @@ type TrackingInfo = {
   error?: string;
 };
 
+type OrderItemDetail = {
+  product_id: string;
+  product_name: string | null;
+  quantity: number;
+  price: number | string;
+};
+
 export function AccountPageClient() {
   const router = useRouter();
   const { user, loading, signOut, accessToken } = useAuth();
@@ -51,6 +58,41 @@ export function AccountPageClient() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [tracking, setTracking] = useState<Record<string, TrackingInfo | "loading">>({});
+  // Itemized price breakdown, shown only here (never in the confirmation
+  // email) — loaded on demand per order rather than up front for every
+  // order in the list.
+  const [orderItems, setOrderItems] = useState<
+    Record<string, OrderItemDetail[] | "loading" | { error: string }>
+  >({});
+
+  const toggleItems = useCallback(
+    (orderId: string) => {
+      if (orderItems[orderId]) {
+        setOrderItems((prev) => {
+          const next = { ...prev };
+          delete next[orderId];
+          return next;
+        });
+        return;
+      }
+      const supabase = createBrowserSupabaseClient();
+      if (!supabase) return;
+      setOrderItems((prev) => ({ ...prev, [orderId]: "loading" }));
+      void (async () => {
+        const { data, error } = await supabase
+          .from("order_items")
+          .select("product_id, product_name, quantity, price")
+          .eq("order_id", orderId);
+        setOrderItems((prev) => ({
+          ...prev,
+          [orderId]: error
+            ? { error: "Could not load items." }
+            : ((data ?? []) as OrderItemDetail[]),
+        }));
+      })();
+    },
+    [orderItems],
+  );
 
   const checkTracking = useCallback(
     (orderId: string) => {
@@ -106,19 +148,30 @@ export function AccountPageClient() {
     setOrdersLoading(true);
 
     void (async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("id, status, total, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+      // Without this try/catch, a thrown network/auth error (not just a
+      // Supabase { error } response) left ordersLoading stuck true forever —
+      // this is exactly the "Loading orders…" that never resolves.
+      try {
+        const { data, error } = await supabase
+          .from("orders")
+          .select("id, status, total, created_at")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
 
-      if (cancelled) return;
-      setOrdersLoading(false);
-      if (error) {
+        if (cancelled) return;
+        if (error) {
+          console.error("[account] load orders:", error.message);
+          setOrders([]);
+          return;
+        }
+        setOrders((data ?? []) as OrderRow[]);
+      } catch (e) {
+        if (cancelled) return;
+        console.error("[account] load orders threw:", e);
         setOrders([]);
-        return;
+      } finally {
+        if (!cancelled) setOrdersLoading(false);
       }
-      setOrders((data ?? []) as OrderRow[]);
     })();
 
     return () => {
@@ -251,6 +304,47 @@ export function AccountPageClient() {
                         ) : null}
                       </div>
                     )}
+                  </div>
+
+                  <div className="mt-3 border-t border-black/10 pt-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleItems(order.id)}
+                      className="text-[11px] font-bold tracking-[0.12em] tt-text-secondary underline underline-offset-4 uppercase"
+                    >
+                      {orderItems[order.id] ? "Hide items" : "View items & pricing"}
+                    </button>
+                    {(() => {
+                      const oi = orderItems[order.id];
+                      if (!oi) return null;
+                      if (oi === "loading") {
+                        return <p className="mt-2 text-[11px] text-black/50">Loading items…</p>;
+                      }
+                      if ("error" in oi) {
+                        return <p className="mt-2 text-[11px] text-black/50">{oi.error}</p>;
+                      }
+                      return (
+                        <ul className="mt-2 space-y-1.5">
+                          {oi.map((item, idx) => {
+                            const qty = Number(item.quantity) || 0;
+                            const unit = Number(item.price) || 0;
+                            return (
+                              <li
+                                key={`${item.product_id}-${idx}`}
+                                className="flex items-center justify-between gap-3 text-[11px] text-black/70"
+                              >
+                                <span className="min-w-0 flex-1 truncate">
+                                  {(item.product_name?.trim() || item.product_id)} × {qty}
+                                </span>
+                                <span className="shrink-0 tabular-nums">
+                                  {formatEuro(unit * qty)}
+                                </span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      );
+                    })()}
                   </div>
                 </li>
               );
