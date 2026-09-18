@@ -15,11 +15,17 @@ import type { NextRequest } from "next/server";
  *
  * If PREVIEW_ACCESS_KEY isn't set, the gate is off — so forgetting to set
  * the env var fails open to the live site, not into a permanent lockout.
+ *
+ * Named/filed as `proxy.ts`, not `middleware.ts` — this Next.js version
+ * (16.2.2) renamed the "middleware" file convention to "proxy"
+ * (node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md).
+ * A file named `middleware.ts` still builds (with a deprecation warning),
+ * but `proxy.ts` is the convention this version actually documents.
  */
 const COOKIE_NAME = "tt_preview_ok";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const previewKey = process.env.PREVIEW_ACCESS_KEY?.trim();
 
   if (!previewKey) {
