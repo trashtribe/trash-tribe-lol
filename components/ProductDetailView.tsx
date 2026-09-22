@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 
 import { formatEuro } from "@/lib/format-currency";
-import type { StoreProduct } from "@/lib/products";
+import { CATEGORY_LABEL, type StoreProduct } from "@/lib/products";
 import {
   approximateSwatchColor,
   colorAvailableForSelection,
@@ -128,6 +129,26 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
 
   return (
     <main className="flex flex-1 flex-col bg-background">
+      <nav aria-label="Breadcrumb" className="mx-auto w-full max-w-[1600px] px-4 pt-6 sm:px-6">
+        <ol className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold tracking-[0.1em] text-black/55 uppercase">
+          <li>
+            <Link href="/shop" className="hover:tt-text-secondary">
+              Shop
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li>
+            <Link href={`/shop?category=${product.category}`} className="hover:tt-text-secondary">
+              {CATEGORY_LABEL[product.category]}
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li aria-current="page" className="truncate text-black/80">
+            {product.name}
+          </li>
+        </ol>
+      </nav>
+
       <section className="border-b tt-border-light px-4 py-10 sm:px-6 sm:py-14">
         <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
           <div>

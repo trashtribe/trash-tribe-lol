@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import type { NavPreviewData, StoreCategory } from "@/lib/products";
+import { CATEGORY_LABEL, type NavPreviewData, type StoreCategory } from "@/lib/products";
 import { useCart } from "./CartProvider";
 import { useSearchModal } from "./SearchModalContext";
 import { useWishlist } from "./WishlistProvider";
@@ -96,18 +97,30 @@ function MenuIcon({ open }: { open: boolean }) {
   );
 }
 
-const CATEGORY_LABEL: Record<StoreCategory, string> = {
-  TOPS: "Tops",
-  UNDERWEAR: "Underwear",
-  ACCESSORIES: "Accessories",
-  POSTERS: "Posters",
-};
+/**
+ * Isolates useSearchParams() behind its own Suspense boundary — calling it
+ * directly in Header would opt every page that renders Header out of static
+ * prerendering (Next.js requires the hook's component to be inside
+ * Suspense). Reports the current `?category=` back up via a plain effect;
+ * on the very first paint (fallback, or before this effect runs) the active
+ * nav item just isn't highlighted yet, which is a fine default.
+ */
+function CategoryParamWatcher({ onCategory }: { onCategory: (category: string | null) => void }) {
+  const searchParams = useSearchParams();
+  const category = searchParams.get("category");
+  useEffect(() => {
+    onCategory(category);
+  }, [category, onCategory]);
+  return null;
+}
 
 export function Header() {
   const { user } = useAuth();
   const { itemCount, openCart } = useCart();
   const { openSearch } = useSearchModal();
   const { count: wishlistCount } = useWishlist();
+  const pathname = usePathname();
+  const [categoryParam, setCategoryParam] = useState<string | null>(null);
 
   const [preview, setPreview] = useState<NavPreviewData | null>(null);
   const [openCategory, setOpenCategory] = useState<StoreCategory | null>(null);
@@ -130,8 +143,19 @@ export function Header() {
   const accountHref = user ? "/account" : "/login";
   const activeFlyout = openCategory ? preview?.[openCategory] : undefined;
 
+  // "Shop All" is only active with no category param — otherwise it'd stay
+  // lit up on every category page too, since they're all under /shop.
+  const isNavItemActive = (item: NavItem) => {
+    if (pathname !== "/shop") return false;
+    if (item.href === "/shop") return !categoryParam;
+    return item.flyoutCategory === categoryParam;
+  };
+
   return (
     <header className="sticky top-0 z-[100] border-b tt-border-light bg-background">
+      <Suspense fallback={null}>
+        <CategoryParamWatcher onCategory={setCategoryParam} />
+      </Suspense>
       <div className="relative" onMouseLeave={() => setOpenCategory(null)}>
         <div className="mx-auto grid max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6 sm:py-5">
           <Link href="/" className="block shrink-0 justify-self-start leading-none" aria-label="trashtribe">
@@ -147,16 +171,22 @@ export function Header() {
           </Link>
 
           <nav aria-label="Primary" className="hidden items-center gap-6 md:flex lg:gap-10">
-            {nav.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                onMouseEnter={() => setOpenCategory(item.flyoutCategory ?? null)}
-                className="text-[11px] font-bold tracking-[0.2em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary lg:text-[12px]"
-              >
-                {item.label}
-              </Link>
-            ))}
+            {nav.map((item) => {
+              const active = isNavItemActive(item);
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onMouseEnter={() => setOpenCategory(item.flyoutCategory ?? null)}
+                  aria-current={active ? "page" : undefined}
+                  className={`text-[11px] font-bold tracking-[0.2em] uppercase underline decoration-2 underline-offset-[10px] transition-colors hover:tt-text-secondary lg:text-[12px] ${
+                    active ? "tt-text-secondary decoration-current" : "tt-text-on-light decoration-transparent"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="flex items-center justify-end gap-1 sm:gap-3">
@@ -294,14 +324,37 @@ export function Header() {
           permanently eating a chunk of the screen with a wrapped list. */}
       {mobileMenuOpen ? (
         <nav aria-label="Primary mobile" className="flex flex-col border-t tt-border-light px-4 py-3 md:hidden">
+          {/* About/Contact first, not buried below every shop category —
+              easy to miss down there when you're just looking for support. */}
+          {utilityNav.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              onClick={() => setMobileMenuOpen(false)}
+              aria-current={pathname === item.href ? "page" : undefined}
+              className={`py-2.5 text-[12px] font-bold tracking-[0.2em] uppercase hover:tt-text-secondary ${
+                pathname === item.href ? "tt-text-secondary" : "tt-text-on-light"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+
+          <span className="my-2 h-px w-full tt-bg-dark opacity-10" aria-hidden="true" />
+
           {nav.map((item) => {
+            const active = isNavItemActive(item);
+
             if (!item.hasSubcategories || !item.flyoutCategory) {
               return (
                 <Link
                   key={item.label}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="py-2.5 text-[12px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary"
+                  aria-current={active ? "page" : undefined}
+                  className={`py-2.5 text-[12px] font-bold tracking-[0.2em] uppercase hover:tt-text-secondary ${
+                    active ? "tt-text-secondary" : "tt-text-on-light"
+                  }`}
                 >
                   {item.label}
                 </Link>
@@ -315,9 +368,10 @@ export function Header() {
                 <button
                   type="button"
                   aria-expanded={isOpen}
+                  aria-current={active ? "page" : undefined}
                   onClick={() => setMobileOpenCategory(isOpen ? null : category)}
                   className={`flex w-full items-center justify-between py-2.5 text-[12px] font-bold tracking-[0.2em] uppercase transition-colors hover:tt-text-secondary ${
-                    isOpen ? "tt-text-secondary" : "tt-text-on-light"
+                    isOpen || active ? "tt-text-secondary" : "tt-text-on-light"
                   }`}
                 >
                   <span>{item.label}</span>
@@ -347,19 +401,6 @@ export function Header() {
               </div>
             );
           })}
-
-          <span className="my-2 h-px w-full tt-bg-dark opacity-10" aria-hidden="true" />
-
-          {utilityNav.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              onClick={() => setMobileMenuOpen(false)}
-              className="py-2.5 text-[12px] font-bold tracking-[0.2em] tt-text-on-light uppercase hover:tt-text-secondary"
-            >
-              {item.label}
-            </Link>
-          ))}
         </nav>
       ) : null}
     </header>

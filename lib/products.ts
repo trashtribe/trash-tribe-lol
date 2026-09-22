@@ -11,6 +11,14 @@ import {
 
 export type StoreCategory = "TOPS" | "UNDERWEAR" | "ACCESSORIES" | "POSTERS";
 
+/** Shared label map — used by the header nav flyout and the product-page breadcrumb. */
+export const CATEGORY_LABEL: Record<StoreCategory, string> = {
+  TOPS: "Tops",
+  UNDERWEAR: "Underwear",
+  ACCESSORIES: "Accessories",
+  POSTERS: "Posters",
+};
+
 /** Only categories that have real subcategories carry one — see inferSubcategory(). */
 export type StoreSubcategory =
   | "TSHIRT"

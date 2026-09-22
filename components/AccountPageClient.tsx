@@ -191,62 +191,77 @@ export function AccountPageClient() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-12 sm:py-16">
-      <h1 className="text-2xl font-bold tracking-[0.16em] tt-text-on-light uppercase sm:text-3xl">
-        Account
-      </h1>
+    <div className="mx-auto max-w-[1600px] px-4 py-12 sm:px-6 sm:py-16">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold tracking-[0.16em] tt-text-on-light uppercase sm:text-3xl">
+          Account
+        </h1>
+        {/* Kept up here, not at the bottom of the page — with a long order
+            history the old bottom-of-page placement meant scrolling past
+            everything else just to sign out. */}
+        <button
+          type="button"
+          onClick={() => void signOut()}
+          className="border border-black bg-black px-5 py-2.5 text-[11px] font-bold tracking-[0.2em] text-[#b8ff06] uppercase transition-opacity hover:opacity-90"
+        >
+          Sign out
+        </button>
+      </div>
 
-      <dl className="mt-10 space-y-6 border border-black/10 bg-white p-6">
-        <div>
-          <dt className="text-[11px] font-bold tracking-[0.14em] text-black/55 uppercase">
-            Email
-          </dt>
-          <dd className="mt-1 text-sm tt-text-on-light">{user.email}</dd>
-        </div>
-        <div>
-          <dt className="text-[11px] font-bold tracking-[0.14em] text-black/55 uppercase">
-            Joined
-          </dt>
-          <dd className="mt-1 text-sm tt-text-on-light">
-            {formatJoined(user.created_at)}
-          </dd>
-        </div>
-      </dl>
+      <div className="mt-10 grid gap-10 lg:grid-cols-[300px_1fr] lg:gap-16">
+        <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+          <dl className="space-y-6 border border-black/10 bg-white p-6">
+            <div>
+              <dt className="text-[11px] font-bold tracking-[0.14em] text-black/55 uppercase">
+                Email
+              </dt>
+              <dd className="mt-1 text-sm tt-text-on-light">{user.email}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] font-bold tracking-[0.14em] text-black/55 uppercase">
+                Joined
+              </dt>
+              <dd className="mt-1 text-sm tt-text-on-light">
+                {formatJoined(user.created_at)}
+              </dd>
+            </div>
+          </dl>
 
-      <Link
-        href="/wishlist"
-        className="mt-6 flex items-center justify-between border border-black/10 bg-white px-6 py-4 text-sm font-bold tracking-[0.1em] tt-text-on-light uppercase transition-colors hover:border-black/30"
-      >
-        My favourites
-        <span aria-hidden="true">→</span>
-      </Link>
+          <Link
+            href="/wishlist"
+            className="flex items-center justify-between border border-black/10 bg-white px-6 py-4 text-sm font-bold tracking-[0.1em] tt-text-on-light uppercase transition-colors hover:border-black/30"
+          >
+            My favourites
+            <span aria-hidden="true">→</span>
+          </Link>
 
-      <a
-        href="https://discord.gg/M47yFsgz8"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-3 flex items-center justify-between border border-black/10 bg-white px-6 py-4 text-sm font-bold tracking-[0.1em] tt-text-on-light uppercase transition-colors hover:border-black/30"
-      >
-        Community &amp; order support (Discord)
-        <span aria-hidden="true">→</span>
-      </a>
+          <a
+            href="https://discord.gg/M47yFsgz8"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between border border-black/10 bg-white px-6 py-4 text-sm font-bold tracking-[0.1em] tt-text-on-light uppercase transition-colors hover:border-black/30"
+          >
+            Community &amp; order support (Discord)
+            <span aria-hidden="true">→</span>
+          </a>
+        </aside>
 
-      <section className="mt-10">
-        <h2 className="text-sm font-bold tracking-[0.18em] tt-text-on-light uppercase">
-          Order history
-        </h2>
-        {ordersLoading ? (
-          <div className="mt-4 border border-dashed border-black/20 bg-[color:color-mix(in_srgb,var(--tt-soft-pink)_10%,var(--tt-bg-light))] px-6 py-12 text-center">
-            <p className="text-sm tt-text-on-light">Loading orders…</p>
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="mt-4 border border-dashed border-black/20 bg-[color:color-mix(in_srgb,var(--tt-soft-pink)_10%,var(--tt-bg-light))] px-6 py-12 text-center">
-            <p className="text-sm tt-text-on-light">
-              No orders yet. When you place one, it will show up here.
-            </p>
-          </div>
-        ) : (
-          <ul className="mt-4 space-y-3">
+        <section>
+          <h2 className="text-sm font-bold tracking-[0.18em] tt-text-on-light uppercase">
+            Order history
+          </h2>
+          {ordersLoading ? (
+            <div className="mt-4 border border-dashed border-black/20 bg-[color:color-mix(in_srgb,var(--tt-soft-pink)_10%,var(--tt-bg-light))] px-6 py-12 text-center">
+              <p className="text-sm tt-text-on-light">Loading orders…</p>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="mt-4 border border-dashed border-black/20 bg-[color:color-mix(in_srgb,var(--tt-soft-pink)_10%,var(--tt-bg-light))] px-6 py-12 text-center">
+              <p className="text-sm tt-text-on-light">
+                No orders yet. When you place one, it will show up here.
+              </p>
+            </div>
+          ) : (
+            <ul className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {orders.map((order) => {
               const t = tracking[order.id];
               return (
@@ -360,16 +375,9 @@ export function AccountPageClient() {
               );
             })}
           </ul>
-        )}
-      </section>
-
-      <button
-        type="button"
-        onClick={() => void signOut()}
-        className="mt-10 w-full border border-black bg-black py-3.5 text-[11px] font-bold tracking-[0.2em] text-[#b8ff06] uppercase transition-opacity hover:opacity-90"
-      >
-        Sign out
-      </button>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

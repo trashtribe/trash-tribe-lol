@@ -14,6 +14,14 @@ function InstagramIcon() {
   );
 }
 
+function DiscordIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M20.32 5.37a17.9 17.9 0 0 0-4.43-1.37 13.4 13.4 0 0 0-.6 1.23 16.6 16.6 0 0 0-4.98 0 13.4 13.4 0 0 0-.6-1.23A17.9 17.9 0 0 0 5.28 5.37 18.4 18.4 0 0 0 2.1 17.72a18 18 0 0 0 5.49 2.77c.44-.6.84-1.24 1.18-1.92a11.6 11.6 0 0 1-1.86-.89c.16-.11.31-.23.46-.35a12.9 12.9 0 0 0 10.93 0c.15.12.3.24.46.35-.59.35-1.22.65-1.86.89.34.68.74 1.32 1.18 1.92a18 18 0 0 0 5.49-2.77 18.3 18.3 0 0 0-3.19-12.35ZM9.68 15.06c-1.07 0-1.94-.98-1.94-2.18s.85-2.19 1.94-2.19 1.96.99 1.94 2.19c0 1.2-.85 2.18-1.94 2.18Zm6.65 0c-1.06 0-1.94-.98-1.94-2.18s.85-2.19 1.94-2.19 1.96.99 1.94 2.19c0 1.2-.85 2.18-1.94 2.18Z" />
+    </svg>
+  );
+}
+
 function PinterestIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -69,6 +77,15 @@ export default function ContactPage() {
                 >
                   <PinterestIcon />
                   Pinterest
+                </a>
+                <a
+                  href="https://discord.gg/M47yFsgz8"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"
+                >
+                  <DiscordIcon />
+                  Discord
                 </a>
               </div>
             </div>
