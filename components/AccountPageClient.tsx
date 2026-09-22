@@ -221,6 +221,16 @@ export function AccountPageClient() {
         <span aria-hidden="true">→</span>
       </Link>
 
+      <a
+        href="https://discord.gg/M47yFsgz8"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-3 flex items-center justify-between border border-black/10 bg-white px-6 py-4 text-sm font-bold tracking-[0.1em] tt-text-on-light uppercase transition-colors hover:border-black/30"
+      >
+        Community &amp; order support (Discord)
+        <span aria-hidden="true">→</span>
+      </a>
+
       <section className="mt-10">
         <h2 className="text-sm font-bold tracking-[0.18em] tt-text-on-light uppercase">
           Order history

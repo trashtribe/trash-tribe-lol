@@ -9,7 +9,12 @@ const quickLinks = [
   { href: "/shop?category=UNDERWEAR", label: "Underwear" },
   { href: "/about", label: "About" },
   { href: "mailto:hello@trashtribe.lol", label: "hello@trashtribe.lol" },
+  { href: "https://discord.gg/M47yFsgz8", label: "Discord community & support" },
 ] as const;
+
+function isExternal(href: string) {
+  return href.startsWith("http://") || href.startsWith("https://");
+}
 
 export function Footer() {
   return (
@@ -21,8 +26,14 @@ export function Footer() {
             <ul className="flex flex-col gap-3 text-[12px] tracking-[0.08em]">
               {quickLinks.map((item) => (
                 <li key={item.label}>
-                  {item.href.startsWith("mailto:") ? (
-                    <a href={item.href} className="tt-text-on-dark transition-colors hover:tt-text-secondary">
+                  {item.href.startsWith("mailto:") || isExternal(item.href) ? (
+                    <a
+                      href={item.href}
+                      className="tt-text-on-dark transition-colors hover:tt-text-secondary"
+                      {...(isExternal(item.href)
+                        ? { target: "_blank", rel: "noopener noreferrer" }
+                        : {})}
+                    >
                       {item.label}
                     </a>
                   ) : (
