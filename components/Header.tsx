@@ -218,17 +218,9 @@ export function Header() {
             </button>
             <Link
               href={accountHref}
-              className="inline-flex cursor-pointer items-center gap-1.5 border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+              className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
               aria-label={user ? "Account" : "Sign in"}
             >
-              {/* Guests get a visible label, not just an icon — an unlabeled
-                  account icon reads as "manage my account" to someone who
-                  doesn't have one yet, not as an invitation to create one. */}
-              {!user ? (
-                <span className="hidden text-[10px] font-bold tracking-[0.18em] uppercase sm:inline lg:text-[11px]">
-                  Sign in
-                </span>
-              ) : null}
               <AccountIcon />
             </Link>
             <button

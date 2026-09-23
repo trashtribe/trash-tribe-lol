@@ -93,6 +93,16 @@
   border-radius: 0;
 }
 
+/* Browsers show the plain arrow cursor on <button> by default — only <a>
+   gets a pointer for free. Several buttons across the site (sign in, sign
+   out, add to cart...) were missing an explicit cursor-pointer class and so
+   looked unclickable on hover. One global rule instead of hunting down
+   every button; :disabled buttons keep their own cursor (usually
+   not-allowed via a per-button class, which wins on specificity anyway). */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
