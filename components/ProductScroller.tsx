@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { shouldSwapImageOnHover, type StoreProduct } from "@/lib/products";
 
@@ -42,6 +42,12 @@ function ProductCard({
   // shouldSwapImageOnHover() in lib/products.ts.
   const altImage = product.galleryImages[1];
   const useImageSwap = shouldSwapImageOnHover(product);
+  // Only mount the swap image once actually hovered — the scroller shows
+  // the full catalog (2x, for the seamless loop), so always-mounting a
+  // second image per card was a big multiplier on Image Optimization
+  // transformations for visitors who never hover a card at all.
+  const [hovered, setHovered] = useState(false);
+  const showAltImage = useImageSwap && hovered;
 
   const cardStyle: CSSProperties & Record<"--tt-rotate", string> = {
     "--tt-rotate": index % 2 === 0 ? "-2deg" : "2deg",
@@ -57,6 +63,8 @@ function ProductCard({
       <article
         className={`group flex w-[220px] flex-col sm:w-[260px] ${useImageSwap ? "" : "tt-scroller-card"}`}
         style={useImageSwap ? undefined : cardStyle}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       >
         <div className="relative h-[220px] overflow-hidden border tt-border-light bg-background sm:h-[260px]">
           {product.saleTag ? (
@@ -68,16 +76,16 @@ function ProductCard({
             src={product.imageSrc}
             alt={product.imageAlt}
             fill
-            className={`object-contain object-center p-3 ${useImageSwap ? "transition-opacity duration-300 group-hover:opacity-0" : ""}`}
+            className={`object-contain object-center p-3 ${useImageSwap ? `transition-opacity duration-300 ${showAltImage ? "opacity-0" : "opacity-100"}` : ""}`}
             sizes="(max-width: 640px) 60vw, 260px"
           />
-          {useImageSwap ? (
+          {showAltImage ? (
             <Image
               src={altImage!}
               alt={product.imageAlt}
               fill
               aria-hidden="true"
-              className="object-contain object-center p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              className="object-contain object-center p-3"
               sizes="(max-width: 640px) 60vw, 260px"
             />
           ) : null}

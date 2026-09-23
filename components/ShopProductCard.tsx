@@ -52,6 +52,12 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
   const variants = product.variants;
   const { sizes, colors, mode } = useMemo(() => deriveVariantAxes(variants), [variants]);
 
+  // Tracks hover with real React state instead of relying purely on CSS
+  // group-hover — the swap image is only mounted while `hovered` is true,
+  // so it isn't fetched/transformed by next/image for every visitor who
+  // never actually hovers the card (this was doubling Vercel Image
+  // Optimization transformations for every product shown).
+  const [hovered, setHovered] = useState(false);
   const [quickBuyOpen, setQuickBuyOpen] = useState(false);
   const [selections, setSelections] = useState(() => computeInitialSelections(variants));
   const { selectedSize, selectedColor } = selections;
@@ -133,8 +139,14 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
   const showSizeRow = (mode === "size-only" || mode === "both") && sizes.length > 1;
   const showColorRow = (mode === "color-only" || mode === "both") && colors.length > 1;
 
+  const showAltImage = useImageSwap && hovered;
+
   return (
-    <article className="group relative flex flex-col">
+    <article
+      className="group relative flex flex-col"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="relative h-32 overflow-hidden border tt-border-light bg-background sm:h-36 md:h-40">
         <Link
           href={`/shop/${product.slug}`}
@@ -150,16 +162,16 @@ export function ShopProductCard({ product }: ShopProductCardProps) {
               src={product.imageSrc}
               alt={product.imageAlt}
               fill
-              className={`object-contain object-center transition duration-300 group-hover:scale-[1.02] ${useImageSwap ? "group-hover:opacity-0" : ""}`}
+              className={`object-contain object-center transition duration-300 group-hover:scale-[1.02] ${showAltImage ? "opacity-0" : "opacity-100"}`}
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
-            {useImageSwap ? (
+            {showAltImage ? (
               <Image
                 src={altImage!}
                 alt={product.imageAlt}
                 fill
                 aria-hidden="true"
-                className="object-contain object-center opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                className="object-contain object-center"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               />
             ) : null}

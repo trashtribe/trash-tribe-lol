@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 import { formatEuro } from "@/lib/format-currency";
 import { parseVariantTitleSegments, shouldSwapImageOnHover } from "@/lib/products";
@@ -19,9 +20,18 @@ export function WishlistProductCard({ product }: WishlistProductCardProps) {
   const { removeFromWishlist } = useWishlist();
   const altImage = product.galleryImages[1];
   const useImageSwap = shouldSwapImageOnHover(product);
+  // Only mount the swap image once actually hovered — keeps it from being
+  // fetched/transformed for every card on every page view (see
+  // ShopProductCard for the same fix and the reasoning behind it).
+  const [hovered, setHovered] = useState(false);
+  const showAltImage = useImageSwap && hovered;
 
   return (
-    <article className="group flex flex-col gap-2">
+    <article
+      className="group flex flex-col gap-2"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="relative h-32 overflow-hidden border tt-border-light bg-background p-3 sm:h-36 md:h-40">
         <Link
           href={`/shop/${product.slug}`}
@@ -32,16 +42,16 @@ export function WishlistProductCard({ product }: WishlistProductCardProps) {
               src={product.imageSrc}
               alt={product.imageAlt}
               fill
-              className={`object-contain object-center transition-opacity duration-300 ${useImageSwap ? "group-hover:opacity-0" : ""}`}
+              className={`object-contain object-center transition-opacity duration-300 ${showAltImage ? "opacity-0" : "opacity-100"}`}
               sizes="(max-width: 640px) 50vw, 25vw"
             />
-            {useImageSwap ? (
+            {showAltImage ? (
               <Image
                 src={altImage!}
                 alt={product.imageAlt}
                 fill
                 aria-hidden="true"
-                className="object-contain object-center opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                className="object-contain object-center"
                 sizes="(max-width: 640px) 50vw, 25vw"
               />
             ) : null}

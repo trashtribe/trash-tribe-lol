@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
+    // Defaults to serving both AVIF and WebP per size, which bills two
+    // transformations for every image instead of one. WebP alone has near-
+    // universal browser support and is already ~25-35% smaller than JPEG/PNG,
+    // so this halves the transformation count with no real quality/format
+    // regression for visitors.
+    formats: ["image/webp"],
     // Trimmed from Next's defaults (8 deviceSizes, 7 imageSizes) to match the
     // actual breakpoints this site's <Image sizes="..."> props use (mobile
     // ~640, tablet ~828, desktop ~1200/1920; thumbnails at 64/96/180/260px).
