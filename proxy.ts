@@ -25,7 +25,18 @@ import type { NextRequest } from "next/server";
 const COOKIE_NAME = "tt_preview_ok";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
+/**
+ * Master switch. true = coming soon is active (when PREVIEW_ACCESS_KEY is
+ * also set); false = the site is fully open, regardless of the env var.
+ * To open or close the site: change this one line and push.
+ */
+const COMING_SOON_ENABLED = false;
+
 export function proxy(request: NextRequest) {
+  if (!COMING_SOON_ENABLED) {
+    return NextResponse.next();
+  }
+
   const previewKey = process.env.PREVIEW_ACCESS_KEY?.trim();
 
   if (!previewKey) {
