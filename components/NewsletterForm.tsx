@@ -12,8 +12,9 @@ export function NewsletterForm() {
     setStatus("loading");
     const supabase = createBrowserSupabaseClient();
     if (!supabase) { setStatus("error"); return; }
-    const { error } = await supabase.from("email_signups").insert([{ email }]);
-    if (error) { setStatus("error"); } 
+    const { error } = await supabase.from("email_signups").insert([{ email: email.trim() }]);
+    // 23505 = already signed up (unique email); that's still a success for the visitor.
+    if (error && error.code !== "23505") { setStatus("error"); }
     else { setStatus("success"); setEmail(""); }
   }
 
