@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Sign in",
   description: "Sign in to your trashtribe account.",
   alternates: { canonical: "/login" },
+  robots: { index: false, follow: true },
 };
 
 export default async function LoginPage({

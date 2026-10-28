@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { WishlistGrid } from "@/components/WishlistGrid";
 import { getProducts } from "@/lib/products";
+
+export const metadata: Metadata = {
+  title: "Wishlist",
+  robots: { index: false, follow: true },
+};
 
 export default async function WishlistPage() {
   const products = await getProducts();

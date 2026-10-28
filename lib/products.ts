@@ -65,7 +65,7 @@ export type StoreProduct = {
   saleTag?: string;
 };
 
-const DISPLAY_CURRENCY = process.env.PRINTIFY_DISPLAY_CURRENCY?.trim() || "EUR";
+export const DISPLAY_CURRENCY = process.env.PRINTIFY_DISPLAY_CURRENCY?.trim() || "EUR";
 
 function slugify(value: string): string {
   return value

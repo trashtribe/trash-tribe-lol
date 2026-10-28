@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Reset password",
   description: "Set a new password for your trashtribe account.",
   alternates: { canonical: "/reset-password" },
+  robots: { index: false, follow: true },
 };
 
 export default function ResetPasswordPage() {

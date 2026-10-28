@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { AuthProvider } from "@/components/AuthProvider";
 import { Providers } from "@/components/Providers";
 import { Space_Mono } from "next/font/google";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
-
-const siteUrl = "https://www.trashtribe.lol";
 
 const spaceMono = Space_Mono({
   subsets: ["latin"],
@@ -17,19 +16,19 @@ const description =
   "Print-on-demand posters, t-shirts, hats and accessories. Independent merch for people who live loud.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: title,
     template: "%s | trashtribe",
   },
   description,
-  alternates: {
-    canonical: "/",
-  },
+  // No site-wide canonical: it's inherited by every page that doesn't set its
+  // own, which made /checkout, /wishlist etc. all declare "/" as canonical.
+  // Each indexable page sets its own `alternates.canonical`.
   openGraph: {
     type: "website",
     locale: "en_IE",
-    url: siteUrl,
+    url: SITE_URL,
     siteName: "trashtribe",
     title,
     description,

@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description:
     "Sign in or create a trashtribe account. Manage your profile and view order history.",
   alternates: { canonical: "/account" },
+  robots: { index: false, follow: true },
 };
 
 export default function AccountPage() {

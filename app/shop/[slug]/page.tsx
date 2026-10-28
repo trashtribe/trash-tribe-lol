@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { ProductDetailView } from "@/components/ProductDetailView";
-import { getProductBySlug, getProducts } from "@/lib/products";
+import { DISPLAY_CURRENCY, getProductBySlug, getProducts, type StoreProduct } from "@/lib/products";
+import { SITE_URL } from "@/lib/site";
 
 type ProductPageProps = {
   params: Promise<{
@@ -25,6 +26,15 @@ function truncateDescription(text: string, max = 155) {
   return `${t.slice(0, max - 1).trim()}…`;
 }
 
+/** Some Printify products have no description; fall back to a generic line so
+ * the meta description and structured data are never empty. */
+function productDescription(product: StoreProduct) {
+  return (
+    product.description.trim() ||
+    `${product.name} by trashtribe. Independent print-on-demand merch with bold graphics.`
+  );
+}
+
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
@@ -35,7 +45,7 @@ export async function generateMetadata({
     return { title: "Product" };
   }
 
-  const description = truncateDescription(product.description);
+  const description = truncateDescription(productDescription(product));
   const path = `/shop/${product.slug}`;
 
   return {
@@ -53,6 +63,33 @@ export async function generateMetadata({
       title: `${product.name} | trashtribe`,
       description,
       images: [product.imageSrc],
+    },
+  };
+}
+
+/** schema.org Product data so Google can show price and stock in results. */
+function productJsonLd(product: StoreProduct) {
+  const absolute = (src: string) => (src.startsWith("/") ? `${SITE_URL}${src}` : src);
+  const prices = product.variants.map((v) => v.price);
+  const inStock = product.variants.some((v) => v.isAvailable);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: productDescription(product),
+    image: (product.galleryImages.length ? product.galleryImages : [product.imageSrc]).map(absolute),
+    sku: product.id,
+    brand: { "@type": "Brand", name: "trashtribe" },
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: DISPLAY_CURRENCY,
+      // Variant prices are in minor units (cents).
+      lowPrice: (Math.min(...prices) / 100).toFixed(2),
+      highPrice: (Math.max(...prices) / 100).toFixed(2),
+      offerCount: product.variants.length,
+      availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      url: `${SITE_URL}/shop/${product.slug}`,
     },
   };
 }
@@ -81,6 +118,14 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
 
   return (
     <>
+      {product.variants.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(productJsonLd(product)).replace(/</g, "\\u003c"),
+          }}
+        />
+      )}
       <Header />
       <ProductDetailView key={product.id} product={product} relatedProducts={relatedProducts} />
       <Footer />

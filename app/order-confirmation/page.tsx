@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
+
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { OrderConfirmationPageClient } from "@/components/OrderConfirmationPageClient";
+
+export const metadata: Metadata = {
+  title: "Order confirmation",
+  robots: { index: false, follow: true },
+};
 
 export default function OrderConfirmationPage() {
   return (
