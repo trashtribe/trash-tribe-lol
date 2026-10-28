@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # The build prerenders every product page from Printify, so it needs
+      # these two. Add them under Settings → Secrets and variables → Actions.
+      PRINTIFY_API_KEY: ${{ secrets.PRINTIFY_API_KEY }}
+      PRINTIFY_SHOP_ID: ${{ secrets.PRINTIFY_SHOP_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        if: env.PRINTIFY_API_KEY != '' && env.PRINTIFY_SHOP_ID != ''
+        run: npm run build
+
+      - name: Build skipped
+        if: env.PRINTIFY_API_KEY == '' || env.PRINTIFY_SHOP_ID == ''
+        run: echo "::warning::Build skipped — add PRINTIFY_API_KEY and PRINTIFY_SHOP_ID as repository secrets to enable it."
