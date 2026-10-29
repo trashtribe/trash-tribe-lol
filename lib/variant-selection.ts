@@ -239,8 +239,38 @@ export function colorAvailableForSelection(
   return false;
 }
 
+/**
+ * Exact Printify color names (Gildan & co. blank catalogs) → swatch hex.
+ * Checked before the keyword fallback below, which only knows generic words
+ * — names like "Gold", "Kiwi", "Royal" or "Sand" used to fall through to
+ * the grey default, so a yellow tee showed a grey swatch. Keys are
+ * lowercased with spaces removed.
+ */
+const SWATCH_HEX_BY_NAME: Record<string, string> = {
+  gold: "#f7b21b",
+  daisy: "#f8d64e",
+  kiwi: "#8dbf4a",
+  royal: "#224da0",
+  sand: "#d9c9a5",
+  natural: "#f0e8d6",
+  ash: "#d8d8d4",
+  sportgrey: "#9b9b9b",
+  darkheather: "#4b4b4b",
+  charcoal: "#42454a",
+  lightblue: "#a4c8e1",
+  lightpink: "#f7c8d8",
+  militarygreen: "#5d6847",
+  forestgreen: "#263c2b",
+  irishgreen: "#1aa04a",
+  maroon: "#5a1f2b",
+  cardinalred: "#8a1c2e",
+  solidbabyblueblend: "#a9cbe8",
+  solidpinkblend: "#f4a6c6",
+};
+
 export function approximateSwatchColor(colorLabel: string): string {
   const k = normalizeLabel(colorLabel).replace(/\s+/g, "");
+  if (SWATCH_HEX_BY_NAME[k]) return SWATCH_HEX_BY_NAME[k];
   if (k.includes("black")) return "#111111";
   if (k.includes("white")) return "#f5f5f5";
   if (k.includes("navy")) return "#1a2744";
@@ -253,5 +283,7 @@ export function approximateSwatchColor(colorLabel: string): string {
   if (k.includes("orange")) return "#e07020";
   if (k.includes("purple")) return "#6844aa";
   if (k.includes("brown")) return "#6b4423";
+  if (k.includes("gold")) return "#f7b21b";
+  if (k.includes("beige") || k.includes("sand") || k.includes("cream")) return "#d9c9a5";
   return "#dcdcdc";
 }

@@ -20,6 +20,7 @@ import {
   saveCompletedOrder,
 } from "@/lib/checkout-order-storage";
 import { formatEuro } from "@/lib/format-currency";
+import { subscribeToNewsletter } from "@/lib/newsletter-client";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 const COUNTRIES = [
@@ -419,6 +420,13 @@ export function CheckoutPageClient({
       setSummarySnapshot([...items]);
       setOrderSuccess(true);
 
+      // "Keep me updated on new drops" — only once the order actually went
+      // through, and only if they ticked it (GDPR: explicit opt-in).
+      if (marketingOptIn) {
+        const signupEmail = email.trim() || user?.email?.trim() || "";
+        if (signupEmail) void subscribeToNewsletter(signupEmail, "");
+      }
+
       if (user) {
         const supabase = createBrowserSupabaseClient();
         if (supabase) {
@@ -451,6 +459,7 @@ export function CheckoutPageClient({
       items,
       shippingMethod,
       email,
+      marketingOptIn,
       clearCart,
       router,
       user,
