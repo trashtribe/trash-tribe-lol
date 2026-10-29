@@ -22,6 +22,17 @@ drop policy if exists "order_items_delete_own" on public.order_items;
 -- hand in the dashboard and do the same thing (found via pg_policies).
 drop policy if exists "users can insert own orders" on public.orders;
 drop policy if exists "users can insert order items" on public.order_items;
+-- Despite its name, this one is an INSERT policy, not a read policy.
+drop policy if exists "users can view own orders" on public.orders;
+
+-- orders had no SELECT policy at all live, so the account page's order
+-- history (read from the browser) always came back empty. order_items'
+-- read policy joins through orders, so it needs this too.
+drop policy if exists "orders_select_own" on public.orders;
+create policy "orders_select_own"
+  on public.orders for select
+  to authenticated
+  using (auth.uid() = user_id);
 
 -- Make sure RLS is still on (no policy = no access for anon/authenticated).
 alter table public.orders enable row level security;
