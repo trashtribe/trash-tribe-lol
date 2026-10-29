@@ -120,8 +120,10 @@ export function CheckoutPageClient({
   // Reset payment intent only when checkout inputs that affect totals change—not when cart
   // identity flickers mid-flow (would clear clientSecret right after preparePayment).
   useEffect(() => {
-    setClientSecret(null);
-    setPrepareError(null);
+    queueMicrotask(() => {
+      setClientSecret(null);
+      setPrepareError(null);
+    });
     onStripeElementsActiveChange?.(false);
   }, [shippingMethod, onStripeElementsActiveChange]);
 

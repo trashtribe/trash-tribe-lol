@@ -1,3 +1,5 @@
+import { createHash, timingSafeEqual } from "crypto";
+
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { formatEuro } from "@/lib/format-currency";
@@ -154,7 +156,14 @@ export function verifySendOrderConfirmationAuth(request: Request): boolean {
     typeof auth === "string" && auth.startsWith("Bearer ")
       ? auth.slice("Bearer ".length).trim()
       : "";
-  return secrets.some((s) => s === token);
+  if (!token) return false;
+  // Constant-time compare: `===` stops at the first differing character,
+  // which in principle leaks how much of a guess was right. Hashing first
+  // gives both sides the same length, which timingSafeEqual requires.
+  const tokenHash = createHash("sha256").update(token).digest();
+  return secrets.some((s) =>
+    timingSafeEqual(createHash("sha256").update(s).digest(), tokenHash),
+  );
 }
 
 /** Console / API trace for debugging confirmation email delivery (no secrets). */

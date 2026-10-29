@@ -8,6 +8,7 @@ import {
 import { isCategoryHidden } from "@/lib/categories";
 import { getAllProducts } from "@/lib/products";
 import { getStripe } from "@/lib/stripe-server";
+import { imageForVariant } from "@/lib/variant-selection";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createSupabaseUserClient } from "@/lib/supabase-route";
 
@@ -48,7 +49,9 @@ const MAX_LINE_QUANTITY = 50;
  * Re-prices every cart line from the live catalog. The browser's `unitPrice`
  * is never trusted: it could be edited to pay €0.50 for anything. Mirrors
  * how the cart prices a line — the chosen variant's price, or the product's
- * cheapest (available) variant when none was chosen.
+ * cheapest (available) variant when none was chosen. Name and image come
+ * from the catalog too, so what's stored on the order (and shown in the
+ * confirmation email) can't be made up by the browser.
  */
 async function priceLinesFromCatalog(
   lines: CheckoutLineInput[],
@@ -68,6 +71,8 @@ async function priceLinesFromCatalog(
     }
 
     let unitCents: number;
+    let productName = product.name;
+    let productImageUrl = product.imageSrc;
     if (line.printifyVariantId != null && String(line.printifyVariantId).trim() !== "") {
       const variant = product.variants.find(
         (v) => String(v.id) === String(line.printifyVariantId).trim(),
@@ -77,13 +82,16 @@ async function priceLinesFromCatalog(
         continue;
       }
       unitCents = variant.price;
+      // Same "Name (Size)" format the checkout page has always sent.
+      productName = variant.title.trim() ? `${product.name} (${variant.title.trim()})` : product.name;
+      productImageUrl = imageForVariant(product, variant.id);
     } else {
       const available = product.variants.filter((v) => v.isAvailable);
       const pool = available.length > 0 ? available : product.variants;
       unitCents = Math.min(...pool.map((v) => v.price));
     }
 
-    priced.push({ ...line, unitPrice: unitCents / 100 });
+    priced.push({ ...line, unitPrice: unitCents / 100, productName, productImageUrl });
   }
 
   return unavailable.length > 0 ? { unavailable } : { lines: priced };

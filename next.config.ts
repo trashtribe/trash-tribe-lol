@@ -1,6 +1,28 @@
 import type { NextConfig } from "next";
 
+/**
+ * Security headers on every response. The CSP is deliberately narrow: it
+ * blocks framing (clickjacking), <base> hijacking, plugins and cross-site
+ * form posts, but doesn't restrict scripts/connections — a full script CSP
+ * needs per-request nonces and must be tested against Stripe's checkout.
+ */
+const securityHeaders = [
+  {
+    key: "Content-Security-Policy",
+    value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'",
+  },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+];
+
 const nextConfig: NextConfig = {
+  // Don't advertise the framework in an x-powered-by header.
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
   images: {
     // Defaults to serving both AVIF and WebP per size, which bills two
     // transformations for every image instead of one. WebP alone has near-

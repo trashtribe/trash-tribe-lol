@@ -55,9 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
     if (!supabase) {
-      setUser(null);
-      setAccessToken(null);
-      setLoading(false);
+      queueMicrotask(() => {
+        setUser(null);
+        setAccessToken(null);
+        setLoading(false);
+      });
       return;
     }
 

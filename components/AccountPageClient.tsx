@@ -146,7 +146,9 @@ export function AccountPageClient() {
     }
 
     let cancelled = false;
-    setOrdersLoading(true);
+    queueMicrotask(() => {
+      if (!cancelled) setOrdersLoading(true);
+    });
 
     void (async () => {
       // Without this try/catch, a thrown network/auth error (not just a
