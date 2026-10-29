@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 
 import { useAuth } from "./AuthProvider";
 import { WishlistProductCard } from "./WishlistProductCard";
@@ -31,8 +31,14 @@ function GuestAccountBanner() {
 }
 
 export function WishlistGrid({ products, emptyAction }: WishlistGridProps) {
-  const { ids, hydrated } = useWishlist();
+  const { ids, hydrated, pruneMissing } = useWishlist();
   const { user, loading: authLoading } = useAuth();
+
+  // Saved ids whose product no longer exists would otherwise still count in
+  // the header badge while the grid shows "empty".
+  useEffect(() => {
+    if (hydrated) pruneMissing(products.map((p) => p.id));
+  }, [hydrated, ids, products, pruneMissing]);
 
   const wishlistProducts = hydrated
     ? ids

@@ -24,6 +24,9 @@ type WishlistContextValue = {
   isInWishlist: (productId: string) => boolean;
   toggleWishlist: (productId: string) => void;
   removeFromWishlist: (productId: string) => void;
+  /** Drop saved ids that aren't in `catalogIds` (products deleted or
+   * re-published in Printify), so the header count matches what's shown. */
+  pruneMissing: (catalogIds: string[]) => void;
 };
 
 const WishlistContext = createContext<WishlistContextValue | undefined>(
@@ -234,6 +237,22 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     [syncToggleToSupabase],
   );
 
+  const pruneMissing = useCallback(
+    (catalogIds: string[]) => {
+      // An empty catalog means the product fetch failed, not that every
+      // product is gone — never wipe the wishlist on that.
+      if (catalogIds.length === 0) return;
+      const valid = new Set(catalogIds);
+      setIds((prev) => {
+        const missing = prev.filter((id) => !valid.has(id));
+        if (missing.length === 0) return prev;
+        for (const id of missing) void syncToggleToSupabase(id, true);
+        return prev.filter((id) => valid.has(id));
+      });
+    },
+    [syncToggleToSupabase],
+  );
+
   const value = useMemo<WishlistContextValue>(
     () => ({
       ids,
@@ -242,8 +261,9 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       isInWishlist,
       toggleWishlist,
       removeFromWishlist,
+      pruneMissing,
     }),
-    [ids, hydrated, isInWishlist, toggleWishlist, removeFromWishlist],
+    [ids, hydrated, isInWishlist, toggleWishlist, removeFromWishlist, pruneMissing],
   );
 
   return (
