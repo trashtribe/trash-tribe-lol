@@ -25,6 +25,24 @@ drop policy if exists "users can insert order items" on public.order_items;
 -- Despite its name, this one is an INSERT policy, not a read policy.
 drop policy if exists "users can view own orders" on public.orders;
 
+-- Catch-all: the named drop above didn't match live (the name likely has an
+-- invisible character), so remove every non-SELECT policy on both tables
+-- whatever it's called.
+do $$
+declare
+  p record;
+begin
+  for p in
+    select tablename, policyname
+    from pg_policies
+    where schemaname = 'public'
+      and tablename in ('orders', 'order_items')
+      and cmd <> 'SELECT'
+  loop
+    execute format('drop policy %I on public.%I', p.policyname, p.tablename);
+  end loop;
+end $$;
+
 -- orders had no SELECT policy at all live, so the account page's order
 -- history (read from the browser) always came back empty. order_items'
 -- read policy joins through orders, so it needs this too.
