@@ -83,7 +83,7 @@ export default function PrivacyPage() {
           <strong>Resend</strong> — sends order confirmation and account emails.
         </li>
         <li>
-          <strong>Vercel</strong> — hosts the website.
+          <strong>Vercel</strong> — hosts the website and provides our visitor statistics.
         </li>
       </LegalList>
       <p>
@@ -101,9 +101,18 @@ export default function PrivacyPage() {
         <li>Hashed IP addresses for spam protection: 24 hours.</li>
       </LegalList>
 
+      <LegalHeading>Visitor statistics</LegalHeading>
+      <p>
+        We use Vercel Web Analytics to count page views and see which pages and products are
+        popular, where visitors come from (for example a link on Instagram), and their country and
+        device type. It works without cookies and stores nothing on your device: visits are
+        counted in aggregate, can&apos;t be used to identify you, and aren&apos;t linked across
+        websites or days (legal basis: legitimate interest in understanding how the shop is used).
+      </p>
+
       <LegalHeading>Cookies and local storage</LegalHeading>
       <p>
-        We don&apos;t use analytics, advertising or tracking cookies. Your browser&apos;s local
+        We don&apos;t use advertising or tracking cookies. Your browser&apos;s local
         storage keeps only what the shop needs to work: your cart, your wishlist, whether you closed
         the sign-up pop-up, and your login session if you sign in. Because these are strictly
         necessary, they don&apos;t require consent. Stripe may set its own cookies on the checkout

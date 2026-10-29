@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/AuthProvider";
+import { CookielessAnalytics } from "@/components/CookielessAnalytics";
 import { Providers } from "@/components/Providers";
 import { Space_Mono } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
@@ -63,6 +64,7 @@ export default function RootLayout({
         <AuthProvider>
           <Providers>{children}</Providers>
         </AuthProvider>
+        <CookielessAnalytics />
       </body>
     </html>
   );
