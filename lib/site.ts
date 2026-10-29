@@ -16,8 +16,12 @@ export const LEGAL_ENTITY = {
   name: "deeptribe OÜ",
   /** Estonian Business Register (e-Äriregister) code. */
   registryCode: "17130573",
-  /** Full postal address, one line. Also where returns are sent. */
-  address: "",
+  /** Registered office address, one line (e-Äriregister). */
+  address: "Ahtri tn 12, 15551 Tallinn",
+  /** Where customers send returns. Left empty until it's confirmed the
+   * registered office (a virtual office) accepts parcels — while empty, the
+   * returns page says we'll email the return address. */
+  returnsAddress: "",
   /** EU member state where trashtribe is established. */
   country: "Estonia",
 };

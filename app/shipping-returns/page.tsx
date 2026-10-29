@@ -63,8 +63,8 @@ export default function ShippingReturnsPage() {
           with your order number and the items you want to return.
         </li>
         <li>
-          {LEGAL_ENTITY.address
-            ? `Send them, unworn and unwashed, to ${LEGAL_ENTITY.address}${LEGAL_ENTITY.country ? `, ${LEGAL_ENTITY.country}` : ""}, within 14 days of telling us.`
+          {LEGAL_ENTITY.returnsAddress
+            ? `Send them, unworn and unwashed, to ${LEGAL_ENTITY.returnsAddress}, within 14 days of telling us.`
             : "We'll reply with the return address. Send the items, unworn and unwashed, within 14 days of telling us."}
         </li>
         <li>Return shipping is paid by you. We recommend a tracked service.</li>
