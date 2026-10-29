@@ -5,7 +5,7 @@ import {
   eurToStripeCents,
   type CheckoutLineInput,
 } from "@/lib/checkout-totals";
-import { HIDDEN_CATEGORIES, isCategoryHidden } from "@/lib/categories";
+import { isCategoryHidden } from "@/lib/categories";
 import { getAllProducts } from "@/lib/products";
 import { getStripe } from "@/lib/stripe-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -41,12 +41,59 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
+/** Max units of one line — stops absurd quantities, well above any real order. */
+const MAX_LINE_QUANTITY = 50;
+
+/**
+ * Re-prices every cart line from the live catalog. The browser's `unitPrice`
+ * is never trusted: it could be edited to pay €0.50 for anything. Mirrors
+ * how the cart prices a line — the chosen variant's price, or the product's
+ * cheapest (available) variant when none was chosen.
+ */
+async function priceLinesFromCatalog(
+  lines: CheckoutLineInput[],
+): Promise<{ lines: CheckoutLineInput[] } | { unavailable: string[] }> {
+  const catalog = await getAllProducts();
+  const priced: CheckoutLineInput[] = [];
+  const unavailable: string[] = [];
+
+  for (const line of lines) {
+    const label = line.productName?.trim() || line.productId;
+    const product = catalog.find((p) => p.id === line.productId);
+    // Missing = deleted/unpublished in Printify; hidden = category pulled
+    // from the store (lib/categories.ts) but maybe still in an old cart.
+    if (!product || isCategoryHidden(product.category) || product.variants.length === 0) {
+      unavailable.push(label);
+      continue;
+    }
+
+    let unitCents: number;
+    if (line.printifyVariantId != null && String(line.printifyVariantId).trim() !== "") {
+      const variant = product.variants.find(
+        (v) => String(v.id) === String(line.printifyVariantId).trim(),
+      );
+      if (!variant || !variant.isAvailable) {
+        unavailable.push(label);
+        continue;
+      }
+      unitCents = variant.price;
+    } else {
+      const available = product.variants.filter((v) => v.isAvailable);
+      const pool = available.length > 0 ? available : product.variants;
+      unitCents = Math.min(...pool.map((v) => v.price));
+    }
+
+    priced.push({ ...line, unitPrice: unitCents / 100 });
+  }
+
+  return unavailable.length > 0 ? { unavailable } : { lines: priced };
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Body;
     const {
       amount,
-      currency = "eur",
       accessToken,
       guestEmail,
       items,
@@ -124,7 +171,9 @@ export async function POST(request: Request) {
       if (
         typeof line.productId !== "string" ||
         typeof line.quantity !== "number" ||
+        !Number.isInteger(line.quantity) ||
         line.quantity < 1 ||
+        line.quantity > MAX_LINE_QUANTITY ||
         typeof line.unitPrice !== "number" ||
         line.unitPrice < 0
       ) {
@@ -157,26 +206,16 @@ export async function POST(request: Request) {
       }
     }
 
-    // Products from a temporarily hidden category may still sit in someone's
-    // cart from before it was hidden — don't let them through to payment.
-    if (HIDDEN_CATEGORIES.length > 0) {
-      const catalog = await getAllProducts();
-      const hiddenIds = new Set(
-        catalog.filter((p) => isCategoryHidden(p.category)).map((p) => p.id),
+    const pricing = await priceLinesFromCatalog(items);
+    if ("unavailable" in pricing) {
+      return NextResponse.json(
+        {
+          error: `Sorry, these items are currently unavailable: ${pricing.unavailable.join(", ")}. Please remove them from your cart.`,
+        },
+        { status: 400 },
       );
-      const blocked = items.filter((line) => hiddenIds.has(line.productId));
-      if (blocked.length > 0) {
-        const names = blocked
-          .map((line) => line.productName?.trim() || line.productId)
-          .join(", ");
-        return NextResponse.json(
-          {
-            error: `Sorry, these items are currently unavailable: ${names}. Please remove them from your cart.`,
-          },
-          { status: 400 },
-        );
-      }
     }
+    const pricedItems = pricing.lines;
 
     if (shippingMethod !== "standard" && shippingMethod !== "express") {
       return NextResponse.json(
@@ -216,13 +255,20 @@ export async function POST(request: Request) {
       receiptEmail = resolvedGuestEmail || undefined;
     }
 
-    const { total } = computeCheckoutTotalEur(items, shippingMethod);
+    // Totals come only from catalog prices. The client's `amount` is just a
+    // cross-check: a mismatch means a price changed since the item was added
+    // (or the request was tampered with) — ask for a refresh rather than
+    // charging something the shopper didn't see.
+    const { total } = computeCheckoutTotalEur(pricedItems, shippingMethod);
     const expectedCents = eurToStripeCents(total);
 
     if (amount !== expectedCents) {
       return NextResponse.json(
-        { error: "Amount does not match cart total." },
-        { status: 400 },
+        {
+          error:
+            "Some prices in your cart have changed. Please refresh the page and review your cart before paying.",
+        },
+        { status: 409 },
       );
     }
 
@@ -262,7 +308,7 @@ export async function POST(request: Request) {
 
     const orderId = order.id as string;
 
-    const printifyCol = (line: (typeof items)[number]) =>
+    const printifyCol = (line: (typeof pricedItems)[number]) =>
       line.printifyVariantId == null ||
       (typeof line.printifyVariantId === "string" &&
         !line.printifyVariantId.trim())
@@ -270,7 +316,7 @@ export async function POST(request: Request) {
         : String(line.printifyVariantId).trim();
 
     const orderItemRows = (includeExtras: boolean) =>
-      items.map((line) => {
+      pricedItems.map((line) => {
         const row: Record<string, unknown> = {
           order_id: orderId,
           product_id: line.productId,
@@ -328,8 +374,10 @@ export async function POST(request: Request) {
     }
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount,
-      currency: currency.toLowerCase(),
+      amount: expectedCents,
+      // Always EUR: catalog prices are euros. Never take the currency from
+      // the request, or the same number could be charged in a cheaper one.
+      currency: "eur",
       automatic_payment_methods: { enabled: true },
       ...(receiptEmail ? { receipt_email: receiptEmail } : {}),
       metadata,
