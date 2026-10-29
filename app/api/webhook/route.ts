@@ -101,7 +101,20 @@ export async function POST(request: Request) {
         if (error) {
           console.error("[stripe webhook] order update failed:", error);
         } else {
-          await submitPaidOrderToPrintify(admin, orderId);
+          // A test-mode payment moved no real money (anyone can pay with
+          // Stripe's public 4242 test card), so it must never become a real
+          // Printify order that we pay to print and ship. Set
+          // PRINTIFY_ALLOW_TEST_ORDERS=true only while deliberately testing
+          // fulfillment end to end, then remove it.
+          const allowTestOrders = process.env.PRINTIFY_ALLOW_TEST_ORDERS === "true";
+          if (event.livemode || allowTestOrders) {
+            await submitPaidOrderToPrintify(admin, orderId);
+          } else {
+            console.warn(
+              "[stripe webhook] test-mode payment; not sending order to Printify:",
+              orderId,
+            );
+          }
           await notifyOrderConfirmationEmail(orderId);
         }
       } catch (e) {
