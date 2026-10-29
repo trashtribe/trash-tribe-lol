@@ -1,11 +1,17 @@
 import Link from "next/link";
 
-const CATEGORY_LINKS = [
+import { isCategoryHidden } from "@/lib/categories";
+
+const ALL_CATEGORY_LINKS = [
   { href: "/shop?category=TOPS", label: "Tops" },
   { href: "/shop?category=ACCESSORIES", label: "Accessories" },
   { href: "/shop?category=UNDERWEAR", label: "Underwear" },
   { href: "/shop?category=POSTERS", label: "Posters" },
 ] as const;
+
+const CATEGORY_LINKS = ALL_CATEGORY_LINKS.filter(
+  (link) => !isCategoryHidden(new URLSearchParams(link.href.split("?")[1]).get("category") ?? ""),
+);
 
 /**
  * Closing category links right before the footer — bigger type than the

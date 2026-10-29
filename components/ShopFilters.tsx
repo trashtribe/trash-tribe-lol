@@ -2,7 +2,9 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
-const CATEGORY_FILTERS = [
+import { isCategoryHidden } from "@/lib/categories";
+
+const ALL_CATEGORY_FILTERS = [
   { value: "ALL", label: "ALL" },
   { value: "TOPS", label: "TOPS" },
   { value: "ACCESSORIES", label: "ACCESSORIES" },
@@ -10,7 +12,9 @@ const CATEGORY_FILTERS = [
   { value: "POSTERS", label: "POSTERS" },
 ] as const;
 
-export type ShopCategoryFilter = (typeof CATEGORY_FILTERS)[number]["value"];
+export type ShopCategoryFilter = (typeof ALL_CATEGORY_FILTERS)[number]["value"];
+
+const CATEGORY_FILTERS = ALL_CATEGORY_FILTERS.filter((f) => !isCategoryHidden(f.value));
 
 /** Only categories with a real subcategory split get a second row of pills. */
 const SUBCATEGORY_FILTERS: Partial<Record<ShopCategoryFilter, { value: string; label: string }[]>> = {

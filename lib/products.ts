@@ -1,5 +1,6 @@
 import { cache } from "react";
 
+import { isCategoryHidden } from "@/lib/categories";
 import {
   fetchPrintifyProducts,
   variantRowIsSellable,
@@ -536,7 +537,7 @@ function isUnstableDraft(p: PrintifyProduct): boolean {
   return minutesSinceEdit < STABILITY_MINUTES;
 }
 
-async function loadProducts(): Promise<StoreProduct[]> {
+async function loadAllProducts(): Promise<StoreProduct[]> {
   const raw = await fetchPrintifyProducts();
   const visible = raw.filter((item) => item.visible !== false && !isUnstableDraft(item));
   const mapped = visible.map(mapPrintifyProduct);
@@ -553,8 +554,16 @@ async function loadProducts(): Promise<StoreProduct[]> {
   });
 }
 
-/** Cached per request; dedupes repeated calls in RSC trees and metadata. */
-export const getProducts = cache(loadProducts);
+/** Every visible Printify product, including hidden categories. Only for
+ * checks that must still recognise those products (e.g. checkout). */
+export const getAllProducts = cache(loadAllProducts);
+
+/** Cached per request; dedupes repeated calls in RSC trees and metadata.
+ * Excludes HIDDEN_CATEGORIES (lib/categories.ts). */
+export const getProducts = cache(async (): Promise<StoreProduct[]> => {
+  const products = await getAllProducts();
+  return products.filter((p) => !isCategoryHidden(p.category));
+});
 
 export async function getProductBySlug(slug: string): Promise<StoreProduct | null> {
   const products = await getProducts();
@@ -595,7 +604,9 @@ export type NavPreviewEntry = {
 
 export type NavPreviewData = Partial<Record<StoreCategory, NavPreviewEntry>>;
 
-const ALL_CATEGORIES: StoreCategory[] = ["TOPS", "UNDERWEAR", "ACCESSORIES", "POSTERS"];
+const ALL_CATEGORIES: StoreCategory[] = (
+  ["TOPS", "UNDERWEAR", "ACCESSORIES", "POSTERS"] as StoreCategory[]
+).filter((c) => !isCategoryHidden(c));
 
 /**
  * Small per-category preview (subcategory links, where the category has

@@ -5,6 +5,8 @@ import {
   eurToStripeCents,
   type CheckoutLineInput,
 } from "@/lib/checkout-totals";
+import { HIDDEN_CATEGORIES, isCategoryHidden } from "@/lib/categories";
+import { getAllProducts } from "@/lib/products";
 import { getStripe } from "@/lib/stripe-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createSupabaseUserClient } from "@/lib/supabase-route";
@@ -152,6 +154,27 @@ export async function POST(request: Request) {
             { status: 400 },
           );
         }
+      }
+    }
+
+    // Products from a temporarily hidden category may still sit in someone's
+    // cart from before it was hidden — don't let them through to payment.
+    if (HIDDEN_CATEGORIES.length > 0) {
+      const catalog = await getAllProducts();
+      const hiddenIds = new Set(
+        catalog.filter((p) => isCategoryHidden(p.category)).map((p) => p.id),
+      );
+      const blocked = items.filter((line) => hiddenIds.has(line.productId));
+      if (blocked.length > 0) {
+        const names = blocked
+          .map((line) => line.productName?.trim() || line.productId)
+          .join(", ");
+        return NextResponse.json(
+          {
+            error: `Sorry, these items are currently unavailable: ${names}. Please remove them from your cart.`,
+          },
+          { status: 400 },
+        );
       }
     }
 

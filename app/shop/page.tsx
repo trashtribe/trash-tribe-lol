@@ -5,13 +5,14 @@ import { Header } from "@/components/Header";
 import { ShopFilters, type ShopCategoryFilter } from "@/components/ShopFilters";
 import { ShopProductCard } from "@/components/ShopProductCard";
 import { SignupPopup } from "@/components/SignupPopup";
+import { isCategoryHidden } from "@/lib/categories";
 import type { StoreProduct } from "@/lib/products";
 import { getProducts } from "@/lib/products";
 
 export const metadata: Metadata = {
   title: "Shop",
   description:
-    "Browse t-shirts, underwear, accessories, and posters from trashtribe. Independent print-on-demand merch with bold graphics.",
+    "Browse t-shirts, accessories, and posters from trashtribe. Independent print-on-demand merch with bold graphics.",
   alternates: { canonical: "/shop" },
 };
 
@@ -29,7 +30,7 @@ const VALID_SUBCATEGORIES = [
 function resolveActiveFilter(categoryParam: string | undefined): ShopCategoryFilter {
   const key = categoryParam?.toUpperCase();
   if (!key || key === "ALL") return "ALL";
-  if ((VALID_CATEGORIES as readonly string[]).includes(key)) {
+  if ((VALID_CATEGORIES as readonly string[]).includes(key) && !isCategoryHidden(key)) {
     return key as ShopCategoryFilter;
   }
   return "ALL";

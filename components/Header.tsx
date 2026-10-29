@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { isCategoryHidden } from "@/lib/categories";
 import { CATEGORY_LABEL, type NavPreviewData, type StoreCategory } from "@/lib/products";
 import { useCart } from "./CartProvider";
 import { useSearchModal } from "./SearchModalContext";
@@ -19,7 +20,7 @@ type NavItem = {
   hasSubcategories?: boolean;
 };
 
-const nav: NavItem[] = [
+const allNav: NavItem[] = [
   { href: "/shop", label: "Shop All" },
   {
     href: "/shop?category=TOPS",
@@ -41,6 +42,8 @@ const nav: NavItem[] = [
   },
   { href: "/shop?category=POSTERS", label: "Posters", flyoutCategory: "POSTERS" },
 ];
+
+const nav = allNav.filter((item) => !item.flyoutCategory || !isCategoryHidden(item.flyoutCategory));
 
 /** Kept apart from the shop categories — sits next to the account/search icons instead. */
 const utilityNav: NavItem[] = [

@@ -1,10 +1,11 @@
 import Link from "next/link";
 
+import { isCategoryHidden } from "@/lib/categories";
 import { DISCORD_INVITE_URL } from "@/lib/site";
 
 import { NewsletterForm } from "./NewsletterForm";
 
-const quickLinks = [
+const allQuickLinks = [
   { href: "/shop", label: "Shop All" },
   { href: "/shop?category=TOPS", label: "Tops" },
   { href: "/shop?category=ACCESSORIES", label: "Accessories" },
@@ -13,6 +14,13 @@ const quickLinks = [
   { href: "mailto:hello@trashtribe.lol", label: "hello@trashtribe.lol" },
   { href: DISCORD_INVITE_URL, label: "Discord community & support" },
 ] as const;
+
+const quickLinks = allQuickLinks.filter((link) => {
+  const category = link.href.startsWith("/shop?")
+    ? new URLSearchParams(link.href.split("?")[1]).get("category")
+    : null;
+  return !category || !isCategoryHidden(category);
+});
 
 function isExternal(href: string) {
   return href.startsWith("http://") || href.startsWith("https://");
