@@ -324,7 +324,7 @@ export function LoginPageClient({
               type="password"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={inputClass}
@@ -343,7 +343,7 @@ export function LoginPageClient({
               type="password"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className={inputClass}

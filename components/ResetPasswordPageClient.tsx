@@ -126,8 +126,8 @@ export function ResetPasswordPageClient() {
       setFormError("Passwords do not match.");
       return;
     }
-    if (password.length < 6) {
-      setFormError("Use at least 6 characters.");
+    if (password.length < 8) {
+      setFormError("Use at least 8 characters.");
       return;
     }
 
@@ -197,7 +197,7 @@ export function ResetPasswordPageClient() {
               type="password"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={inputClass}
@@ -213,7 +213,7 @@ export function ResetPasswordPageClient() {
               type="password"
               autoComplete="new-password"
               required
-              minLength={6}
+              minLength={8}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               className={inputClass}
