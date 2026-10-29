@@ -21,7 +21,7 @@ export async function generateStaticParams() {
 }
 
 function truncateDescription(text: string, max = 155) {
-  const t = text.trim();
+  const t = text.replace(/\s+/g, " ").trim();
   if (t.length <= max) return t;
   return `${t.slice(0, max - 1).trim()}…`;
 }

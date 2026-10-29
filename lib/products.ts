@@ -75,20 +75,51 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+/** HTML → plain text, keeping paragraph and <br> breaks as newlines so lists
+ * (e.g. "Product features") don't collapse into one run-on paragraph. */
 function stripHtml(html: string): string {
   return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
     .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
+    .split("\n")
+    .map((line) => line.replace(/[ \t]+/g, " ").trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
-/** Decode common double-encoded entities Printify sends when `&` was escaped as `&amp;`. */
-function decodeHtmlEntities(html: string): string {
-  return html
-    .replaceAll("&amp;#39;", "'")
-    .replaceAll("&amp;amp;", "&")
-    .replaceAll("&amp;lt;", "<")
-    .replaceAll("&amp;gt;", ">");
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+};
+
+/**
+ * Decode HTML entities in Printify descriptions. Printify sends them single-
+ * encoded (`&#39;`, `&quot;`) and sometimes double-encoded (`&amp;#39;`), so
+ * decode repeatedly until nothing changes — otherwise shoppers saw literal
+ * "Spain&#39;s" on the product page.
+ */
+function decodeHtmlEntities(text: string): string {
+  const decodeOnce = (value: string) =>
+    value.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, code: string) => {
+      if (code[0] === "#") {
+        const n = code[1].toLowerCase() === "x" ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+        return Number.isFinite(n) ? String.fromCodePoint(n) : match;
+      }
+      return NAMED_ENTITIES[code.toLowerCase()] ?? match;
+    });
+  let previous = text;
+  for (let i = 0; i < 3; i++) {
+    const next = decodeOnce(previous);
+    if (next === previous) break;
+    previous = next;
+  }
+  return previous;
 }
 
 export function formatCents(cents: number): string {

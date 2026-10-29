@@ -211,7 +211,7 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
               ) : null}
               <p className="text-2xl font-bold tt-text-secondary">{priceLabel}</p>
             </div>
-            <p className="mt-6 max-w-xl text-sm leading-relaxed tt-text-on-light sm:text-base">
+            <p className="mt-6 max-w-xl whitespace-pre-line text-sm leading-relaxed tt-text-on-light sm:text-base">
               {product.description}
             </p>
 
