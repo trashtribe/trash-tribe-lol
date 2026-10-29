@@ -1,23 +1,21 @@
 "use client";
 import { useState } from "react";
-import { createBrowserSupabaseClient } from "@/lib/supabase";
+
+import { HoneypotField, honeypotValue } from "@/components/HoneypotField";
+import { subscribeToNewsletter } from "@/lib/newsletter-client";
 
 export function ComingSoonNotifyForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorText, setErrorText] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!email) return;
     setStatus("loading");
-    const supabase = createBrowserSupabaseClient();
-    if (!supabase) {
-      setStatus("error");
-      return;
-    }
-    const { error } = await supabase.from("email_signups").insert([{ email: email.trim() }]);
-    // 23505 = already signed up (unique email); that's still a success for the visitor.
-    if (error && error.code !== "23505") {
+    const result = await subscribeToNewsletter(email, honeypotValue(e.currentTarget));
+    if (!result.ok) {
+      setErrorText(result.error);
       setStatus("error");
     } else {
       setStatus("success");
@@ -27,9 +25,10 @@ export function ComingSoonNotifyForm() {
 
   return (
     <form
-      className="mt-8 flex w-full max-w-sm flex-col gap-3 sm:flex-row sm:items-stretch"
+      className="relative mt-8 flex w-full max-w-sm flex-col gap-3 sm:flex-row sm:items-stretch"
       onSubmit={handleSubmit}
     >
+      <HoneypotField />
       <label htmlFor="coming-soon-email" className="sr-only">Email</label>
       <input
         id="coming-soon-email"
@@ -50,7 +49,7 @@ export function ComingSoonNotifyForm() {
         {status === "loading" ? "..." : status === "success" ? "✓ DONE" : "NOTIFY ME"}
       </button>
       {status === "error" && (
-        <p className="text-xs text-red-500">Something went wrong. Try again.</p>
+        <p className="text-xs text-red-500">{errorText}</p>
       )}
     </form>
   );

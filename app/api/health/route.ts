@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { pruneRateLimitEvents } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
 /**
@@ -7,7 +8,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase-admin";
  * vercel.json. Its main job is to make a real request against Supabase so
  * the free-tier project never sits idle long enough to auto-pause — the
  * "have to reactivate Supabase" issue hit after this project sat untouched
- * for a month (jul 2026).
+ * for a month (jul 2026). Also clears day-old rate-limit rows.
  */
 export async function GET() {
   try {
@@ -18,6 +19,8 @@ export async function GET() {
       console.error("[health] Supabase ping failed:", error.message);
       return NextResponse.json({ ok: false, supabase: false }, { status: 500 });
     }
+
+    await pruneRateLimitEvents();
 
     return NextResponse.json({ ok: true, supabase: true, checkedAt: new Date().toISOString() });
   } catch (e) {

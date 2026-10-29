@@ -2,6 +2,8 @@
 
 import { useCallback, useState } from "react";
 
+import { HONEYPOT_FIELD, HoneypotField, honeypotValue } from "@/components/HoneypotField";
+
 const inputClass =
   "min-h-[44px] w-full border tt-border-light bg-background px-4 text-[13px] tt-text-on-light placeholder:text-[color:color-mix(in_srgb,var(--tt-text-on-light)_45%,transparent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--tt-accent-secondary)]";
 
@@ -43,6 +45,7 @@ export function ContactForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const honeypot = honeypotValue(e.currentTarget);
     setSubmitError(null);
     const next: FieldErrors = {};
     if (!name.trim()) next.name = "Name is required.";
@@ -67,6 +70,7 @@ export function ContactForm() {
           email: email.trim(),
           subject,
           message: message.trim(),
+          [HONEYPOT_FIELD]: honeypot,
         }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -113,7 +117,8 @@ export function ContactForm() {
   }
 
   return (
-    <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+    <form className="relative flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+      <HoneypotField />
       <div className="flex flex-col gap-2">
         <label htmlFor="contact-name" className={labelClass}>
           Name
@@ -122,6 +127,7 @@ export function ContactForm() {
           id="contact-name"
           name="name"
           type="text"
+          maxLength={100}
           autoComplete="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -194,6 +200,7 @@ export function ContactForm() {
           id="contact-message"
           name="message"
           rows={6}
+          maxLength={5000}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           className={`${inputClass} min-h-[140px] resize-y py-3`}

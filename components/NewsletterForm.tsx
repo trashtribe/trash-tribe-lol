@@ -1,25 +1,26 @@
 "use client";
 import { useState } from "react";
-import { createBrowserSupabaseClient } from "@/lib/supabase";
+
+import { HoneypotField, honeypotValue } from "@/components/HoneypotField";
+import { subscribeToNewsletter } from "@/lib/newsletter-client";
 
 export function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorText, setErrorText] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!email) return;
     setStatus("loading");
-    const supabase = createBrowserSupabaseClient();
-    if (!supabase) { setStatus("error"); return; }
-    const { error } = await supabase.from("email_signups").insert([{ email: email.trim() }]);
-    // 23505 = already signed up (unique email); that's still a success for the visitor.
-    if (error && error.code !== "23505") { setStatus("error"); }
+    const result = await subscribeToNewsletter(email, honeypotValue(e.currentTarget));
+    if (!result.ok) { setErrorText(result.error); setStatus("error"); }
     else { setStatus("success"); setEmail(""); }
   }
 
   return (
-    <form className="mt-6 flex max-w-md flex-col gap-3 sm:flex-row" onSubmit={handleSubmit}>
+    <form className="relative mt-6 flex max-w-md flex-col gap-3 sm:flex-row" onSubmit={handleSubmit}>
+      <HoneypotField />
       <label htmlFor="footer-email" className="sr-only">Email</label>
       <input
         id="footer-email"
@@ -39,7 +40,7 @@ export function NewsletterForm() {
       >
         {status === "loading" ? "..." : status === "success" ? "✓ JOINED" : "Join"}
       </button>
-      {status === "error" && <p className="text-xs text-red-500">Something went wrong. Try again.</p>}
+      {status === "error" && <p className="text-xs text-red-500">{errorText}</p>}
     </form>
   );
 }
