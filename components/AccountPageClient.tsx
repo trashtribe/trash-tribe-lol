@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "@/components/AuthProvider";
 import { formatEuro } from "@/lib/format-currency";
+import { DISCORD_INVITE_URL } from "@/lib/site";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
 function formatJoined(iso: string | undefined) {
@@ -201,7 +202,13 @@ export function AccountPageClient() {
             everything else just to sign out. */}
         <button
           type="button"
-          onClick={() => void signOut()}
+          onClick={async () => {
+            await signOut();
+            // Full page load (not router.replace) so the Supabase client
+            // starts fresh, without a session left in memory.
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+            window.location.assign("/login");
+          }}
           className="border border-black bg-black px-5 py-2.5 text-[11px] font-bold tracking-[0.2em] text-[#b8ff06] uppercase transition-opacity hover:opacity-90"
         >
           Sign out
@@ -236,7 +243,7 @@ export function AccountPageClient() {
           </Link>
 
           <a
-            href="https://discord.gg/M47yFsgz8"
+            href={DISCORD_INVITE_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-between border border-black/10 bg-white px-6 py-4 text-sm font-bold tracking-[0.1em] tt-text-on-light uppercase transition-colors hover:border-black/30"

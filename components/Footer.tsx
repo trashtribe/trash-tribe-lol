@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { DISCORD_INVITE_URL } from "@/lib/site";
+
 import { NewsletterForm } from "./NewsletterForm";
 
 const quickLinks = [
@@ -9,7 +11,7 @@ const quickLinks = [
   { href: "/shop?category=UNDERWEAR", label: "Underwear" },
   { href: "/about", label: "About" },
   { href: "mailto:hello@trashtribe.lol", label: "hello@trashtribe.lol" },
-  { href: "https://discord.gg/M47yFsgz8", label: "Discord community & support" },
+  { href: DISCORD_INVITE_URL, label: "Discord community & support" },
 ] as const;
 
 function isExternal(href: string) {

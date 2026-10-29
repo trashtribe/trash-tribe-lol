@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ContactForm } from "@/components/ContactForm";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { DISCORD_INVITE_URL } from "@/lib/site";
 
 function InstagramIcon() {
   return (
@@ -79,7 +80,7 @@ export default function ContactPage() {
                   Pinterest
                 </a>
                 <a
-                  href="https://discord.gg/M47yFsgz8"
+                  href={DISCORD_INVITE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.14em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary"

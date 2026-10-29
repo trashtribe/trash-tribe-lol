@@ -2,8 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { formatEuro } from "@/lib/format-currency";
 
-const LOGO_URL =
-  "https://raw.githubusercontent.com/raverbunny01/trash-tribe-lol/main/public/ttt.png";
+// Served from our own domain, not raw.githubusercontent.com: the GitHub URL
+// broke (blank logo in every email) whenever the repo was private.
+const LOGO_URL = "https://www.trashtribe.lol/ttt.png";
 
 type OrderRow = {
   total: number | string;

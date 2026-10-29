@@ -17,6 +17,22 @@ import { createBrowserSupabaseClient } from "@/lib/supabase";
 /** If `getSession()` never settles (seen with some guest browsers), still finish loading UI. */
 const AUTH_SESSION_BOOTSTRAP_MS = 3500;
 
+/** How long to wait for Supabase's signOut before clearing the session ourselves. */
+const SIGN_OUT_TIMEOUT_MS = 3000;
+
+/** Remove Supabase's persisted session (localStorage key `sb-<project>-auth-token`). */
+function clearStoredSupabaseSession() {
+  try {
+    for (const key of Object.keys(window.localStorage)) {
+      if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
+        window.localStorage.removeItem(key);
+      }
+    }
+  } catch {
+    /* storage unavailable (private mode etc.) — nothing persisted to clear */
+  }
+}
+
 type AuthResult = { error?: string };
 
 type AuthContextValue = {
@@ -134,11 +150,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    // supabase.auth.signOut() waits on the same internal lock as getSession(),
+    // which can hang (see AUTH_SESSION_BOOTSTRAP_MS), and on a server error it
+    // returns { error } without clearing the local session. Either way the
+    // button did nothing — so cap the wait and always clear locally after.
     try {
-      await auth.signOut();
-    } catch {
-      /* still clear local session via listener */
+      const outcome = await Promise.race([
+        auth.signOut(),
+        new Promise<"timeout">((resolve) =>
+          setTimeout(() => resolve("timeout"), SIGN_OUT_TIMEOUT_MS),
+        ),
+      ]);
+      if (outcome === "timeout") {
+        console.warn("[AuthProvider] signOut timed out; clearing local session.");
+      } else if (outcome.error) {
+        console.warn("[AuthProvider] signOut error; clearing local session:", outcome.error);
+      }
+    } catch (err) {
+      console.warn("[AuthProvider] signOut failed; clearing local session:", err);
     }
+    clearStoredSupabaseSession();
+    setUser(null);
+    setAccessToken(null);
   }, []);
 
   const value = useMemo<AuthContextValue>(

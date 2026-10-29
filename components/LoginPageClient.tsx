@@ -83,7 +83,7 @@ export function LoginPageClient({
     setPassword("");
     setConfirmPassword("");
     setFormInfo(
-      "Check your email to confirm your account, if required by your project settings.",
+      "Almost there! We've sent you an email — click the link inside to confirm your account, then sign in.",
     );
   };
 
@@ -98,9 +98,8 @@ export function LoginPageClient({
       setResetPending(false);
 
       if (result.error) {
-        setResetError(
-          `${result.error.displayMessage} — redirect: ${result.redirectTo}`,
-        );
+        console.error("[LoginPageClient] password reset failed:", result.error, result.redirectTo);
+        setResetError(result.error.message);
         return;
       }
 
