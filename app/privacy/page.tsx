@@ -23,7 +23,7 @@ export default function PrivacyPage() {
 
       <LegalHeading>Who is responsible for your data</LegalHeading>
       <p>
-        The data controller is {sellerIdentity(LEGAL_ENTITY)}. For anything related to your data,
+        The data controller is {sellerIdentity(LEGAL_ENTITY)}, which runs the trashtribe brand. For anything related to your data,
         email{" "}
         <a href={`mailto:${CONTACT_EMAIL}`} className={linkClass}>
           {CONTACT_EMAIL}
@@ -118,7 +118,8 @@ export default function PrivacyPage() {
           {CONTACT_EMAIL}
         </a>{" "}
         and we&apos;ll reply within one month. You also have the right to complain to the data
-        protection authority in the EU country where you live or work.
+        protection authority in the EU country where you live or work, or to our lead authority,
+        the Estonian Data Protection Inspectorate (Andmekaitse Inspektsioon).
       </p>
 
       <LegalHeading>Changes</LegalHeading>

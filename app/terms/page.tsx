@@ -23,7 +23,7 @@ export default function TermsPage() {
 
       <LegalHeading>Who we are</LegalHeading>
       <p>
-        trashtribe.lol is run by {sellerIdentity(LEGAL_ENTITY)}. You can reach us at{" "}
+        trashtribe is a brand of {sellerIdentity(LEGAL_ENTITY)}. You can reach us at{" "}
         <a href={`mailto:${CONTACT_EMAIL}`} className={linkClass}>
           {CONTACT_EMAIL}
         </a>
@@ -128,8 +128,9 @@ export default function TermsPage() {
 
       <LegalHeading>Governing law</LegalHeading>
       <p>
-        These terms are governed by the law of the EU member state where trashtribe is
-        established. If you are a consumer, you also keep the protection of the mandatory laws of
+        These terms are governed by the law of{" "}
+        {LEGAL_ENTITY.country || "the EU member state where trashtribe is established"}. If you
+        are a consumer, you also keep the protection of the mandatory laws of
         the country where you live, and you can bring a claim in the courts there.
       </p>
 

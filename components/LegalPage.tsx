@@ -43,9 +43,15 @@ export function LegalList({ children }: { children: ReactNode }) {
   return <ul className="ml-5 flex list-disc flex-col gap-2">{children}</ul>;
 }
 
-/** "trashtribe (Legal Name), Address, Country" — whatever parts are filled in. */
-export function sellerIdentity(entity: { name: string; address: string; country: string }) {
+/** "deeptribe OÜ (registry code …), Address, Country" — whatever parts are filled in. */
+export function sellerIdentity(entity: {
+  name: string;
+  registryCode?: string;
+  address: string;
+  country: string;
+}) {
   const parts = [entity.address, entity.country].filter(Boolean).join(", ");
-  const who = entity.name ? `trashtribe (${entity.name})` : "trashtribe";
+  let who = entity.name || "trashtribe";
+  if (entity.name && entity.registryCode) who += ` (registry code ${entity.registryCode})`;
   return parts ? `${who}, ${parts}` : who;
 }

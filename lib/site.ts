@@ -13,11 +13,13 @@ export const CONTACT_EMAIL = "hello@trashtribe.lol";
  */
 export const LEGAL_ENTITY = {
   /** Registered name of the person or company behind trashtribe. */
-  name: "",
+  name: "deeptribe OÜ",
+  /** Estonian Business Register (e-Äriregister) code. */
+  registryCode: "17130573",
   /** Full postal address, one line. Also where returns are sent. */
   address: "",
-  /** EU member state where trashtribe is established, e.g. "Ireland". */
-  country: "",
+  /** EU member state where trashtribe is established. */
+  country: "Estonia",
 };
 
 /** Date the legal pages were last revised. */
