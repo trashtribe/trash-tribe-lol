@@ -18,6 +18,11 @@ drop policy if exists "orders_update_own" on public.orders;
 drop policy if exists "order_items_insert_own" on public.order_items;
 drop policy if exists "order_items_delete_own" on public.order_items;
 
+-- The live database didn't use 001's policy names: these were created by
+-- hand in the dashboard and do the same thing (found via pg_policies).
+drop policy if exists "users can insert own orders" on public.orders;
+drop policy if exists "users can insert order items" on public.order_items;
+
 -- Make sure RLS is still on (no policy = no access for anon/authenticated).
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
