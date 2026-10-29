@@ -978,6 +978,24 @@ function OrderSummaryBlock({
           ) : null}
         </>
       )}
+
+      {/* EU consumer law: terms, return conditions and privacy info must be
+          available before the customer commits to pay. */}
+      <p className="mt-4 text-center text-[11px] leading-relaxed text-black/50">
+        By placing your order you agree to our{" "}
+        <Link href="/terms" target="_blank" className="underline underline-offset-4">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" target="_blank" className="underline underline-offset-4">
+          Privacy Policy
+        </Link>
+        . 14-day returns —{" "}
+        <Link href="/shipping-returns" target="_blank" className="underline underline-offset-4">
+          see details
+        </Link>
+        .
+      </p>
     </div>
   );
 }

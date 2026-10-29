@@ -22,6 +22,12 @@ const quickLinks = allQuickLinks.filter((link) => {
   return !category || !isCategoryHidden(category);
 });
 
+const legalLinks = [
+  { href: "/shipping-returns", label: "Shipping & Returns" },
+  { href: "/terms", label: "Terms & Conditions" },
+  { href: "/privacy", label: "Privacy Policy" },
+] as const;
+
 function isExternal(href: string) {
   return href.startsWith("http://") || href.startsWith("https://");
 }
@@ -64,10 +70,21 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto mt-14 max-w-[1600px] border-t tt-border-dark pt-8">
+      <div className="mx-auto mt-14 flex max-w-[1600px] flex-col items-center gap-4 border-t tt-border-dark pt-8 sm:flex-row sm:justify-between">
         <p className="text-center text-[10px] tracking-[0.12em] tt-text-on-dark sm:text-left">
           © {new Date().getFullYear()} trashtribe. All rights reserved.
         </p>
+        <nav aria-label="Legal">
+          <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[10px] tracking-[0.12em]">
+            {legalLinks.map((item) => (
+              <li key={item.href}>
+                <Link href={item.href} className="tt-text-on-dark transition-colors hover:tt-text-secondary">
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
     </footer>
   );
