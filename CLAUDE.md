@@ -18,7 +18,7 @@ Actualizado 2026-10-30. Es una foto del estado: verificar contra el código ante
 - Al reactivar Underwear, volver a añadir en `/shipping-returns` y `/terms` que la ropa interior desprecintada no se devuelve por higiene (se quitó al acortar los textos legales).
 - Stripe sigue en modo test en producción a propósito hasta el lanzamiento. Los pagos test nunca se mandan a Printify (`app/api/webhook/route.ts`), salvo con `PRINTIFY_ALLOW_TEST_ORDERS=true`.
 - Seguridad: el checkout recalcula precios desde el catálogo; RLS de `orders`/`order_items` solo lectura (migración 015); límite de envíos por IP en contacto y newsletter (`lib/rate-limit.ts`, migración 016); cabeceras en `next.config.ts`.
-- Textos legales cortos y sin nombrar proveedores (preferencia de la dueña). Solo la línea de identidad de deeptribe OÜ (`LEGAL_ENTITY` en `lib/site.ts`) es obligatoria. Devoluciones por soporte (email o Discord), sin dirección publicada.
+- Textos legales cortos y sin nombrar proveedores (preferencia expresa del equipo). Solo la línea de identidad de deeptribe OÜ (`LEGAL_ENTITY` en `lib/site.ts`) es obligatoria. Devoluciones por soporte (email o Discord), sin dirección publicada.
 - Analíticas: Vercel Web Analytics sin cookies (plan Hobby), sin banner de cookies.
 - Migraciones: se aplican a mano en el SQL Editor de Supabase. Las políticas reales de la base pueden tener nombres distintos a los del repo; comprobar con `pg_policies`.
 - Imágenes: servir solo WebP y montar la imagen de hover solo al pasar el cursor, para no agotar las transformaciones de Vercel Image Optimization (alerta del 75% de 5.000).
