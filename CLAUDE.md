@@ -21,6 +21,7 @@ Actualizado 2026-10-30. Es una foto del estado: verificar contra el código ante
 - Textos legales cortos y sin nombrar proveedores (preferencia expresa del equipo). Solo la línea de identidad de deeptribe OÜ (`LEGAL_ENTITY` en `lib/site.ts`) es obligatoria. Devoluciones por soporte (email o Discord), sin dirección publicada.
 - Analíticas: Vercel Web Analytics sin cookies (plan Hobby), sin banner de cookies.
 - Migraciones: se aplican a mano en el SQL Editor de Supabase. Las políticas reales de la base pueden tener nombres distintos a los del repo; comprobar con `pg_policies`.
+- Descripciones de producto (Printify): tono corto con humor seco, ficha técnica real (modelo, fit, nº de tallas y colores activos) y cierre en español. Evitar frases cursis. Verificar cifras contra las variantes activas antes de escribirlas.
 - Imágenes: servir solo WebP y montar la imagen de hover solo al pasar el cursor, para no agotar las transformaciones de Vercel Image Optimization (alerta del 75% de 5.000).
 
 ## Pendiente
@@ -35,7 +36,6 @@ Seguridad:
 - Vercel: app de autenticación de respaldo; borrar `PREVIEW_ACCESS_KEY`.
 
 Producto:
-- 11 productos sin descripción en Printify (la web usa un texto genérico).
 - Etiqueta de cuello en 3 camisetas; revisión de diseño con la diseñadora.
 - Underwear: resolver los problemas y reactivar.
 - Prodigi: probar la API, decidir productos, catálogo local ligado a `getProducts()` y envío del pedido tras el pago.
