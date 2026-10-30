@@ -21,6 +21,7 @@ Actualizado 2026-10-31. Es una foto del estado: verificar contra el código ante
 - Accesos revisados (2026-10-31): solo una persona en Stripe, Supabase, Vercel y GitHub; en Printify además la diseñadora.
 - Compra de prueba completa hecha en modo test (2026-10-31). Falta probar un cobro real con Stripe en live.
 - Textos legales cortos y sin nombrar proveedores (preferencia expresa del equipo). Solo la línea de identidad de deeptribe OÜ (`LEGAL_ENTITY` en `lib/site.ts`) es obligatoria. Devoluciones por soporte (email o Discord), sin dirección publicada.
+- Uptime: UptimeRobot (avisa en Discord #uptime-alerts) más cron diario a `/api/health`.
 - Analíticas: Vercel Web Analytics sin cookies (plan Hobby), sin banner de cookies.
 - Migraciones: se aplican a mano en el SQL Editor de Supabase. Las políticas reales de la base pueden tener nombres distintos a los del repo; comprobar con `pg_policies`.
 - Descripciones de producto (Printify): tono corto con humor seco, ficha técnica real (modelo, fit, nº de tallas y colores activos) y cierre en español. Evitar frases cursis. Verificar cifras contra las variantes activas antes de escribirlas.
@@ -41,8 +42,7 @@ Producto:
 - Prodigi: probar la API, decidir productos, catálogo local ligado a `getProducts()` y envío del pedido tras el pago.
 
 Técnico:
-- Migraciones con Supabase CLI (requiere `supabase login`), tests Playwright del checkout, Sentry, alertas de uptime, rotación de secretos, Node 20 a 22.
+- Migraciones con Supabase CLI (requiere `supabase login`), tests Playwright del checkout, Sentry, rotación de secretos, Node 20 a 22.
 
 Otros:
-- Notion no refleja el trabajo de 2026-10-29/30 (SEO, CI, seguridad, textos legales, analíticas).
 - Ordenar archivos sin seguimiento en la raíz (imágenes `.png`, `about-us-hero.webp`, `hero-join-the-tribe.webp`, `cart-empty.svg`).
