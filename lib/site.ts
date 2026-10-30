@@ -24,4 +24,4 @@ export const LEGAL_ENTITY = {
 };
 
 /** Date the legal pages were last revised. */
-export const LEGAL_LAST_UPDATED = "30 October 2026";
+export const LEGAL_LAST_UPDATED = "31 October 2026";

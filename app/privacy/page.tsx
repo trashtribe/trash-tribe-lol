@@ -40,15 +40,16 @@ export default function PrivacyPage() {
 
       <LegalHeading>Who we share it with</LegalHeading>
       <p>
-        Only the services that run the shop for us — payments, printing and delivery, hosting and
-        email — and only what each one needs to do its job.
+        Only the services that run the shop for us — payments, printing and delivery, hosting, error
+        monitoring and email — and only what each one needs to do its job.
       </p>
 
       <LegalHeading>Cookies and analytics</LegalHeading>
       <p>
         No advertising or tracking cookies. We count visits with privacy-friendly analytics that
         don&apos;t use cookies or identify you. Your browser stores your cart, wishlist and login
-        so the shop works.
+        so the shop works. If something breaks, an EU-hosted error monitoring service gets a
+        technical report (page, browser, device) with no personal data, kept for 30 days.
       </p>
 
       <LegalHeading>How long we keep it</LegalHeading>
