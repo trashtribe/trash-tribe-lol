@@ -21,6 +21,8 @@ Actualizado 2026-10-31. Es una foto del estado: verificar contra el código ante
 - Accesos revisados (2026-10-31): solo una persona en Stripe, Supabase, Vercel y GitHub; en Printify además la diseñadora.
 - Compra de prueba completa hecha en modo test (2026-10-31). Falta probar un cobro real con Stripe en live.
 - Textos legales cortos y sin nombrar proveedores (preferencia expresa del equipo). Solo la línea de identidad de deeptribe OÜ (`LEGAL_ENTITY` en `lib/site.ts`) es obligatoria. Devoluciones por soporte (email o Discord), sin dirección publicada.
+- Tests: Playwright en `e2e/` (`npm run build` y luego `npm run test:e2e`), también en el CI. Nunca crean pedidos: el checkout se prueba hasta el control de precio del servidor.
+- Rotación de claves: guía en `docs/rotacion-de-claves.md`, con registro de fechas.
 - Uptime: UptimeRobot (avisa en Discord #uptime-alerts) más cron diario a `/api/health`.
 - Analíticas: Vercel Web Analytics sin cookies (plan Hobby), sin banner de cookies.
 - Migraciones: se aplican a mano en el SQL Editor de Supabase. Las políticas reales de la base pueden tener nombres distintos a los del repo; comprobar con `pg_policies`.
@@ -42,7 +44,8 @@ Producto:
 - Prodigi: probar la API, decidir productos, catálogo local ligado a `getProducts()` y envío del pedido tras el pago.
 
 Técnico:
-- Migraciones con Supabase CLI (requiere `supabase login`), tests Playwright del checkout, Sentry, rotación de secretos, Node 20 a 22.
+- Migraciones con Supabase CLI (requiere `supabase login`), Sentry (requiere cuenta), autocompletar dirección en el checkout (baja prioridad).
+- Node 22 en el Mac local (el proyecto ya pide 22.x; la máquina tiene 20.9).
 
 Otros:
 - Ordenar archivos sin seguimiento en la raíz (imágenes `.png`, `about-us-hero.webp`, `hero-join-the-tribe.webp`, `cart-empty.svg`).
