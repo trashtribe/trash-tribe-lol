@@ -25,7 +25,7 @@ Actualizado 2026-10-31. Es una foto del estado: verificar contra el código ante
 - Rotación de claves: guía en `docs/rotacion-de-claves.md`, con registro de fechas.
 - Uptime: UptimeRobot (avisa en Discord #uptime-alerts) más cron diario a `/api/health`.
 - Analíticas: Vercel Web Analytics sin cookies (plan Hobby), sin banner de cookies.
-- Migraciones: se aplican a mano en el SQL Editor de Supabase. Las políticas reales de la base pueden tener nombres distintos a los del repo; comprobar con `pg_policies`.
+- Migraciones: Supabase CLI enlazado al proyecto `dzqeaxvekkcrdbcfisgc` (2026-10-31); 001–016 marcadas como aplicadas. Nuevas migraciones: crear el archivo en `supabase/migrations/` y `supabase db push --linked` (probar antes con `--dry-run`). Las políticas reales de la base pueden tener nombres distintos a los del repo; comprobar con `pg_policies`.
 - Descripciones de producto (Printify): tono corto con humor seco, ficha técnica real (modelo, fit, nº de tallas y colores activos) y cierre en español. Evitar frases cursis. Verificar cifras contra las variantes activas antes de escribirlas.
 - El proyecto vive en `~/Developer/trash-tribe-lol` (fuera de iCloud desde 2026-10-30). En `~/Documents`, iCloud creaba copias `… 2.ts` en `.next` que rompían `tsc`.
 - Imágenes: servir solo WebP y montar la imagen de hover solo al pasar el cursor, para no agotar las transformaciones de Vercel Image Optimization (alerta del 75% de 5.000).
@@ -44,7 +44,7 @@ Producto:
 - Prodigi: probar la API, decidir productos, catálogo local ligado a `getProducts()` y envío del pedido tras el pago.
 
 Técnico:
-- Migraciones con Supabase CLI (requiere `supabase login`), Sentry (requiere cuenta), autocompletar dirección en el checkout (baja prioridad).
+- Sentry, autocompletar dirección en el checkout (baja prioridad).
 - Node 22 en el Mac local (el proyecto ya pide 22.x; la máquina tiene 20.9).
 
 Otros:
