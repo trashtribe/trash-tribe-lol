@@ -2,32 +2,27 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Site-wide "Coming soon" gate, ahead of public launch. Everyone gets
- * rewritten to /coming-soon UNLESS they've unlocked it with the shared
- * PREVIEW_ACCESS_KEY — either just now, via `?key=...` in the URL (which
- * sets a cookie so they don't need the key again), or on a previous visit
- * (the cookie is still valid).
+ * Site-wide "Coming soon" gate. When COMING_SOON_ENABLED is true, every page
+ * is rewritten to /coming-soon. No key or env var is needed.
+ *
+ * Optional bypass: if PREVIEW_ACCESS_KEY is set in Vercel, visiting any page
+ * with `?key=...` sets a cookie that skips the gate for 30 days. Without the
+ * env var there is no bypass at all.
  *
  * /api/* is intentionally excluded (see `config.matcher` below) — webhooks
  * (Stripe, Printify) and the checkout flow are server-to-server or already
  * mid-flow, and gating them would silently break payments/fulfillment
  * without anyone visiting a page to notice.
  *
- * If PREVIEW_ACCESS_KEY isn't set, the gate is off — so forgetting to set
- * the env var fails open to the live site, not into a permanent lockout.
- *
  * Named/filed as `proxy.ts`, not `middleware.ts` — this Next.js version
- * (16.2.2) renamed the "middleware" file convention to "proxy"
+ * renamed the "middleware" file convention to "proxy"
  * (node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md).
- * A file named `middleware.ts` still builds (with a deprecation warning),
- * but `proxy.ts` is the convention this version actually documents.
  */
 const COOKIE_NAME = "tt_preview_ok";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 /**
- * Master switch. true = coming soon is active (when PREVIEW_ACCESS_KEY is
- * also set); false = the site is fully open, regardless of the env var.
+ * Master switch. true = coming soon is active; false = the site is fully open.
  * To open or close the site: change this one line and push.
  */
 const COMING_SOON_ENABLED = false;
@@ -38,15 +33,10 @@ export function proxy(request: NextRequest) {
   }
 
   const previewKey = process.env.PREVIEW_ACCESS_KEY?.trim();
-
-  if (!previewKey) {
-    return NextResponse.next();
-  }
-
   const { pathname, searchParams } = request.nextUrl;
   const suppliedKey = searchParams.get("key");
 
-  if (suppliedKey && suppliedKey === previewKey) {
+  if (previewKey && suppliedKey === previewKey) {
     const cleanUrl = request.nextUrl.clone();
     cleanUrl.searchParams.delete("key");
     const response = NextResponse.redirect(cleanUrl);
@@ -60,7 +50,7 @@ export function proxy(request: NextRequest) {
     return response;
   }
 
-  if (request.cookies.get(COOKIE_NAME)?.value === previewKey) {
+  if (previewKey && request.cookies.get(COOKIE_NAME)?.value === previewKey) {
     return NextResponse.next();
   }
 
