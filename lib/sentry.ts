@@ -1,7 +1,8 @@
 import type { BrowserOptions, NodeOptions } from "@sentry/nextjs";
 
 /** Public by design (it only lets the site send events), so it lives in code. */
-export const SENTRY_DSN = "";
+export const SENTRY_DSN =
+  "https://2114b4aed39ec24e859b3bba1ed9e650@o4512347849031680.ingest.de.sentry.io/4512347891368016";
 
 /**
  * Errors only, from production only, with no personal data: no IPs, user

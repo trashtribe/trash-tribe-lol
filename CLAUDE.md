@@ -45,7 +45,8 @@ Producto:
 - Prodigi: probar la API, decidir productos, catálogo local ligado a `getProducts()` y envío del pedido tras el pago.
 
 Técnico:
-- Sentry: pegar el DSN en `SENTRY_DSN` (`lib/sentry.ts`); opcional `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` y `SENTRY_PROJECT` en Vercel para mapas de código legibles. Autocompletar dirección en el checkout (baja prioridad).
+- Autocompletar dirección en el checkout (baja prioridad).
+- Sentry, opcional: `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` y `SENTRY_PROJECT` en Vercel para que los errores del navegador muestren el código legible.
 - Node 22 en el Mac local (el proyecto ya pide 22.x; la máquina tiene 20.9).
 
 Otros:
