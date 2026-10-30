@@ -22,6 +22,7 @@ Actualizado 2026-10-30. Es una foto del estado: verificar contra el código ante
 - Analíticas: Vercel Web Analytics sin cookies (plan Hobby), sin banner de cookies.
 - Migraciones: se aplican a mano en el SQL Editor de Supabase. Las políticas reales de la base pueden tener nombres distintos a los del repo; comprobar con `pg_policies`.
 - Descripciones de producto (Printify): tono corto con humor seco, ficha técnica real (modelo, fit, nº de tallas y colores activos) y cierre en español. Evitar frases cursis. Verificar cifras contra las variantes activas antes de escribirlas.
+- El proyecto vive en `~/Developer/trash-tribe-lol` (fuera de iCloud desde 2026-10-30). En `~/Documents`, iCloud creaba copias `… 2.ts` en `.next` que rompían `tsc`.
 - Imágenes: servir solo WebP y montar la imagen de hover solo al pasar el cursor, para no agotar las transformaciones de Vercel Image Optimization (alerta del 75% de 5.000).
 
 ## Pendiente
@@ -42,7 +43,6 @@ Producto:
 
 Técnico:
 - Migraciones con Supabase CLI (requiere `supabase login`), tests Playwright del checkout, Sentry, alertas de uptime, rotación de secretos, Node 20 a 22.
-- Si los Documentos se sincronizan con iCloud, mover el proyecto: crea copias `… 2.ts` en `.next` que rompen `tsc`.
 
 Otros:
 - Notion no refleja el trabajo de 2026-10-29/30 (SEO, CI, seguridad, textos legales, analíticas).
