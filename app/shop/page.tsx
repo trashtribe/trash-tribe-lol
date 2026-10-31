@@ -72,9 +72,9 @@ export default async function ShopPage({
     <>
       <Header />
       <main className="flex flex-1 flex-col bg-background">
-        <section className="border-b tt-border-light px-4 py-16 sm:px-6 sm:py-20">
+        <section className="tt-shop-hero border-b tt-border-light px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-[1600px]">
-            <h1 className="text-center text-4xl font-bold tracking-[0.2em] tt-text-on-light uppercase sm:text-5xl">
+            <h1 className="tt-shop-hero-title text-center text-4xl font-bold tracking-[0.2em] tt-text-on-light uppercase sm:text-6xl">
               SHOP
             </h1>
             <ShopFilters activeFilter={activeFilter} activeSubcategory={activeSubcategory} />

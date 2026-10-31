@@ -75,6 +75,32 @@
   border-color: var(--tt-border-light);
 }
 
+/* Shop header: the designer's pastel pattern, with a white veil in the
+   middle so the title and filter pills stay readable on top of it. Plain
+   CSS backgrounds (not next/image) so it uses no Vercel image transforms. */
+.tt-shop-hero {
+  background-color: #fdf0fa;
+  background-image:
+    radial-gradient(ellipse 60% 70% at 50% 50%, rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.25) 70%, transparent),
+    url("/shop-hero-bg.webp");
+  background-size: cover;
+  background-position: center;
+}
+
+@media (min-width: 768px) {
+  .tt-shop-hero {
+    background-image:
+      radial-gradient(ellipse 45% 70% at 50% 50%, rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.25) 70%, transparent),
+      url("/shop-hero-bg.webp");
+  }
+}
+
+.tt-shop-hero-title {
+  text-shadow:
+    0 0 12px #ffffff,
+    0 0 24px #ffffff;
+}
+
 .tt-border-dark {
   border-color: var(--tt-border-dark);
 }
