@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { countryIso } from "@/lib/countries";
 import { quoteShippingEur, ShippingUnavailableError, type ShippingLine } from "@/lib/shipping";
 
 /** Max lines and units per line — same bounds checkout accepts. */
@@ -23,6 +24,9 @@ export async function POST(request: Request) {
   const rawItems = Array.isArray(body.items) ? body.items : [];
   if (!country.trim() || rawItems.length === 0 || rawItems.length > MAX_LINES) {
     return NextResponse.json({ error: "Country and items are required." }, { status: 400 });
+  }
+  if (!countryIso(country)) {
+    return NextResponse.json({ error: "Sorry, we don't ship to that country yet." }, { status: 400 });
   }
 
   const lines: ShippingLine[] = [];
