@@ -45,12 +45,8 @@ function siteOrigin(): string {
   return "https://trash-tribe.lol";
 }
 
-function estimateDeliveryPhrase(method: string | null | undefined): string {
-  if (method === "express") {
-    return "Estimated delivery: 2–3 business days (express shipping).";
-  }
-  return "Estimated delivery: 5–7 business days (standard shipping).";
-}
+const ESTIMATED_DELIVERY =
+  "Estimated delivery: printed in 2–5 business days, then about 5–7 business days in transit.";
 
 function formatAddressInnerHtml(order: OrderRow): string {
   const rows: string[] = [];
@@ -301,7 +297,7 @@ export async function sendOrderConfirmationEmail(
   const orderTotalFormatted = formatEuro(Number.isFinite(totalNum) ? totalNum : 0);
   const orderIdShort = orderId.slice(0, 8).toUpperCase();
   const addressInnerHtml = formatAddressInnerHtml(o);
-  const estimatedDelivery = estimateDeliveryPhrase(o.shipping_method ?? undefined);
+  const estimatedDelivery = ESTIMATED_DELIVERY;
 
   const base = siteOrigin();
   const ordersUrl = `${base}/account`;

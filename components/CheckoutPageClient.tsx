@@ -10,40 +10,17 @@ import { useAuth } from "@/components/AuthProvider";
 import type { CartItem } from "@/components/CartProvider";
 import { useCart } from "@/components/CartProvider";
 import { CheckoutCardPayment } from "@/components/CheckoutCardPayment";
-import {
-  computeCheckoutTotalEur,
-  eurToStripeCents,
-  getShippingEur,
-} from "@/lib/checkout-totals";
+import { computeCheckoutTotalEur, eurToStripeCents } from "@/lib/checkout-totals";
 import {
   cartItemsToStoredLines,
   saveCompletedOrder,
 } from "@/lib/checkout-order-storage";
+import { countryIso, SHIPPING_COUNTRY_NAMES } from "@/lib/countries";
 import { formatEuro } from "@/lib/format-currency";
 import { subscribeToNewsletter } from "@/lib/newsletter-client";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
-const COUNTRIES = [
-  "Ireland",
-  "United Kingdom",
-  "France",
-  "Germany",
-  "Spain",
-  "Italy",
-  "Netherlands",
-  "Belgium",
-  "Portugal",
-  "Austria",
-  "Sweden",
-  "Denmark",
-  "Finland",
-  "Poland",
-  "United States",
-  "Canada",
-  "Australia",
-  "Japan",
-  "Other",
-] as const;
+const COUNTRIES = SHIPPING_COUNTRY_NAMES;
 
 // Printify's carriers need a state/province for these countries specifically
 // — without it, an order can end up "stuck on-hold, incomplete address" the
@@ -98,9 +75,13 @@ export function CheckoutPageClient({
   const [country, setCountry] = useState("");
   const [region, setRegion] = useState("");
   const [phone, setPhone] = useState("");
-  const [shippingMethod, setShippingMethod] = useState<"standard" | "express">(
-    "standard",
-  );
+  // Shipping depends on the destination and the cart, so it's quoted by the
+  // server (Printify's real rates) once a country is picked.
+  const [shippingQuote, setShippingQuote] = useState<{
+    key: string;
+    shipping: number | null;
+    error: string | null;
+  } | null>(null);
 
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [submitAttempted, setSubmitAttempted] = useState(false);
@@ -126,7 +107,65 @@ export function CheckoutPageClient({
       setPrepareError(null);
     });
     onStripeElementsActiveChange?.(false);
-  }, [shippingMethod, onStripeElementsActiveChange]);
+  }, [country, onStripeElementsActiveChange]);
+
+  const quoteKey = useMemo(
+    () =>
+      country
+        ? `${country}|${items.map((i) => `${i.productId}:${i.variantId ?? ""}:${i.quantity}`).join(",")}`
+        : "",
+    [country, items],
+  );
+
+  useEffect(() => {
+    if (!quoteKey || items.length === 0 || summarySnapshot) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/shipping-quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            country,
+            items: cartLinesForApi(items).map(
+              ({ productId, quantity, productName, printifyVariantId }) => ({
+                productId,
+                quantity,
+                productName,
+                printifyVariantId,
+              }),
+            ),
+          }),
+        });
+        const data = (await res.json()) as { shipping?: number; error?: string };
+        if (cancelled) return;
+        setShippingQuote(
+          res.ok && typeof data.shipping === "number"
+            ? { key: quoteKey, shipping: data.shipping, error: null }
+            : { key: quoteKey, shipping: null, error: data.error ?? "Couldn't calculate shipping." },
+        );
+      } catch {
+        if (!cancelled) {
+          setShippingQuote({ key: quoteKey, shipping: null, error: "Couldn't calculate shipping." });
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // `items` and `country` are captured through quoteKey.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quoteKey]);
+
+  const currentQuote = shippingQuote?.key === quoteKey ? shippingQuote : null;
+  const quotedShipping = currentQuote?.shipping ?? null;
+  const shippingStatus: "none" | "loading" | "error" | "ready" = !country
+    ? "none"
+    : !currentQuote
+      ? "loading"
+      : currentQuote.error
+        ? "error"
+        : "ready";
 
   // Prefill email + saved shipping address for a signed-in customer. Only
   // fills fields the customer hasn't already touched, so we never clobber
@@ -178,7 +217,8 @@ export function CheckoutPageClient({
         if (data.shipping_postal_code) {
           setPostalCode((prev) => (prev.trim() ? prev : data.shipping_postal_code));
         }
-        if (data.shipping_country) {
+        // Only countries we still ship to (older profiles may say "Other").
+        if (data.shipping_country && countryIso(data.shipping_country)) {
           setCountry((prev) => (prev ? prev : data.shipping_country));
         }
         if (data.shipping_region) {
@@ -200,11 +240,9 @@ export function CheckoutPageClient({
 
   const displayItems = summarySnapshot ?? items;
   const displaySubtotal = totalsSnapshot?.subtotal ?? subtotal;
-  const displayShipping =
-    totalsSnapshot?.shipping ??
-    getShippingEur(displaySubtotal, shippingMethod);
+  const displayShipping = totalsSnapshot?.shipping ?? quotedShipping;
   const displayTotal =
-    totalsSnapshot?.total ?? displaySubtotal + displayShipping;
+    totalsSnapshot?.total ?? displaySubtotal + (displayShipping ?? 0);
 
   const errors = useMemo(() => {
     const e: Record<string, string> = {};
@@ -268,7 +306,7 @@ export function CheckoutPageClient({
       (!COUNTRIES_REQUIRING_REGION.has(country) || region.trim().length > 0) &&
       phone.trim().length > 0 &&
       digitCount(phone) >= 8 &&
-      (shippingMethod === "standard" || shippingMethod === "express")
+      quotedShipping !== null
     );
   }, [
     email,
@@ -280,7 +318,7 @@ export function CheckoutPageClient({
     country,
     region,
     phone,
-    shippingMethod,
+    quotedShipping,
   ]);
 
   const blur = (field: string) => () =>
@@ -297,7 +335,6 @@ export function CheckoutPageClient({
       country: true,
       region: true,
       phone: true,
-      shippingMethod: true,
     });
     return (
       isValidEmail(email) &&
@@ -325,14 +362,14 @@ export function CheckoutPageClient({
 
   const preparePayment = useCallback(async () => {
     setSubmitAttempted(true);
-    if (!validateAll()) return;
+    if (!validateAll() || quotedShipping === null) return;
 
     setPrepareError(null);
     setPreparingPayment(true);
 
     try {
       const lines = cartLinesForApi(items);
-      const { total } = computeCheckoutTotalEur(lines, shippingMethod);
+      const { total } = computeCheckoutTotalEur(lines, quotedShipping);
       const amount = eurToStripeCents(total);
 
       const shippingName = `${firstName} ${lastName}`.trim();
@@ -340,7 +377,6 @@ export function CheckoutPageClient({
         amount,
         currency: "eur",
         items: lines,
-        shippingMethod,
         shippingName,
         shippingAddress1: address1.trim(),
         shippingAddress2: address2.trim() || undefined,
@@ -385,7 +421,7 @@ export function CheckoutPageClient({
     accessToken,
     validateAll,
     items,
-    shippingMethod,
+    quotedShipping,
     firstName,
     lastName,
     address1,
@@ -404,7 +440,7 @@ export function CheckoutPageClient({
       const lines = cartLinesForApi(items);
       const { subtotal: st, shipping, total } = computeCheckoutTotalEur(
         lines,
-        shippingMethod,
+        quotedShipping ?? 0,
       );
 
       saveCompletedOrder({
@@ -412,7 +448,6 @@ export function CheckoutPageClient({
         subtotal: st,
         shipping,
         total,
-        shippingMethod,
         email: email.trim(),
         placedAt: new Date().toISOString(),
       });
@@ -457,7 +492,7 @@ export function CheckoutPageClient({
     },
     [
       items,
-      shippingMethod,
+      quotedShipping,
       email,
       marketingOptIn,
       clearCart,
@@ -739,65 +774,25 @@ export function CheckoutPageClient({
               id="step-method"
               className="border-b border-black/10 pb-3 text-sm font-bold tracking-[0.2em] tt-text-on-light uppercase"
             >
-              Step 3 — Shipping method
+              Step 3 — Shipping
             </h2>
-            <fieldset className="mt-6 space-y-3">
-              <legend className="sr-only">Shipping method</legend>
-              <label
-                className={`flex cursor-pointer flex-col gap-1 border p-4 transition-colors ${
-                  shippingMethod === "standard"
-                    ? "border-black bg-black/[0.02]"
-                    : "border-black/15 hover:border-black/30"
-                }`}
-              >
-                <span className="flex items-start gap-3">
-                  <input
-                    type="radio"
-                    name="shipping"
-                    value="standard"
-                    checked={shippingMethod === "standard"}
-                    onChange={() => setShippingMethod("standard")}
-                    className="mt-1 h-4 w-4 border-black/30 accent-black"
-                  />
-                  <span>
-                    <span className="text-sm font-bold tracking-[0.12em] tt-text-on-light uppercase">
-                      Standard (5–7 days)
-                    </span>
-                    <span className="mt-1 block text-sm tt-text-on-light">
-                      {subtotal >= 100
-                        ? "Free — your order qualifies."
-                        : `${formatEuro(4.99)} — free on orders over €100.`}
-                    </span>
-                  </span>
-                </span>
-              </label>
-              <label
-                className={`flex cursor-pointer flex-col gap-1 border p-4 transition-colors ${
-                  shippingMethod === "express"
-                    ? "border-black bg-black/[0.02]"
-                    : "border-black/15 hover:border-black/30"
-                }`}
-              >
-                <span className="flex items-start gap-3">
-                  <input
-                    type="radio"
-                    name="shipping"
-                    value="express"
-                    checked={shippingMethod === "express"}
-                    onChange={() => setShippingMethod("express")}
-                    className="mt-1 h-4 w-4 border-black/30 accent-black"
-                  />
-                  <span>
-                    <span className="text-sm font-bold tracking-[0.12em] tt-text-on-light uppercase">
-                      Express (2–3 days)
-                    </span>
-                    <span className="mt-1 block text-sm tt-text-on-light">
-                      {formatEuro(12.99)} flat rate.
-                    </span>
-                  </span>
-                </span>
-              </label>
-            </fieldset>
+            <div className="mt-6 border border-black bg-black/[0.02] p-4" aria-live="polite">
+              <p className="text-sm font-bold tracking-[0.12em] tt-text-on-light uppercase">
+                Standard shipping
+              </p>
+              <p className="mt-1 text-sm tt-text-on-light">
+                {shippingStatus === "none"
+                  ? "Choose your country to see the shipping cost."
+                  : shippingStatus === "loading"
+                    ? "Calculating…"
+                    : shippingStatus === "error"
+                      ? currentQuote?.error
+                      : `${formatEuro(quotedShipping ?? 0)} to ${country}.`}
+              </p>
+              <p className="mt-1 text-xs text-black/55">
+                Printed in 2–5 business days, then about 5–7 business days in transit.
+              </p>
+            </div>
           </section>
 
           {clientSecret ? (
@@ -865,7 +860,8 @@ export function CheckoutPageClient({
 type OrderSummaryBlockProps = {
   items: CartItem[];
   subtotal: number;
-  shippingCost: number;
+  /** Null until a country is chosen and the quote comes back. */
+  shippingCost: number | null;
   total: number;
   orderSuccess: boolean;
   isFormValid: boolean;
@@ -932,7 +928,7 @@ function OrderSummaryBlock({
         <div className="flex justify-between tt-text-on-light">
           <dt>Shipping</dt>
           <dd className="font-bold">
-            {shippingCost === 0 ? "Free" : formatEuro(shippingCost)}
+            {shippingCost === null ? "Choose country" : formatEuro(shippingCost)}
           </dd>
         </div>
         <div className="flex justify-between border-t border-black/10 pt-3 text-base font-bold tt-text-on-light">

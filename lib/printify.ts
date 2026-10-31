@@ -63,6 +63,9 @@ export type PrintifyProduct = {
   update_at?: string;
   /** True while Printify is mid-"publish" — blocks all edits (error 8252) until acked. */
   is_locked?: boolean;
+  /** Catalog model and the print provider that makes it — together they key shipping rates. */
+  blueprint_id?: number;
+  print_provider_id?: number;
 };
 
 type PrintifyListResponse = {

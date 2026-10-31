@@ -107,9 +107,7 @@ export function OrderConfirmationPageClient() {
           </div>
         </dl>
         <p className="mt-4 text-[11px] text-black/50">
-          {order.shippingMethod === "express"
-            ? "Express shipping (2–3 days)"
-            : "Standard shipping (5–7 days)"}
+          Standard shipping: printed in 2–5 business days, then about 5–7 business days in transit.
         </p>
       </div>
 

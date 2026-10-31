@@ -39,4 +39,9 @@ test("add to cart, survive a reload, reach checkout", async ({ page, request }) 
   await expect(
     page.getByText(product.name, { exact: false }).filter({ visible: true }).first(),
   ).toBeVisible();
+
+  // Shipping is quoted once a country is picked.
+  await expect(page.getByText("Choose your country to see the shipping cost.")).toBeVisible();
+  await page.getByLabel("Country").selectOption("Spain");
+  await expect(page.getByText(/€\s?\d+[.,]99 to Spain\./)).toBeVisible();
 });

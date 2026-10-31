@@ -37,8 +37,8 @@ export const validShipping = {
   guestEmail: "e2e@example.com",
   shippingName: "E2E Test",
   shippingAddress1: "Test street 1",
-  shippingCity: "Tallinn",
-  shippingPostalCode: "10111",
-  shippingCountry: "Estonia",
-  shippingPhone: "+3720000000",
+  shippingCity: "Madrid",
+  shippingPostalCode: "28001",
+  shippingCountry: "Spain",
+  shippingPhone: "+34600000000",
 };

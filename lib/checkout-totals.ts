@@ -10,24 +10,16 @@ export type CheckoutLineInput = {
   printifyVariantId?: number | string;
 };
 
-export function getShippingEur(
-  subtotal: number,
-  method: "standard" | "express",
-): number {
-  if (method === "express") return 12.99;
-  return subtotal >= 100 ? 0 : 4.99;
-}
-
+/** Shipping is quoted per country and cart by lib/shipping.ts (server side). */
 export function computeCheckoutTotalEur(
   lines: CheckoutLineInput[],
-  shippingMethod: "standard" | "express",
+  shippingEur: number,
 ): { subtotal: number; shipping: number; total: number } {
   const subtotal = lines.reduce(
     (sum, line) => sum + line.unitPrice * line.quantity,
     0,
   );
-  const shipping = getShippingEur(subtotal, shippingMethod);
-  return { subtotal, shipping, total: subtotal + shipping };
+  return { subtotal, shipping: shippingEur, total: subtotal + shippingEur };
 }
 
 /** Stripe amount in smallest currency unit (e.g. cents for EUR). */

@@ -6,8 +6,10 @@ import {
   type CheckoutLineInput,
 } from "@/lib/checkout-totals";
 import { isCategoryHidden } from "@/lib/categories";
+import { countryIso } from "@/lib/countries";
 import { getAllProducts } from "@/lib/products";
 import { getStripe } from "@/lib/stripe-server";
+import { quoteShippingEur, ShippingUnavailableError } from "@/lib/shipping";
 import { imageForVariant } from "@/lib/variant-selection";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createSupabaseUserClient } from "@/lib/supabase-route";
@@ -19,7 +21,6 @@ type Body = {
   /** Required for guest checkout (no accessToken). */
   guestEmail?: string;
   items?: CheckoutLineInput[];
-  shippingMethod?: "standard" | "express";
   shippingName?: string;
   shippingAddress1?: string;
   shippingAddress2?: string;
@@ -105,7 +106,6 @@ export async function POST(request: Request) {
       accessToken,
       guestEmail,
       items,
-      shippingMethod = "standard",
       shippingName,
       shippingAddress1,
       shippingAddress2,
@@ -159,6 +159,13 @@ export async function POST(request: Request) {
           error:
             "Invalid request: shipping name, address, city, postal code, country, and phone are required.",
         },
+        { status: 400 },
+      );
+    }
+
+    if (!countryIso(shippingCountry)) {
+      return NextResponse.json(
+        { error: "Sorry, we don't ship to that country yet." },
         { status: 400 },
       );
     }
@@ -225,11 +232,19 @@ export async function POST(request: Request) {
     }
     const pricedItems = pricing.lines;
 
-    if (shippingMethod !== "standard" && shippingMethod !== "express") {
-      return NextResponse.json(
-        { error: "Invalid shipping method." },
-        { status: 400 },
-      );
+    let shippingEur: number;
+    try {
+      shippingEur = await quoteShippingEur(pricedItems, shippingCountry);
+    } catch (e) {
+      if (e instanceof ShippingUnavailableError) {
+        return NextResponse.json(
+          {
+            error: `Sorry, these items can't be shipped to ${shippingCountry.trim()}: ${e.items.join(", ")}.`,
+          },
+          { status: 400 },
+        );
+      }
+      throw e;
     }
 
     const shippingAddress2Trimmed =
@@ -263,11 +278,11 @@ export async function POST(request: Request) {
       receiptEmail = resolvedGuestEmail || undefined;
     }
 
-    // Totals come only from catalog prices. The client's `amount` is just a
+    // Totals come only from catalog prices and Printify's shipping rates. The client's `amount` is just a
     // cross-check: a mismatch means a price changed since the item was added
     // (or the request was tampered with) — ask for a refresh rather than
     // charging something the shopper didn't see.
-    const { total } = computeCheckoutTotalEur(pricedItems, shippingMethod);
+    const { total } = computeCheckoutTotalEur(pricedItems, shippingEur);
     const expectedCents = eurToStripeCents(total);
 
     if (amount !== expectedCents) {
@@ -301,7 +316,7 @@ export async function POST(request: Request) {
             ? shippingRegion.trim()
             : null,
         shipping_phone: shippingPhone.trim(),
-        shipping_method: shippingMethod,
+        shipping_method: "standard",
       })
       .select("id")
       .single();

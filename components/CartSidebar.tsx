@@ -146,7 +146,7 @@ export function CartSidebar() {
               <span>Subtotal</span>
               <span>{formatCurrency(subtotal)}</span>
             </div>
-            <p className="mt-2 text-xs tt-text-on-light">Free shipping over €100</p>
+            <p className="mt-2 text-xs tt-text-on-light">Shipping calculated at checkout</p>
             <Link
               href="/checkout"
               onClick={closeCart}

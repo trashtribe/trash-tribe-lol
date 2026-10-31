@@ -15,7 +15,6 @@ export type StoredCompletedOrder = {
   subtotal: number;
   shipping: number;
   total: number;
-  shippingMethod: "standard" | "express";
   email: string;
   placedAt: string;
 };

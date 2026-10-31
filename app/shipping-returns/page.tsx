@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const linkClass = "underline underline-offset-4 hover:tt-text-secondary";
 
 // Kept in sync with the confirmation email's delivery estimates and
-// COUNTRIES in components/CheckoutPageClient.tsx.
+// SHIPPING_COUNTRIES in lib/countries.ts.
 const DESTINATIONS =
   "Ireland, the UK, France, Germany, Spain, Italy, the Netherlands, Belgium, Portugal, Austria, Sweden, Denmark, Finland, Poland, the US, Canada, Australia and Japan";
 
@@ -37,21 +37,15 @@ export default function ShippingReturnsPage() {
       <LegalHeading>Shipping</LegalHeading>
       <LegalList>
         <li>Every item is printed on demand, usually within 2–5 business days.</li>
-        <li>
-          <strong>Standard:</strong> about 5–7 business days after production.
-        </li>
-        <li>
-          <strong>Express:</strong> about 2–3 business days after production.
-        </li>
-        <li>You&apos;ll see the shipping cost at checkout, before you pay.</li>
+        <li>Delivery takes about 5–7 business days after production.</li>
+        <li>Shipping depends on where you are and what you order. You&apos;ll see the cost at checkout, before you pay.</li>
         <li>We ship to {DESTINATIONS}. Orders outside the EU may be charged import duties.</li>
       </LegalList>
 
       <LegalHeading>Returns</LegalHeading>
       <p>
-        Changed your mind? You have 14 days from delivery. Just <ContactSupport /> with your order
-        number and we&apos;ll walk you through it. Items should be unworn and unwashed, and return
-        postage is on you. We refund within 14 days of getting them back.
+        Changed your mind or something&apos;s not right? You have 14 days from delivery. Just{" "}
+        <ContactSupport /> with your order number and we&apos;ll work it out together.
       </p>
     </LegalPage>
   );

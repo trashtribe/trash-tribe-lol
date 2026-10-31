@@ -1,35 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-/** Country labels from checkout → ISO 3166-1 alpha-2 for Printify. */
-const DISPLAY_COUNTRY_TO_ISO: Record<string, string> = {
-  ireland: "IE",
-  "united kingdom": "GB",
-  france: "FR",
-  germany: "DE",
-  spain: "ES",
-  italy: "IT",
-  netherlands: "NL",
-  belgium: "BE",
-  portugal: "PT",
-  austria: "AT",
-  sweden: "SE",
-  denmark: "DK",
-  finland: "FI",
-  poland: "PL",
-  "united states": "US",
-  canada: "CA",
-  australia: "AU",
-  japan: "JP",
-  other: "US",
-};
+import { countryIso } from "@/lib/countries";
 
-function countryToIso(display: string): string {
+function countryToIso(display: string): string | null {
   const t = display.trim();
   if (/^[A-Za-z]{2}$/.test(t)) return t.toUpperCase();
-  const iso = DISPLAY_COUNTRY_TO_ISO[t.toLowerCase()];
-  if (iso) return iso;
-  console.warn("[printify fulfillment] Unknown country label; fallback US:", display);
-  return "US";
+  return countryIso(t);
 }
 
 function splitShippingName(full: string): { first_name: string; last_name: string } {
@@ -57,15 +33,11 @@ type OrderShippingRow = {
 };
 
 /**
- * Printify's shipping_method is a numeric code (1 = standard, 2 = express/
- * priority), unrelated to our own "standard" | "express" strings stored on
- * the order. Defaults to standard for any unrecognized value rather than
- * failing the whole push — an express customer getting standard shipping is
- * a lesser problem than the order not reaching Printify at all.
+ * Printify's shipping_method is a numeric code (1 = standard). Express isn't
+ * offered for any product in this shop, so every order ships standard
+ * (older orders may still say "express" in the database).
  */
-function shippingMethodToPrintifyCode(method: string | null): number {
-  return method === "express" ? 2 : 1;
-}
+const PRINTIFY_STANDARD_SHIPPING = 1;
 
 type OrderLineRow = {
   product_id: string;
@@ -206,13 +178,20 @@ export async function submitPaidOrderToPrintify(
     }
 
     const { first_name, last_name } = splitShippingName(order.shipping_name);
-    const countryIso = countryToIso(order.shipping_country);
+    const country = countryToIso(order.shipping_country);
+    if (!country) {
+      console.error("[printify fulfillment] Unknown shipping country; skipping Printify push.", {
+        orderId,
+        country: order.shipping_country,
+      });
+      return;
+    }
 
     const body = {
       external_id: orderId,
       label: `Order ${orderId}`,
       line_items,
-      shipping_method: shippingMethodToPrintifyCode(order.shipping_method),
+      shipping_method: PRINTIFY_STANDARD_SHIPPING,
       // Printify's field is `address_to`, not `shipping_address` — sending the
       // wrong key means Printify silently ignores it (no error), creating the
       // order with valid line items but "Not completed" customer/shipping
@@ -227,7 +206,7 @@ export async function submitPaidOrderToPrintify(
         city: order.shipping_city.trim(),
         region: (order.shipping_region ?? "").trim(),
         zip: order.shipping_postal_code.trim(),
-        country: countryIso,
+        country,
         phone: order.shipping_phone.trim(),
         email,
       },

@@ -15,7 +15,8 @@ Actualizado 2026-10-31. Es una foto del estado: verificar contra el código ante
 - Prodigi será un catálogo paralelo a Printify, no un reemplazo. Cliente en `lib/prodigi.ts`, variables en `.env.example`. La clave de sandbox está en `.env.local` (no se sube a git).
 - El "Coming soon" se controla con el interruptor `COMING_SOON_ENABLED` en `proxy.ts` (hoy en `false`). Basta con cambiarlo a `true` y hacer push; no necesita clave. `PREVIEW_ACCESS_KEY` es opcional (salta la pantalla con `?key=`) y se borró de Vercel el 2026-10-31.
 - Underwear oculta hasta nuevo aviso (2026-10-29, problemas con esa línea). Interruptor `HIDDEN_CATEGORIES` en `lib/categories.ts`: quitar `"UNDERWEAR"` y hacer push para reactivarla.
-- `/shipping-returns` no muestra precios de envío (se ven en el checkout) ni sección de pedidos defectuosos; eso lo cubre `/terms`. El checkout sigue cobrando tarifa plana (`lib/checkout-totals.ts`).
+- Envío (2026-10-31): se cobra lo que cobra Printify por país y carrito (`lib/shipping.ts`): un paquete por proveedor, primer artículo + adicionales, USD→EUR a 0,90 y redondeo hacia arriba a .99. Sin envío gratis ni exprés (Printify no ofrece exprés para estos productos). Países en `lib/countries.ts`; se quitó "Other" (mandaba los pedidos a EE. UU.). El checkout pide el precio a `/api/shipping-quote` y `create-payment-intent` lo recalcula.
+- `/shipping-returns`: sin precios de envío ni sección de pedidos defectuosos (lo cubre `/terms`). Devoluciones: escribir a soporte y se resuelve caso a caso (de momento se reembolsa sin pedir la prenda de vuelta; no se publica).
 - Al reactivar Underwear, volver a añadir en `/shipping-returns` y `/terms` que la ropa interior desprecintada no se devuelve por higiene (se quitó al acortar los textos legales).
 - Stripe sigue en modo test en producción a propósito hasta el lanzamiento. Los pagos test nunca se mandan a Printify (`app/api/webhook/route.ts`), salvo con `PRINTIFY_ALLOW_TEST_ORDERS=true`.
 - Seguridad: el checkout recalcula precios desde el catálogo; RLS de `orders`/`order_items` solo lectura (migración 015); límite de envíos por IP en contacto y newsletter (`lib/rate-limit.ts`, migración 016); cabeceras en `next.config.ts`.
@@ -43,6 +44,7 @@ Seguridad:
 
 Producto:
 - Etiqueta de cuello en 3 camisetas; revisión de diseño con la diseñadora.
+- Sapphic Code Baby Tee: Printify ya no reconoce su combinación de modelo (2053) y proveedor (29); revisarlo antes de que alguien lo compre.
 - Prodigi: probar la API, decidir productos, catálogo local ligado a `getProducts()` y envío del pedido tras el pago.
 
 Técnico:

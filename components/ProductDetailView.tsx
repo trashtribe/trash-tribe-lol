@@ -342,7 +342,6 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
               >
                 {wishlisted ? "Remove from wishlist" : "Add to wishlist"}
               </button>
-              <p className="text-sm tt-text-on-light">Free shipping over €100</p>
             </div>
           </div>
         </div>

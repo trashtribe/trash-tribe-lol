@@ -53,6 +53,19 @@ test.describe("create-payment-intent", () => {
     }
   });
 
+  test("rejects countries we don't ship to", async ({ request }) => {
+    const { product, variant } = await getBuyableProduct(request);
+    const res = await request.post("/api/create-payment-intent", {
+      data: {
+        ...validShipping,
+        shippingCountry: "Other",
+        amount: 2000,
+        items: [{ productId: product.id, printifyVariantId: variant.id, quantity: 1, unitPrice: 20 }],
+      },
+    });
+    expect(res.status()).toBe(400);
+  });
+
   test("requires a valid guest email", async ({ request }) => {
     const { product, variant } = await getBuyableProduct(request);
     const res = await request.post("/api/create-payment-intent", {
@@ -62,6 +75,48 @@ test.describe("create-payment-intent", () => {
         amount: 2000,
         items: [{ productId: product.id, printifyVariantId: variant.id, quantity: 1, unitPrice: 20 }],
       },
+    });
+    expect(res.status()).toBe(400);
+  });
+});
+
+test.describe("shipping-quote", () => {
+  test("quotes real shipping for a country we ship to", async ({ request }) => {
+    const { product, variant } = await getBuyableProduct(request);
+    const res = await request.post("/api/shipping-quote", {
+      data: {
+        country: "Spain",
+        items: [{ productId: product.id, printifyVariantId: variant.id, quantity: 1 }],
+      },
+    });
+    expect(res.status()).toBe(200);
+    const { shipping } = (await res.json()) as { shipping: number };
+    expect(shipping).toBeGreaterThan(0);
+    // Always rounded up to x.99.
+    expect(Math.round((shipping % 1) * 100)).toBe(99);
+  });
+
+  test("a second unit costs less than a second parcel", async ({ request }) => {
+    const { product, variant } = await getBuyableProduct(request);
+    const quote = async (quantity: number) => {
+      const res = await request.post("/api/shipping-quote", {
+        data: {
+          country: "Spain",
+          items: [{ productId: product.id, printifyVariantId: variant.id, quantity }],
+        },
+      });
+      return ((await res.json()) as { shipping: number }).shipping;
+    };
+    const one = await quote(1);
+    const two = await quote(2);
+    expect(two).toBeGreaterThanOrEqual(one);
+    expect(two).toBeLessThan(one * 2);
+  });
+
+  test("rejects countries we don't ship to", async ({ request }) => {
+    const { product } = await getBuyableProduct(request);
+    const res = await request.post("/api/shipping-quote", {
+      data: { country: "Other", items: [{ productId: product.id, quantity: 1 }] },
     });
     expect(res.status()).toBe(400);
   });
