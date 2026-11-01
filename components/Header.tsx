@@ -160,7 +160,7 @@ export function Header() {
         <CategoryParamWatcher onCategory={setCategoryParam} />
       </Suspense>
       <div className="relative" onMouseLeave={() => setOpenCategory(null)}>
-        <div className="mx-auto grid max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6 sm:py-5">
+        <div className="mx-auto grid max-w-[1600px] grid-cols-[max-content_1fr_auto] items-center gap-4 px-4 py-4 sm:px-6 sm:py-5">
           <Link href="/" className="block shrink-0 justify-self-start leading-none" aria-label="trashtribe">
             <Image
               src="/tt.png"
@@ -173,7 +173,7 @@ export function Header() {
             />
           </Link>
 
-          <nav aria-label="Primary" className="hidden items-center gap-6 md:flex lg:gap-10">
+          <nav aria-label="Primary" className="hidden items-center gap-4 justify-self-start md:flex lg:ml-12 lg:gap-10">
             {nav.map((item) => {
               const active = isNavItemActive(item);
               return (
@@ -182,7 +182,7 @@ export function Header() {
                   href={item.href}
                   onMouseEnter={() => setOpenCategory(item.flyoutCategory ?? null)}
                   aria-current={active ? "page" : undefined}
-                  className={`text-[11px] font-bold tracking-[0.2em] uppercase underline decoration-2 underline-offset-[10px] transition-colors hover:tt-text-secondary lg:text-[12px] ${
+                  className={`whitespace-nowrap text-[11px] font-bold tracking-[0.2em] uppercase underline decoration-2 underline-offset-[10px] transition-colors hover:tt-text-secondary lg:text-[12px] ${
                     active ? "tt-text-secondary decoration-current" : "tt-text-on-light decoration-transparent"
                   }`}
                 >
@@ -192,20 +192,26 @@ export function Header() {
             })}
           </nav>
 
-          <div className="flex items-center justify-end gap-1 sm:gap-3">
+          <div className="flex items-center justify-end gap-1 sm:gap-3 md:gap-1 lg:gap-3">
             <nav
               aria-label="Secondary"
               className="mr-2 hidden items-center gap-4 border-r tt-border-light pr-3 md:flex lg:mr-3 lg:gap-5 lg:pr-5"
             >
-              {utilityNav.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="text-[10px] font-bold tracking-[0.18em] tt-text-on-light uppercase transition-colors hover:tt-text-secondary lg:text-[11px]"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {utilityNav.map((item) => {
+                const active = pathname === item.href;
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={`text-[10px] font-bold tracking-[0.18em] uppercase underline decoration-2 underline-offset-[10px] transition-colors hover:tt-text-secondary lg:text-[11px] ${
+                      active ? "tt-text-secondary decoration-current" : "tt-text-on-light decoration-transparent"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
             </nav>
             <button
               type="button"
@@ -221,14 +227,14 @@ export function Header() {
             </button>
             <Link
               href={accountHref}
-              className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+              className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-[color,transform] duration-200 hover:tt-text-secondary motion-safe:hover:scale-115"
               aria-label={user ? "Account" : "Sign in"}
             >
               <AccountIcon />
             </Link>
             <button
               type="button"
-              className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+              className="inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-[color,transform] duration-200 hover:tt-text-secondary motion-safe:hover:scale-115"
               aria-label="Search"
               onClick={openSearch}
             >
@@ -236,7 +242,7 @@ export function Header() {
             </button>
             <Link
               href="/wishlist"
-              className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+              className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-[color,transform] duration-200 hover:tt-text-secondary motion-safe:hover:scale-115"
               aria-label={`Wishlist, ${wishlistCount} items`}
             >
               <HeartIcon />
@@ -248,7 +254,7 @@ export function Header() {
             </Link>
             <button
               type="button"
-              className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-colors hover:tt-text-secondary"
+              className="relative inline-flex cursor-pointer items-center justify-center border-0 bg-transparent p-2 tt-text-on-light transition-[color,transform] duration-200 hover:tt-text-secondary motion-safe:hover:scale-115"
               aria-label={`Shopping cart, ${itemCount} items`}
               onClick={openCart}
             >

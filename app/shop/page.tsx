@@ -75,7 +75,7 @@ export default async function ShopPage({
         <section className="tt-shop-hero border-b tt-border-light px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-[1600px]">
             <h1 className="tt-shop-hero-title text-center text-4xl font-bold tracking-[0.2em] tt-text-on-light uppercase sm:text-6xl">
-              SHOP
+              <span className="tt-pulse-hover">SHOP</span>
             </h1>
             <ShopFilters activeFilter={activeFilter} activeSubcategory={activeSubcategory} />
           </div>

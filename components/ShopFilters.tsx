@@ -57,7 +57,7 @@ export function ShopFilters({ activeFilter, activeSubcategory }: ShopFiltersProp
             <button
               key={filter.value}
               type="button"
-              className={`border px-4 py-2 text-[11px] font-bold tracking-[0.18em] uppercase transition-colors sm:px-5 sm:py-2.5 ${
+              className={`border px-4 py-2 text-[11px] font-bold tracking-[0.18em] uppercase transition-[color,transform] duration-200 motion-safe:hover:scale-110 motion-safe:active:scale-95 sm:px-5 sm:py-2.5 ${
                 isActive
                   ? "tt-bg-primary tt-text-on-light tt-border-light"
                   : "bg-background tt-text-on-light tt-border-light hover:tt-text-secondary"
@@ -91,7 +91,7 @@ export function ShopFilters({ activeFilter, activeSubcategory }: ShopFiltersProp
               <button
                 key={sub.value}
                 type="button"
-                className={`border px-3 py-1.5 text-[10px] font-bold tracking-[0.14em] uppercase transition-colors ${
+                className={`border px-3 py-1.5 text-[10px] font-bold tracking-[0.14em] uppercase transition-[color,transform] duration-200 motion-safe:hover:scale-110 motion-safe:active:scale-95 ${
                   isActive
                     ? "tt-bg-soft tt-text-on-light tt-border-light"
                     : "bg-background tt-text-on-light tt-border-light hover:tt-text-secondary"
