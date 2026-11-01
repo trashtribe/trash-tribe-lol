@@ -44,6 +44,7 @@ Seguridad:
 
 Producto:
 - Etiqueta de cuello en 3 camisetas; revisión de diseño con la diseñadora.
+- Leer y corregir todos los textos de la web, sección por sección: inicio, shop, fichas y descripciones de producto, about, contacto, legales, emails.
 - Sapphic Code Baby Tee: Printify ya no reconoce su combinación de modelo (2053) y proveedor (29); revisarlo antes de que alguien lo compre.
 - Prodigi: probar la API, decidir productos, catálogo local ligado a `getProducts()` y envío del pedido tras el pago.
 
