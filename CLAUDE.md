@@ -46,6 +46,8 @@ Producto:
 - Etiqueta de cuello en 3 camisetas; revisión de diseño con la diseñadora.
 - Leer y corregir todos los textos de la web, sección por sección: inicio, shop, fichas y descripciones de producto, about, contacto, legales, emails.
 - Sapphic Code Baby Tee: Printify ya no reconoce su combinación de modelo (2053) y proveedor (29); revisarlo antes de que alguien lo compre.
+- Proveedores (foco UE + Reino Unido, 2026-11-01): Printful (como taller dentro de Printify) envía una camiseta por ~$5 a la UE/UK frente a $11–13 de los talleres actuales; falta ver su coste de fabricación y probar con "Love is... Tee" (no hace falta tocar código). Concentrar el catálogo en pocos talleres europeos para que los pedidos lleguen en un solo paquete.
+- Tapstitch (futuro): prendas más de diseño que encajan con TT, pero fabrican en China y Los Ángeles (Special Line ~10 días a Europa) y no tienen API para tiendas propias. Plan si se retoma: pedir muestras a una dirección europea (calidad, plazo, aduanas) y luego montar una tienda Shopify oculta como puente (nuestro webhook crea el pedido pagado allí y Tapstitch lo recoge); Stripe se queda. Antes, aclarar IVA de importación UE/UK con Tapstitch y la gestoría.
 - Prodigi: probar la API, decidir productos, catálogo local ligado a `getProducts()` y envío del pedido tras el pago.
 
 Técnico:
